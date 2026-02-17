@@ -1,27 +1,59 @@
-import Link from 'next/link';
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Image from "next/image";
+import { Footer } from "@/components/footer";
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome</h1>
-        <p className="text-gray-600 mb-8">Get started by logging in or creating an account</p>
-        
-        <div className="flex gap-4">
-          <Link
-            href="/login"
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Login
-          </Link>
-          <Link
-            href="/register"
-            className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-          >
-            Register
-          </Link>
+    <div className="min-h-screen flex flex-col bg-amber-50">
+      <main className="flex-1 flex flex-col items-center px-6 py-12">
+        <div className="w-28 h-28 bg-slate-700 rounded-full flex items-center justify-center mb-8">
+          <Image
+            src="/images/logo.jpg"
+            alt="Logo"
+            width={112}
+            height={112}
+            className="rounded-full"
+          />
         </div>
-      </div>
+
+        <h1 className="text-2xl font-bold text-slate-800 mb-6">Welcome</h1>
+
+        <Card className="w-full max-w-sm mb-8 border-2 border-slate-300 rounded-3xl">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-center text-lg font-semibold">
+              Project Description
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-center text-sm italic">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+              eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+              enim ad minim veniam, quis nostrud exercitation ullamco laboris
+              nisi ut aliquip ex ea commodo consequat.
+            </p>
+          </CardContent>
+        </Card>
+
+        <div className="w-full max-w-sm flex flex-col gap-3 mt-auto mb-8">
+          <Button
+            asChild
+            className="w-full h-12 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-xl border-2 border-orange-800"
+          >
+            <Link href="/login">Login</Link>
+          </Button>
+
+          <Button
+            asChild
+            className="w-full h-12 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-xl border-2 border-orange-800"
+          >
+            <Link href="/register">Register</Link>
+          </Button>
+        </div>
+      </main>
+
+      <Footer />
     </div>
   );
 }

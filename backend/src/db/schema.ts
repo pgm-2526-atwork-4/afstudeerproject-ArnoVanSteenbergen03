@@ -16,8 +16,8 @@ export const places = pgTable('places', {
   name: text('name').notNull(),
   geojson: jsonb('geojson').notNull(), 
   type: text('type').notNull(), // "provider or distribution_center"
-  operatingInfo: jsonb('operating_info'), // opening hours/days
-  contactInfo: jsonb('contact_info'), // phone, email, etc.
+  operatingInfo: jsonb('operating_info'),
+  contactInfo: jsonb('contact_info'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });

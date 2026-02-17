@@ -1,122 +1,216 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import Link from 'next/link';
+import { Footer } from '@/components/Footer';
 
-export function RegisterForm() {
+interface RegisterFormProps {
+  role: string;
+  onBack: () => void;
+}
+
+export function RegisterForm({ role, onBack }: RegisterFormProps) {
   const router = useRouter();
   const { register } = useAuth();
-  const [formData, setFormData] = useState({
-    email: "",
-    username: "",
-    password: "",
-    role: "Volunteer",
-  });
-  const [error, setError] = useState("");
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await register(
-        formData.email,
-        formData.username,
-        formData.password,
-        formData.role,
-      );
-      console.log("Registration successful");
+      const username = `${firstName.toLowerCase()}.${lastName.toLowerCase()}`;
+      await register(email, username, password, role);
+      router.push('/dashboard');
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Registration failed");
+      setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium">
-          Email
-        </label>
-        <input
-          id="email"
-          type="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-          className="w-full px-4 py-2 border rounded-lg"
-        />
-      </div>
-
-      <div>
-        <label htmlFor="username" className="block text-sm font-medium">
-          Username
-        </label>
-        <input
-          id="username"
-          type="text"
-          name="username"
-          value={formData.username}
-          onChange={handleChange}
-          required
-          className="w-full px-4 py-2 border rounded-lg"
-        />
-      </div>
-
-      <div>
-        <label htmlFor="password" className="block text-sm font-medium">
-          Password
-        </label>
-        <input
-          id="password"
-          type="password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-          className="w-full px-4 py-2 border rounded-lg"
-        />
-      </div>
-
-      <div>
-        <label htmlFor="role" className="block text-sm font-medium">
-          Role
-        </label>
-        <select
-          id="role"
-          name="role"
-          value={formData.role}
-          onChange={handleChange}
-          className="w-full px-4 py-2 border rounded-lg"
-        >
-          <option value="Volunteer">Volunteer</option>
-          <option value="Provider">Provider</option>
-        </select>
-      </div>
-
-      {error && <div className="text-red-600 text-sm">{error}</div>}
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-blue-600 text-white py-2 rounded-lg disabled:opacity-50"
+    <div className="min-h-screen flex flex-col bg-amber-50 p-4">
+      {/* Back Button */}
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={onBack}
+        className="mb-6 w-10 h-10 border-2 border-slate-300 rounded-lg hover:bg-gray-100"
       >
-        {loading ? "Registering..." : "Register"}
-      </button>
-    </form>
+        <ArrowLeft className="w-5 h-5 text-slate-700" />
+      </Button>
+
+      {/* Main Container */}
+      <div className="flex-1 flex flex-col items-center px-4">
+        <div className="w-full max-w-sm">
+          {/* Title */}
+          <h1 className="text-2xl font-bold text-center text-slate-800 mb-2">
+            Registration
+          </h1>
+          <p className="text-center text-sm text-slate-600 mb-8 capitalize">
+            {role} Account
+          </p>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5 min-h-[500px]">
+            {/* First Name */}
+            <div className="space-y-2">
+              <Label htmlFor="firstName" className="text-slate-700 font-medium">
+                First name
+              </Label>
+              <Input
+                id="firstName"
+                type="text"
+                placeholder="First name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+                className="px-4 py-4 bg-white border-2 border-slate-400 rounded-2xl placeholder-slate-500 focus:outline-none focus:border-orange-600"
+              />
+            </div>
+
+            {/* Last Name */}
+            <div className="space-y-2">
+              <Label htmlFor="lastName" className="text-slate-700 font-medium">
+                Last name
+              </Label>
+              <Input
+                id="lastName"
+                type="text"
+                placeholder="Last name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+                className="px-4 py-4 bg-white border-2 border-slate-400 rounded-2xl placeholder-slate-500 focus:outline-none focus:border-orange-600"
+              />
+            </div>
+
+            {/* Email */}
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-slate-700 font-medium">
+                E-mail
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="E-mail"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="px-4 py-4 bg-white border-2 border-slate-400 rounded-2xl placeholder-slate-500 focus:outline-none focus:border-orange-600"
+              />
+            </div>
+
+            {/* Password */}
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-slate-700 font-medium">
+                Password
+              </Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="px-4 py-4 bg-white border-2 border-slate-400 rounded-2xl placeholder-slate-500 focus:outline-none focus:border-orange-600"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Confirm Password */}
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="text-slate-700 font-medium">
+                Repeat password
+              </Label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  placeholder="Repeat password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  className="px-4 py-4 bg-white border-2 border-slate-400 rounded-2xl placeholder-slate-500 focus:outline-none focus:border-orange-600"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {/* Spacer */}
+            <div className="flex-1" />
+
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full h-14 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-2xl border-2 border-orange-800 disabled:opacity-50"
+            >
+              {loading ? 'Creating Account...' : 'Create Account'}
+            </Button>
+          </form>
+
+          {/* Login Link */}
+          <p className="text-center text-sm text-slate-600 mt-6">
+            Already have an account?
+            <Link href="/login" className="text-orange-600 font-semibold hover:underline ml-1">
+              Log in
+            </Link>
+          </p>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <Footer />
+    </div>
   );
 }

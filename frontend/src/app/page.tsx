@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
-import { Footer } from "@/components/footer";
+import { Footer } from "@/components/Footer";
 
 export default function Home() {
   return (

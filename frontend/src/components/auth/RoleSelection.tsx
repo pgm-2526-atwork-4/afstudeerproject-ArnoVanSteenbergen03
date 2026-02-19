@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { Footer } from '@/components/Footer';
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
+import { Footer } from "@/components/Footer";
 
 interface RoleSelectionProps {
   onRoleSelect: (role: string) => void;
@@ -14,23 +14,22 @@ interface RoleSelectionProps {
 export default function RoleSelection({ onRoleSelect }: RoleSelectionProps) {
   const roles = [
     {
-      id: 'volunteer',
-      name: 'Volunteer',
-      description: 'Help us pick up orders from providers',
-      image: '/images/volunteer.jpg',
+      id: "volunteer",
+      name: "Volunteer",
+      description: "Help us pick up orders from providers",
+      image: "/images/volunteer.jpg",
     },
     {
-      id: 'provider',
-      name: 'Provider',
+      id: "provider",
+      name: "Provider",
       description:
-        'Got any leftovers? Or wanna help a good cause? Let us pick up any food you\'re willing to donate!',
-      image: '/images/provider.jpg',
+        "Got any leftovers? Or wanna help a good cause? Let us pick up any food you're willing to donate!",
+      image: "/images/provider.jpg",
     },
   ];
 
   return (
     <div className="min-h-screen flex flex-col bg-amber-50 p-4">
-      {/* Back Button */}
       <Button
         asChild
         variant="outline"
@@ -42,15 +41,12 @@ export default function RoleSelection({ onRoleSelect }: RoleSelectionProps) {
         </Link>
       </Button>
 
-      {/* Main Container */}
       <div className="flex-1 flex flex-col items-center px-4">
         <div className="w-full max-w-sm">
-          {/* Title */}
           <h1 className="text-2xl font-bold text-center text-slate-800 mb-8">
             Choose your role
           </h1>
 
-          {/* Role Cards */}
           <div className="space-y-4">
             {roles.map((role) => (
               <Card
@@ -59,7 +55,6 @@ export default function RoleSelection({ onRoleSelect }: RoleSelectionProps) {
                 onClick={() => onRoleSelect(role.id)}
               >
                 <div className="space-y-3 p-4">
-                  {/* Role Image */}
                   <div className="w-full h-32 bg-slate-200 rounded-xl overflow-hidden relative">
                     <Image
                       src={role.image}
@@ -69,12 +64,10 @@ export default function RoleSelection({ onRoleSelect }: RoleSelectionProps) {
                     />
                   </div>
 
-                  {/* Role Name */}
                   <h2 className="text-xl font-semibold text-center text-slate-800">
                     {role.name}
                   </h2>
 
-                  {/* Role Description */}
                   <p className="text-sm text-slate-600 text-center">
                     {role.description}
                   </p>
@@ -84,8 +77,6 @@ export default function RoleSelection({ onRoleSelect }: RoleSelectionProps) {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
       <Footer />
     </div>
   );

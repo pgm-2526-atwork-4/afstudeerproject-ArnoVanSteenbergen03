@@ -1,12 +1,12 @@
-import { Request, Response, NextFunction } from 'express';
-import { db } from '../config/database';
-import { permissions } from '../db/schema';
-import { eq, and } from 'drizzle-orm';
+import { Request, Response, NextFunction } from "express";
+import { db } from "../config/database";
+import { permissions } from "../db/schema";
+import { eq, and } from "drizzle-orm";
 
 export const checkCapability = (requiredCapability: string) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      return res.status(401).json({ error: "Unauthorized" });
     }
 
     const userPermissions = await db.query.permissions.findMany({
@@ -14,11 +14,11 @@ export const checkCapability = (requiredCapability: string) => {
     });
 
     const hasCapability = userPermissions.some(
-      (p) => p.capability === requiredCapability
+      (p) => p.capability === requiredCapability,
     );
 
     if (!hasCapability) {
-      return res.status(403).json({ error: 'Forbidden' });
+      return res.status(403).json({ error: "Forbidden" });
     }
 
     next();

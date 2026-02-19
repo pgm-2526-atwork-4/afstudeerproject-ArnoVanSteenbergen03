@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useAuth } from '@/lib/auth-context';
-import { User } from '@/types';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useAuth } from "@/lib/auth-context";
+import { User } from "@/types";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
@@ -11,7 +11,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/login');
+      router.push("/login");
     }
   }, [user, loading, router]);
 
@@ -27,12 +27,11 @@ export default function DashboardPage() {
     return null;
   }
 
-  // Route to role-specific dashboard
-  if (user.role === 'volunteer') {
+  if (user.role === "volunteer") {
     return <VolunteerDashboard user={user} />;
   }
 
-  if (user.role === 'provider') {
+  if (user.role === "provider") {
     return <ProviderDashboard user={user} />;
   }
 
@@ -54,7 +53,8 @@ function VolunteerDashboard({ user }: { user: User }) {
           Welcome Volunteer
         </p>
         <p className="text-center text-slate-600 max-w-md">
-          Ready to help pick up food orders from providers? Let&apos;s make a difference together!
+          Ready to help pick up food orders from providers? Let&apos;s make a
+          difference together!
         </p>
       </div>
     </div>
@@ -72,7 +72,8 @@ function ProviderDashboard({ user }: { user: User }) {
           Welcome Provider
         </p>
         <p className="text-center text-slate-600 max-w-md">
-          Have leftovers? Let us help you donate food and make a positive impact!
+          Have leftovers? Let us help you donate food and make a positive
+          impact!
         </p>
       </div>
     </div>

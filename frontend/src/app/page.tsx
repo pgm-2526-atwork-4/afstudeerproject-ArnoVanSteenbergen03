@@ -18,7 +18,9 @@ export default function Home() {
           />
         </div>
 
-        <h1 className="text-2xl font-bold text-slate-800 mb-6">Welcome to Pick Up & Give!</h1>
+        <h1 className="text-2xl font-bold text-slate-800 mb-6">
+          Welcome to Pick Up & Give!
+        </h1>
 
         <Card className="w-full max-w-sm mb-8 border-2 border-slate-300 rounded-3xl">
           <CardHeader className="pb-2">

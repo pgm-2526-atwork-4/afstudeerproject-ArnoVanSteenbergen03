@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/auth-context';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
-import Link from 'next/link';
-import { Footer } from '@/components/Footer';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
+import Link from "next/link";
+import { Footer } from "@/components/Footer";
 
 interface RegisterFormProps {
   role: string;
@@ -19,27 +19,27 @@ interface RegisterFormProps {
 export function RegisterForm({ role, onBack }: RegisterFormProps) {
   const router = useRouter();
   const { register } = useAuth();
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError("Password must be at least 6 characters");
       return;
     }
 
@@ -48,9 +48,9 @@ export function RegisterForm({ role, onBack }: RegisterFormProps) {
     try {
       const username = `${firstName.toLowerCase()}.${lastName.toLowerCase()}`;
       await register(email, username, password, role);
-      router.push('/dashboard');
+      router.push("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -58,7 +58,6 @@ export function RegisterForm({ role, onBack }: RegisterFormProps) {
 
   return (
     <div className="min-h-screen flex flex-col bg-amber-50 p-4">
-      {/* Back Button */}
       <Button
         variant="outline"
         size="icon"
@@ -68,10 +67,8 @@ export function RegisterForm({ role, onBack }: RegisterFormProps) {
         <ArrowLeft className="w-5 h-5 text-slate-700" />
       </Button>
 
-      {/* Main Container */}
       <div className="flex-1 flex flex-col items-center px-4">
         <div className="w-full max-w-sm">
-          {/* Title */}
           <h1 className="text-2xl font-bold text-center text-slate-800 mb-2">
             Registration
           </h1>
@@ -79,9 +76,10 @@ export function RegisterForm({ role, onBack }: RegisterFormProps) {
             {role} Account
           </p>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5 min-h-[500px]">
-            {/* First Name */}
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-5 min-h-[500px]"
+          >
             <div className="space-y-2">
               <Label htmlFor="firstName" className="text-slate-700 font-medium">
                 First name
@@ -97,7 +95,6 @@ export function RegisterForm({ role, onBack }: RegisterFormProps) {
               />
             </div>
 
-            {/* Last Name */}
             <div className="space-y-2">
               <Label htmlFor="lastName" className="text-slate-700 font-medium">
                 Last name
@@ -113,7 +110,6 @@ export function RegisterForm({ role, onBack }: RegisterFormProps) {
               />
             </div>
 
-            {/* Email */}
             <div className="space-y-2">
               <Label htmlFor="email" className="text-slate-700 font-medium">
                 E-mail
@@ -129,7 +125,6 @@ export function RegisterForm({ role, onBack }: RegisterFormProps) {
               />
             </div>
 
-            {/* Password */}
             <div className="space-y-2">
               <Label htmlFor="password" className="text-slate-700 font-medium">
                 Password
@@ -137,7 +132,7 @@ export function RegisterForm({ role, onBack }: RegisterFormProps) {
               <div className="relative">
                 <Input
                   id="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -149,20 +144,26 @@ export function RegisterForm({ role, onBack }: RegisterFormProps) {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </div>
 
-            {/* Confirm Password */}
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-slate-700 font-medium">
+              <Label
+                htmlFor="confirmPassword"
+                className="text-slate-700 font-medium"
+              >
                 Repeat password
               </Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
+                  type={showConfirmPassword ? "text" : "password"}
                   placeholder="Repeat password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -174,42 +175,44 @@ export function RegisterForm({ role, onBack }: RegisterFormProps) {
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
                 >
-                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </div>
 
-            {/* Error Message */}
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 
-            {/* Spacer */}
             <div className="flex-1" />
 
-            {/* Submit Button */}
             <Button
               type="submit"
               disabled={loading}
               className="w-full h-14 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-2xl border-2 border-orange-800 disabled:opacity-50"
             >
-              {loading ? 'Creating Account...' : 'Create Account'}
+              {loading ? "Creating Account..." : "Create Account"}
             </Button>
           </form>
 
-          {/* Login Link */}
           <p className="text-center text-sm text-slate-600 mt-6">
             Already have an account?
-            <Link href="/login" className="text-orange-600 font-semibold hover:underline ml-1">
+            <Link
+              href="/login"
+              className="text-orange-600 font-semibold hover:underline ml-1"
+            >
               Log in
             </Link>
           </p>
         </div>
       </div>
 
-      {/* Footer */}
       <Footer />
     </div>
   );

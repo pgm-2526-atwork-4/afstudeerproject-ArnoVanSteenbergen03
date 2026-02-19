@@ -1,13 +1,12 @@
-import { LoginForm } from '@/components/auth/LoginForm';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
-import { Footer } from '@/components/Footer';
+import { LoginForm } from "@/components/auth/LoginForm";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import { Footer } from "@/components/Footer";
 
 export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col bg-amber-50 p-4">
-      {/* Back Button */}
       <Button
         asChild
         variant="outline"
@@ -19,28 +18,26 @@ export default function LoginPage() {
         </Link>
       </Button>
 
-      {/* Main Container */}
       <div className="flex-1 flex flex-col items-center px-4">
         <div className="w-full max-w-sm">
-          {/* Title */}
           <h1 className="text-2xl font-bold text-center text-slate-800 mb-8">
             Log in to your account
           </h1>
 
-          {/* Form */}
           <LoginForm />
 
-          {/* Sign Up Link */}
           <p className="text-center text-sm text-slate-600 mt-6">
             Don&apos;t have an account?
-            <Link href="/register" className="text-orange-600 font-semibold hover:underline ml-1">
+            <Link
+              href="/register"
+              className="text-orange-600 font-semibold hover:underline ml-1"
+            >
               Sign up
             </Link>
           </p>
         </div>
       </div>
 
-      {/* Footer */}
       <Footer />
     </div>
   );

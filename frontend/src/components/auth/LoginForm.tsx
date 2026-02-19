@@ -35,9 +35,10 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6 min-h-[500px]">
-      {/* Email Input */}
       <div className="space-y-2">
-        <Label htmlFor="email" className="text-slate-700 font-medium">Email</Label>
+        <Label htmlFor="email" className="text-slate-700 font-medium">
+          Email
+        </Label>
         <Input
           id="email"
           type="email"
@@ -49,9 +50,10 @@ export function LoginForm() {
         />
       </div>
 
-      {/* Password Input */}
       <div className="space-y-2">
-        <Label htmlFor="password" className="text-slate-700 font-medium">Password</Label>
+        <Label htmlFor="password" className="text-slate-700 font-medium">
+          Password
+        </Label>
         <div className="relative">
           <Input
             id="password"
@@ -76,17 +78,14 @@ export function LoginForm() {
         </div>
       </div>
 
-      {/* Error Message */}
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
-      {/* Spacer - pushes button to bottom */}
       <div className="flex-1" />
 
-      {/* Submit Button */}
       <Button
         type="submit"
         disabled={loading}

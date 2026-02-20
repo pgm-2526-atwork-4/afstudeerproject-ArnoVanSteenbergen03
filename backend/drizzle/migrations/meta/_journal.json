@@ -22,6 +22,20 @@
       "when": 1771589043775,
       "tag": "0002_brown_proemial_gods",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1771589279340,
+      "tag": "0003_loud_vindicator",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1771589519337,
+      "tag": "0004_massive_the_twelve",
+      "breakpoints": true
     }
   ]
 }

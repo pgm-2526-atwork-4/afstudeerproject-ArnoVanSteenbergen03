@@ -68,7 +68,7 @@ export const activities = pgTable("activities", {
   pickupTime: timestamp("pickup_time").notNull(),
   notes: text("notes"),
   details: jsonb("details"),
-  metrics: jsonb("metrics"), // replace with vehicle type
+  vehicleId: uuid("vehicle_id").references(() => vehicles.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -133,6 +133,10 @@ export const activitiesRelations = relations(activities, ({ one, many }) => ({
   assignedCenter: one(places, {
     fields: [activities.assignedCenterId],
     references: [places.id],
+  }),
+  vehicle: one(vehicles, {
+    fields: [activities.vehicleId],
+    references: [vehicles.id],
   }),
   foodItems: many(foodItems),
 }));

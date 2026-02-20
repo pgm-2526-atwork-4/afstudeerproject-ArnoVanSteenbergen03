@@ -8,18 +8,40 @@ import {
   uuid,
   varchar,
   integer,
+  primaryKey,
 } from "drizzle-orm/pg-core";
-import { relations, sql } from "drizzle-orm";
+import { relations } from "drizzle-orm";
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   email: text("email").unique().notNull(),
   username: text("username").unique().notNull(),
   password: text("password").notNull(),
-  role: text("role").notNull(), // "volunteer, provider, manager & admin"
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+export const roles = pgTable("roles", {
+  id: serial("id").primaryKey(),
+  roleName: text("name").unique().notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Join table so users can have multiple roles
+export const userRoles = pgTable(
+  "user_roles",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    roleId: integer("role_id")
+      .notNull()
+      .references(() => roles.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.roleId] })],
+);
 
 export const places = pgTable("places", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -71,6 +93,22 @@ export const foodItems = pgTable("food_items", {
 //Relations
 export const usersRelations = relations(users, ({ many }) => ({
   activitiesCreated: many(activities),
+  userRoles: many(userRoles),
+}));
+
+export const rolesRelations = relations(roles, ({ many }) => ({
+  userRoles: many(userRoles),
+}));
+
+export const userRolesRelations = relations(userRoles, ({ one }) => ({
+  user: one(users, {
+    fields: [userRoles.userId],
+    references: [users.id],
+  }),
+  role: one(roles, {
+    fields: [userRoles.roleId],
+    references: [roles.id],
+  }),
 }));
 
 export const activitiesRelations = relations(activities, ({ one, many }) => ({

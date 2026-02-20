@@ -30,5 +30,5 @@ export interface AuthContextType {
     password: string,
     role: string,
   ) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }

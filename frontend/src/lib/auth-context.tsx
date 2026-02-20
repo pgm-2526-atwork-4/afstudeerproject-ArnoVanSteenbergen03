@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { login, register, getCurrentUser } from "./api-client";
-import { AuthContextType, User } from "@/types";
+import { AuthContextType, User } from "@/types/Auth";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -27,22 +27,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const handleLogin = async (email: string, password: string) => {
     const response = await login({ email, password });
+    // Wait for session to be established
+    await new Promise((resolve) => setTimeout(resolve, 300));
     setUser(response.user);
   };
 
   const handleRegister = async (
-    email: string,
-    username: string,
-    password: string,
-    role: string,
-  ) => {
-    const response = await register({ email, username, password, role });
-    setUser(response.user);
-  };
+  email: string,
+  username: string,
+  password: string,
+  role: string,
+) => {
+  const response = await register({ email, username, password, role });
+  // Wait for session to be established
+  await new Promise(resolve => setTimeout(resolve, 300));
+  setUser(response.user);
+};
 
-  const handleLogout = () => {
-    setUser(null);
-    //TODO: Implement logout API call
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+      });
+      setUser(null);
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
   return (

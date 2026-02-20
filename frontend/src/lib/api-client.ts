@@ -1,16 +1,6 @@
-import { User } from "@/types";
+import { User, AuthResponse } from "@/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-export interface AuthResponse {
-  message: string;
-  user: {
-    id: string;
-    email: string;
-    username: string;
-    role: string;
-  };
-}
 
 export interface LoginCredentials {
   email: string;
@@ -40,7 +30,17 @@ export async function register(
     throw new Error(error.error || "Registration failed");
   }
 
-  return response.json();
+  // Wait for session to be established
+  await new Promise((resolve) => setTimeout(resolve, 300));
+
+  // Fetch user with roles from /api/auth/me
+  const userWithRoles = await getCurrentUser();
+  const initialResponse = await response.json();
+
+  return {
+    message: initialResponse.message,
+    user: userWithRoles,
+  };
 }
 
 // Login
@@ -61,7 +61,16 @@ export async function login(
     throw new Error(error.error || "Login failed");
   }
 
-  return response.json();
+  // Wait for session to be established
+  await new Promise((resolve) => setTimeout(resolve, 300));
+
+  const userWithRoles = await getCurrentUser();
+  const initialResponse = await response.json();
+
+  return {
+    message: initialResponse.message,
+    user: userWithRoles,
+  };
 }
 
 // Get current user

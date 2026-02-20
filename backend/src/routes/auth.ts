@@ -142,9 +142,12 @@ router.get("/me", async (req: Request, res: Response) => {
 
 // Logout
 router.post("/logout", (req: Request, res: Response) => {
-  req.logout((err: any) => {
-    if (err) return res.status(500).json({ error: "Logout failed" });
-    res.json({ message: "Logout successful" });
+  req.logout((err) => {
+    if (err) {
+      return res.status(500).json({ error: "Logout failed" });
+    }
+    res.clearCookie("connect.sid");
+    res.json({ message: "Logged out successfully" });
   });
 });
 

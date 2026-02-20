@@ -2,6 +2,8 @@ export interface User {
   id: string;
   email: string;
   username: string;
+  firstname: string;
+  lastname: string;
   roles: string[];
 }
 
@@ -16,7 +18,8 @@ export interface LoginCredentials {
 }
 
 export interface RegisterCredentials extends LoginCredentials {
-  username: string;
+  firstname: string;
+  lastname: string;
   role: string;
 }
 
@@ -26,7 +29,8 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (
     email: string,
-    username: string,
+    firstname: string,
+    lastname: string,
     password: string,
     role: string,
   ) => Promise<void>;

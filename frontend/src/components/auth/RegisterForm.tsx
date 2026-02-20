@@ -46,8 +46,7 @@ export function RegisterForm({ role, onBack }: RegisterFormProps) {
     setLoading(true);
 
     try {
-      const username = `${firstName.toLowerCase()}.${lastName.toLowerCase()}`;
-      await register(email, username, password, role);
+      await register(email, firstName, lastName, password, role);
       router.push("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");

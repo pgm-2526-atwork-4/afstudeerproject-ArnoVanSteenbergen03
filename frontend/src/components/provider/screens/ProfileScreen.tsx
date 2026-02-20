@@ -51,13 +51,14 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
         </Button>
 
         <div className="w-full space-y-6">
+          {/* First name */}
           <div>
             <label className="block text-sm font-semibold text-slate-800 mb-2">
               Name:
             </label>
             <input
               type="text"
-              value={user.username?.split("")[0] || ""}
+              value={user.firstname || ""}
               readOnly
               className="w-full border-b-2 border-slate-800 bg-transparent py-2 text-slate-800 focus:outline-none"
             />
@@ -69,7 +70,7 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
             </label>
             <input
               type="text"
-              value=""
+              value={user.lastname || ""}
               readOnly
               className="w-full border-b-2 border-slate-800 bg-transparent py-2 text-slate-800 focus:outline-none"
             />
@@ -87,6 +88,7 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
             />
           </div>
 
+          {/* Email */}
           <div>
             <label className="block text-sm font-semibold text-slate-800 mb-2">
               E-mail:
@@ -99,6 +101,7 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
             />
           </div>
 
+          {/* Distribution center */}
           <div>
             <label className="block text-sm font-semibold text-slate-800 mb-2">
               Your distribution centrum:
@@ -111,6 +114,7 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
             />
           </div>
 
+          {/* Role */}
           <div>
             <label className="block text-sm font-semibold text-slate-800 mb-2">
               Role:

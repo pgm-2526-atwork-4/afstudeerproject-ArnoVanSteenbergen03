@@ -27,22 +27,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const handleLogin = async (email: string, password: string) => {
     const response = await login({ email, password });
-    // Wait for session to be established
     await new Promise((resolve) => setTimeout(resolve, 300));
     setUser(response.user);
   };
 
   const handleRegister = async (
-  email: string,
-  username: string,
-  password: string,
-  role: string,
-) => {
-  const response = await register({ email, username, password, role });
-  // Wait for session to be established
-  await new Promise(resolve => setTimeout(resolve, 300));
-  setUser(response.user);
-};
+    email: string,
+    firstname: string,
+    lastname: string,
+    password: string,
+    role: string,
+  ) => {
+    const response = await register({
+      email,
+      firstname,
+      lastname,
+      password,
+      role,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    setUser(response.user);
+  };
 
   const handleLogout = async () => {
     try {
@@ -72,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;

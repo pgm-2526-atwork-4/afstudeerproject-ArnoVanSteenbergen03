@@ -8,7 +8,8 @@ export interface LoginCredentials {
 }
 
 export interface RegisterCredentials extends LoginCredentials {
-  username: string;
+  firstname: string;
+  lastname: string;
   role: string;
 }
 
@@ -33,7 +34,6 @@ export async function register(
   // Wait for session to be established
   await new Promise((resolve) => setTimeout(resolve, 300));
 
-  // Fetch user with roles from /api/auth/me
   const userWithRoles = await getCurrentUser();
   const initialResponse = await response.json();
 

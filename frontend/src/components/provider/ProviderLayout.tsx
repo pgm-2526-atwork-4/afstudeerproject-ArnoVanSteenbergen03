@@ -13,14 +13,12 @@ export default function ProviderLayout({ user }: { user: User }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-amber-50">
-      {/* Main content */}
       <div className="flex-1 overflow-y-auto pb-24">
         {activeTab === "orders" && <OrdersScreen user={user} />}
         {activeTab === "chat" && <div>Chat coming soon</div>}
         {activeTab === "account" && <ProfileScreen user={user} />}
       </div>
 
-      {/* Navigation bar */}
       <ProviderNavigation activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );

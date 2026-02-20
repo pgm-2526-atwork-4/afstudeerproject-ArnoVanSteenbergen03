@@ -48,15 +48,22 @@ async function main() {
   const insertedUsers = await db
     .insert(users)
     .values(
-      Array.from({ length: 12 }).map(() => ({
-        email: faker.internet.email().toLowerCase(),
-        username: faker.internet.username().toLowerCase(),
-        password: passwordHash,
-      })),
+      Array.from({ length: 12 }).map(() => {
+        const firstname = faker.person.firstName();
+        const lastname = faker.person.lastName();
+        let username = `${firstname}${lastname}`.toLowerCase();
+        return {
+          email: faker.internet.email().toLowerCase(),
+          firstname,
+          lastname,
+          username,
+          password: passwordHash,
+        };
+      }),
     )
     .returning();
 
-  // user_roles (1-2 roles/user)
+  // user_roles
   for (const u of insertedUsers) {
     const count = faker.number.int({ min: 1, max: 2 });
     const picked = faker.helpers.arrayElements(allRoles, count);

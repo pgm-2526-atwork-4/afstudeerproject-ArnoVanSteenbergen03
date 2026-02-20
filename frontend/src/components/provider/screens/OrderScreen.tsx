@@ -11,7 +11,6 @@ export default function OrdersScreen({ user }: { user: User }) {
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-120px)] bg-amber-50 p-4">
-      {/* Title at top */}
       <div className="flex justify-center mb-12">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-slate-800 mb-4">Orders</h1>
@@ -19,11 +18,9 @@ export default function OrdersScreen({ user }: { user: User }) {
         </div>
       </div>
 
-      {/* Main content centered */}
       <div className="flex flex-col items-center justify-center flex-1">
         {orders.length === 0 ? (
           <div className="w-full max-w-sm text-center">
-            {/* Empty state icon */}
             <div className="flex justify-center mb-8">
               <div className="w-24 h-24 rounded-full border-4 border-slate-300 flex items-center justify-center bg-slate-50">
                 <FileText className="w-12 h-12 text-slate-400" />
@@ -47,7 +44,6 @@ export default function OrdersScreen({ user }: { user: User }) {
           </div>
         ) : (
           <div className="w-full max-w-4xl">
-            {/* Orders list goes here */}
           </div>
         )}
       </div>

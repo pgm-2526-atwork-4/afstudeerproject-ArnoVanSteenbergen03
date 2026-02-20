@@ -24,15 +24,9 @@ router.post(
 // Register
 router.post("/register", async (req: Request, res: Response) => {
   try {
-    const { email, username, password, role } = req.body;
+    const { email, firstname, lastname, password, role } = req.body;
 
-    if (!email || !username || !password || !role) {
-      console.log("Missing fields:", {
-        email,
-        username,
-        password: !!password,
-        role,
-      });
+    if (!email || !firstname || !lastname || !password || !role) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
@@ -44,18 +38,31 @@ router.post("/register", async (req: Request, res: Response) => {
       return res.status(409).json({ error: "Email already registered" });
     }
 
-    console.log("Hashing password...");
+    // Auto-generate username from first + last name
+    let username = `${firstname}${lastname}`.toLowerCase();
+    let counter = 1;
+    
+    // Check if username already exists, add number if it does
+    while (await db.query.users.findFirst({
+      where: eq(users.username, username),
+    })) {
+      username = `${firstname}${lastname}${counter}`.toLowerCase();
+      counter++;
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await db
       .insert(users)
       .values({
         email,
+        firstname,
+        lastname,
         username,
         password: hashedPassword,
       })
       .returning();
 
-    //assigns a role depending on users choice in the front end
+    // Assign role
     const roleRecord = await db.query.roles.findFirst({
       where: eq(roles.roleName, role),
     });
@@ -84,9 +91,7 @@ router.post("/register", async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error("Registration error:", error);
-    res
-      .status(500)
-      .json({ error: "Registration failed", details: error.message });
+    res.status(500).json({ error: "Registration failed" });
   }
 });
 
@@ -120,12 +125,17 @@ router.post("/login", (req: Request, res: Response, next: NextFunction) => {
 });
 
 // Get current user
-router.get("/me", async (req: Request, res: Response) => {
+router.get("/me", requireAuth, async (req: Request, res: Response) => {
   if (!req.user) {
-    return res.status(401).json({ error: "Not authenticated", user: null });
+    return res.status(401).json({ error: "Not authenticated" });
   }
 
   const user = req.user as any;
+
+  const fullUser = await db.query.users.findFirst({
+    where: eq(users.id, user.id),
+  });
+
   const userRoleRecords = await db
     .select({ roleName: roles.roleName })
     .from(userRoles)
@@ -133,9 +143,11 @@ router.get("/me", async (req: Request, res: Response) => {
     .where(eq(userRoles.userId, user.id));
 
   res.json({
-    id: user.id,
-    email: user.email,
-    username: user.username,
+    id: fullUser!.id,
+    email: fullUser!.email,
+    username: fullUser!.username,
+    firstname: fullUser!.firstname,
+    lastname: fullUser!.lastname,
     roles: userRoleRecords.map((r) => r.roleName),
   });
 });

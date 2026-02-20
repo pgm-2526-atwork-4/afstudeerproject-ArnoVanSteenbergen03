@@ -36,6 +36,13 @@
       "when": 1771589519337,
       "tag": "0004_massive_the_twelve",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1771592631518,
+      "tag": "0005_dear_patriot",
+      "breakpoints": true
     }
   ]
 }

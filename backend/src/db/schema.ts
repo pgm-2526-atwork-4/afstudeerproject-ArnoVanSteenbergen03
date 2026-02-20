@@ -68,7 +68,9 @@ export const activities = pgTable("activities", {
   pickupTime: timestamp("pickup_time").notNull(),
   notes: text("notes"),
   details: jsonb("details"),
-  vehicleId: uuid("vehicle_id").references(() => vehicles.id, { onDelete: "cascade" }),
+  vehicleId: uuid("vehicle_id").references(() => vehicles.id, {
+    onDelete: "cascade",
+  }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -81,6 +83,7 @@ export const foodItems = pgTable("food_items", {
     .references(() => activities.id, { onDelete: "cascade" }),
   itemName: text("item_name").notNull(),
   servings: integer("servings").notNull(),
+  allergies: text("allergies"),
   expirationDate: timestamp("expiration_date"),
   freezerItemIncluded: boolean("freezer_item").notNull().default(false),
   packageIncluded: boolean("package_included").notNull().default(false),
@@ -97,7 +100,6 @@ export const vehicles = pgTable("vehicles", {
   amount: integer("amount").notNull(), // Amount of vehicles stored (for later explansion)
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-
 });
 
 //Relations

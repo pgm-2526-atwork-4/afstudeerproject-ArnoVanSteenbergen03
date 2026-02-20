@@ -68,7 +68,7 @@ export const activities = pgTable("activities", {
   pickupTime: timestamp("pickup_time").notNull(),
   notes: text("notes"),
   details: jsonb("details"),
-  metrics: jsonb("metrics"),
+  metrics: jsonb("metrics"), // replace with vehicle type
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -88,6 +88,16 @@ export const foodItems = pgTable("food_items", {
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+//These are the different type of vihicles used for pickups
+export const vehicles = pgTable("vehicles", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  vehicleType: text("vehicle_type").notNull(), // Bikebags, bikecarts, ...?
+  amount: integer("amount").notNull(), // Amount of vehicles stored (for later explansion)
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+
 });
 
 //Relations

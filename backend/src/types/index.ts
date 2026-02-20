@@ -7,7 +7,6 @@ declare global {
       email: string;
       username: string;
       password: string;
-      role: string;
       createdAt: Date | null;
       updatedAt: Date | null;
     }

@@ -23,7 +23,7 @@ export function Footer() {
         . All rights reserved.
       </p>
       <p>
-        In collaberation with{" "}
+        In collaboration with{" "}
         <a
           href="https://avsworks.be"
           className="text-orange-600 hover:underline"

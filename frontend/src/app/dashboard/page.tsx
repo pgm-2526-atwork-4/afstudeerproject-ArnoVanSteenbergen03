@@ -27,11 +27,11 @@ export default function DashboardPage() {
     return null;
   }
 
-  if (user.role === "volunteer") {
+  if (user.roles?.includes("volunteer")) {
     return <VolunteerDashboard user={user} />;
   }
 
-  if (user.role === "provider") {
+  if (user.roles?.includes("provider")) {
     return <ProviderDashboard user={user} />;
   }
 

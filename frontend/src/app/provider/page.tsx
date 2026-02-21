@@ -3,7 +3,7 @@
 import OrdersScreen from "@/components/provider/screens/OrderScreen";
 import { useAuth } from "@/lib/auth-context";
 
-export default function OrdersPage() {
+export default function ProviderPage() {
   const { user } = useAuth();
 
   if (!user) {

@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-export default function ProfileLayout({
+export default function ProviderLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -20,7 +20,11 @@ export default function ProfileLayout({
   }, [user, loading, router]);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-amber-50">
+        <p className="text-slate-600">Loading...</p>
+      </div>
+    );
   }
 
   if (!user) {

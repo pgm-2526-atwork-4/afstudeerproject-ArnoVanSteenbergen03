@@ -3,7 +3,7 @@
 import ProfileScreen from "@/components/provider/screens/ProfileScreen";
 import { useAuth } from "@/lib/auth-context";
 
-export default function AccountPage() {
+export default function ProfilePage() {
   const { user } = useAuth();
 
   if (!user) {

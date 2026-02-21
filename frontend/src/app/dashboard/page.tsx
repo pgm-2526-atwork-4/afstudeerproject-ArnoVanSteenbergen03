@@ -3,8 +3,6 @@
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import VolunteerLayout from "@/components/volunteer/VolunteerLayout";
-import ProviderLayout from "@/components/provider/ProviderLayout";
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
@@ -13,6 +11,13 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!loading && !user) {
       router.push("/login");
+      return;
+    }
+
+    if (user?.roles?.includes("provider")) {
+      router.push("/provider");
+    } else if (user?.roles?.includes("volunteer")) {
+      router.push("/volunteer");
     }
   }, [user, loading, router]);
 
@@ -24,21 +29,5 @@ export default function DashboardPage() {
     );
   }
 
-  if (!user) {
-    return null;
-  }
-
-  if (user.roles?.includes("volunteer")) {
-    return <VolunteerLayout user={user} />;
-  }
-
-  if (user.roles?.includes("provider")) {
-    return <ProviderLayout user={user} />;
-  }
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-amber-50">
-      <p className="text-slate-600">Unknown role</p>
-    </div>
-  );
+  return null;
 }

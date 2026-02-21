@@ -8,15 +8,13 @@ import Link from "next/link";
 export default function ProviderNavigation() {
   const pathname = usePathname();
 
-  const isActive = (tab: string) => pathname.includes(`/profile/${tab}`);
-
   return (
     <div className="fixed bottom-0 left-0 right-0 border-t-2 border-slate-800 bg-white flex justify-around py-4">
-      <Link href="/dashboard">
+      <Link href="/provider">
         <Button
           variant="ghost"
           className={`flex flex-col items-center gap-2 h-auto p-2 ${
-            isActive("orders")
+            pathname === "/provider"
               ? "text-orange-600"
               : "text-slate-600 hover:text-orange-600"
           }`}
@@ -26,11 +24,11 @@ export default function ProviderNavigation() {
         </Button>
       </Link>
 
-      <Link href="/chatroom">
+      <Link href="/provider/chatroom">
         <Button
           variant="ghost"
           className={`flex flex-col items-center gap-2 h-auto p-2 ${
-            isActive("chat")
+            pathname === "/provider/chatroom"
               ? "text-orange-600"
               : "text-slate-600 hover:text-orange-600"
           }`}
@@ -40,11 +38,11 @@ export default function ProviderNavigation() {
         </Button>
       </Link>
 
-      <Link href="/profile">
+      <Link href="/provider/profile">
         <Button
           variant="ghost"
           className={`flex flex-col items-center gap-2 h-auto p-2 ${
-            isActive("account")
+            pathname === "/provider/profile"
               ? "text-orange-600"
               : "text-slate-600 hover:text-orange-600"
           }`}

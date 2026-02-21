@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { login, register, getCurrentUser } from "./api-client";
+import { login, register, getCurrentUser, logout } from "./api-client";
 import { AuthContextType, User } from "@/types/Auth";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -51,9 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", {
-        method: "POST",
-      });
+      await logout();
       setUser(null);
     } catch (error) {
       console.error("Logout failed:", error);

@@ -76,7 +76,9 @@ export async function login(
 // Get current user
 export async function getCurrentUser(): Promise<User> {
   const response = await fetch(`${API_BASE_URL}/auth/me`, {
-    credentials: "include",
+    method: "GET",
+    credentials: "include", 
+    cache: "no-store",
   });
 
   if (!response.ok) {
@@ -84,4 +86,16 @@ export async function getCurrentUser(): Promise<User> {
   }
 
   return response.json();
+}
+
+// Logout
+export async function logout(): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new Error("Logout failed");
+  }
 }

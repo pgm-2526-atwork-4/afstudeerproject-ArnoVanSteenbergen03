@@ -2,57 +2,57 @@
 
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Package, User } from "lucide-react";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 
-interface ProviderNavigationProps {
-  activeTab: "orders" | "chat" | "account";
-  onTabChange: (tab: "orders" | "chat" | "account") => void;
-}
+export default function ProviderNavigation() {
+  const pathname = usePathname();
 
-export default function ProviderNavigation({
-  activeTab,
-  onTabChange,
-}: ProviderNavigationProps) {
+  const isActive = (tab: string) => pathname.includes(`/profile/${tab}`);
+
   return (
-    
     <div className="fixed bottom-0 left-0 right-0 border-t-2 border-slate-800 bg-white flex justify-around py-4">
-      <Button
-        variant="ghost"
-        className={`flex flex-col items-center gap-2 h-auto p-2 ${
-          activeTab === "orders"
-            ? "text-orange-600"
-            : "text-slate-600 hover:text-orange-600"
-        }`}
-        onClick={() => onTabChange("orders")}
-      >
-        <Package className="w-6 h-6" />
-        <span className="text-xs font-semibold">Orders</span>
-      </Button>
+      <Link href="/dashboard">
+        <Button
+          variant="ghost"
+          className={`flex flex-col items-center gap-2 h-auto p-2 ${
+            isActive("orders")
+              ? "text-orange-600"
+              : "text-slate-600 hover:text-orange-600"
+          }`}
+        >
+          <Package className="w-6 h-6" />
+          <span className="text-xs font-semibold">Orders</span>
+        </Button>
+      </Link>
 
-      <Button
-        variant="ghost"
-        className={`flex flex-col items-center gap-2 h-auto p-2 ${
-          activeTab === "chat"
-            ? "text-orange-600"
-            : "text-slate-600 hover:text-orange-600"
-        }`}
-        onClick={() => onTabChange("chat")}
-      >
-        <MessageCircle className="w-6 h-6" />
-        <span className="text-xs font-semibold">Chat</span>
-      </Button>
+      <Link href="/chatroom">
+        <Button
+          variant="ghost"
+          className={`flex flex-col items-center gap-2 h-auto p-2 ${
+            isActive("chat")
+              ? "text-orange-600"
+              : "text-slate-600 hover:text-orange-600"
+          }`}
+        >
+          <MessageCircle className="w-6 h-6" />
+          <span className="text-xs font-semibold">Chat</span>
+        </Button>
+      </Link>
 
-      <Button
-        variant="ghost"
-        className={`flex flex-col items-center gap-2 h-auto p-2 ${
-          activeTab === "account"
-            ? "text-orange-600"
-            : "text-slate-600 hover:text-orange-600"
-        }`}
-        onClick={() => onTabChange("account")}
-      >
-        <User className="w-6 h-6" />
-        <span className="text-xs font-semibold">Account</span>
-      </Button>
+      <Link href="/profile">
+        <Button
+          variant="ghost"
+          className={`flex flex-col items-center gap-2 h-auto p-2 ${
+            isActive("account")
+              ? "text-orange-600"
+              : "text-slate-600 hover:text-orange-600"
+          }`}
+        >
+          <User className="w-6 h-6" />
+          <span className="text-xs font-semibold">Account</span>
+        </Button>
+      </Link>
     </div>
   );
 }

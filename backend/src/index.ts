@@ -5,7 +5,8 @@ import passport from "passport";
 import dotenv from "dotenv";
 import authRouter from "@/routes/auth";
 import "@/config/passport";
-import profileRouter from "@/routes/profile/profileRoutes";
+import providerRouter from "@/routes/provider/index";
+import volunteerRouter from "@/routes/volunteer/index";
 
 dotenv.config();
 
@@ -21,7 +22,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Configuration
+// Session & Auth configuration
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "dev-secret",
@@ -47,8 +48,9 @@ app.get("/api/health", (req, res) => {
 // Auth routes
 app.use("/api/auth", authRouter);
 
-// Profile routes
-app.use("/api/profile", profileRouter);
+// Role-based routes
+app.use("/api/provider", providerRouter);
+app.use("/api/volunteer", volunteerRouter);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

@@ -99,3 +99,43 @@ export async function logout(): Promise<void> {
     throw new Error("Logout failed");
   }
 }
+
+
+//// Profile API calls
+
+export async function getProfile(): Promise<User> {
+  const response = await fetch(`${API_BASE_URL}/profile`, {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch profile");
+  }
+
+  return response.json();
+}
+
+export async function updateProfile(data: {
+  firstname: string;
+  lastname: string;
+  username: string;
+  email: string;
+}): Promise<User> {
+  const response = await fetch(`${API_BASE_URL}/profile`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Profile update failed");
+  }
+
+  return response.json();
+}

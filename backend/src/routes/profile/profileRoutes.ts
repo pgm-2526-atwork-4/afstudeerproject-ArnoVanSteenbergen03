@@ -8,31 +8,31 @@ const router = Router();
 
 router.use(requireAuth);
 
-// Get account info
-router.get("/account", async (req: Request, res: Response) => {
+// Get profile info
+router.get("/", async (req: Request, res: Response) => {
   try {
     const user = await db.query.users.findFirst({
       where: eq(users.id, (req.user as any).id),
     });
     res.json(user);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch account" });
+    res.status(500).json({ error: "Failed to fetch profile" });
   }
 });
 
-// Update account info
-router.put("/account", async (req: Request, res: Response) => {
+// Update profile info
+router.put("/", async (req: Request, res: Response) => {
   try {
-    const { firstname, lastname } = req.body;
+    const { firstname, lastname, username, email } = req.body;
     const updated = await db
       .update(users)
-      .set({ firstname, lastname })
+      .set({ firstname, lastname, username, email })
       .where(eq(users.id, (req.user as any).id))
       .returning();
     
     res.json(updated[0]);
   } catch (error) {
-    res.status(500).json({ error: "Failed to update account" });
+    res.status(500).json({ error: "Failed to update profile" });
   }
 });
 

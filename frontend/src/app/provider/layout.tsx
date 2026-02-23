@@ -1,23 +1,14 @@
 "use client";
 
 import ProviderNavigation from "@/components/provider/ProviderNavigation";
-import { useAuth } from "@/lib/auth-context";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useRequireRole } from "@/hooks/useRequireRole";
 
 export default function ProviderLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-    }
-  }, [user, loading, router]);
+  const { loading, authorized } = useRequireRole("provider");
 
   if (loading) {
     return (
@@ -27,7 +18,7 @@ export default function ProviderLayout({
     );
   }
 
-  if (!user) {
+  if (!authorized) {
     return null;
   }
 

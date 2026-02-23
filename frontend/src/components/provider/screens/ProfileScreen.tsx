@@ -50,7 +50,7 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
         lastname: formData.lastname,
         username: formData.username,
         email: formData.email,
-      });
+      }, "provider");
       setIsEditing(false);
     } catch (error) {
       console.error("Save failed:", error);

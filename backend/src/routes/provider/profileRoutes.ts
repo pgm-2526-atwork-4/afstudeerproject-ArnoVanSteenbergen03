@@ -1,12 +1,9 @@
 import { Router, Request, Response } from "express";
-import { requireAuth } from "@/middleware/auth";
 import { db } from "@/config/database";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 const router = Router();
-
-router.use(requireAuth);
 
 // Get profile info
 router.get("/", async (req: Request, res: Response) => {

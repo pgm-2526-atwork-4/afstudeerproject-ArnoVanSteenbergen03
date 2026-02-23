@@ -27,8 +27,12 @@ export async function register(
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Registration failed");
+    try {
+      const error = await response.json();
+      throw new Error(error.error || "Registration failed");
+    } catch {
+      throw new Error(`Registration failed: ${response.statusText}`);
+    }
   }
 
   // Wait for session to be established
@@ -57,8 +61,12 @@ export async function login(
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Login failed");
+    try {
+      const error = await response.json();
+      throw new Error(error.error || "Login failed");
+    } catch {
+      throw new Error(`Login failed: ${response.statusText}`);
+    }
   }
 
   // Wait for session to be established
@@ -85,7 +93,11 @@ export async function getCurrentUser(): Promise<User> {
     throw new Error("Not authenticated");
   }
 
-  return response.json();
+  try {
+    return await response.json();
+  } catch {
+    throw new Error("Failed to parse user data");
+  }
 }
 
 // Logout
@@ -111,30 +123,30 @@ export async function getProfile(): Promise<User> {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to fetch profile");
+    try {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to fetch profile");
+    } catch {
+      throw new Error(`Failed to fetch profile: ${response.statusText}`);
+    }
   }
 
   return response.json();
 }
 
-export async function updateProfile(data: {
-  firstname: string;
-  lastname: string;
-  username: string;
-  email: string;
-}): Promise<User> {
-  const response = await fetch(`${API_BASE_URL}/profile`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    body: JSON.stringify(data),
-  });
+export async function updateProfile(data: User, rolePrefix: string) {
+  const response = await fetch(
+    `${API_BASE_URL}/${rolePrefix}/profile`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(data),
+    }
+  );
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Profile update failed");
+    throw new Error("Failed to update profile");
   }
 
   return response.json();

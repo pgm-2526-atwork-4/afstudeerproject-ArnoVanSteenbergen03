@@ -1,17 +1,6 @@
-import { User, AuthResponse } from "@/types";
+import { User, AuthResponse, LoginCredentials, RegisterCredentials } from "@/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-export interface RegisterCredentials extends LoginCredentials {
-  firstname: string;
-  lastname: string;
-  role: string;
-}
 
 // Register
 export async function register(

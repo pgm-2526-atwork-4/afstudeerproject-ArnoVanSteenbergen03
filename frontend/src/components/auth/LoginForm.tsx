@@ -84,17 +84,19 @@ export function LoginForm() {
             onChange={(e) => handlePasswordChange(e.target.value)}
             className="px-4 py-4 bg-white border-2 border-slate-400 rounded-2xl placeholder-slate-500 focus:outline-none focus:border-orange-600 text-slate-800"
           />
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 h-auto w-auto p-0"
           >
             {showPassword ? (
               <EyeOff className="w-5 h-5" />
             ) : (
               <Eye className="w-5 h-5" />
             )}
-          </button>
+          </Button>
         </div>
       </div>
 

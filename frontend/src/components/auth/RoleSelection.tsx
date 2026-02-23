@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -54,7 +54,7 @@ export default function RoleSelection({ onRoleSelect }: RoleSelectionProps) {
                 className="border-2 border-slate-300 rounded-2xl overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
                 onClick={() => onRoleSelect(role.id)}
               >
-                <div className="space-y-3 p-4">
+                <CardContent className="space-y-3 p-4">
                   <div className="w-full h-32 bg-slate-200 rounded-xl overflow-hidden relative">
                     <Image
                       src={role.image}
@@ -71,7 +71,7 @@ export default function RoleSelection({ onRoleSelect }: RoleSelectionProps) {
                   <p className="text-sm text-slate-600 text-center">
                     {role.description}
                   </p>
-                </div>
+                </CardContent>
               </Card>
             ))}
           </div>

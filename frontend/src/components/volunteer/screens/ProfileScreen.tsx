@@ -2,6 +2,9 @@
 
 import { User } from "@/types";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
@@ -119,24 +122,24 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
 
         <div className="w-full space-y-6">
           {errors.general && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-              {errors.general}
-            </div>
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{errors.general}</AlertDescription>
+            </Alert>
           )}
 
           <div>
-            <label className="block text-sm font-semibold text-slate-800 mb-2">
+            <Label className="block text-sm font-semibold text-slate-800 mb-2">
               Name:
-            </label>
-            <input
+            </Label>
+            <Input
               type="text"
               value={formData.firstname}
               onChange={(e) => handleInputChange("firstname", e.target.value)}
               readOnly={!isEditing}
-              className={`w-full py-2 text-slate-800 focus:outline-none transition-all rounded ${
+              className={`w-full py-2 text-slate-800 transition-all rounded ${
                 isEditing
-                  ? `bg-white px-3 border-2 ${errors.firstname ? "border-red-500" : "border-slate-800"} focus:border-blue-600`
-                  : "bg-transparent border-b-2 border-slate-800"
+                  ? `bg-white px-3 border-2 ${errors.firstname ? "border-red-500" : "border-slate-800"} focus-visible:border-blue-600 focus-visible:ring-0`
+                  : "bg-transparent border-b-2 border-slate-800 focus-visible:ring-0 focus-visible:border-slate-800 cursor-default"
               }`}
             />
             {errors.firstname && (
@@ -145,18 +148,18 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-slate-800 mb-2">
+            <Label className="block text-sm font-semibold text-slate-800 mb-2">
               Last name:
-            </label>
-            <input
+            </Label>
+            <Input
               type="text"
               value={formData.lastname}
               onChange={(e) => handleInputChange("lastname", e.target.value)}
               readOnly={!isEditing}
-              className={`w-full py-2 text-slate-800 focus:outline-none transition-all rounded ${
+              className={`w-full py-2 text-slate-800 transition-all rounded ${
                 isEditing
-                  ? `bg-white px-3 border-2 ${errors.lastname ? "border-red-500" : "border-slate-800"} focus:border-blue-600`
-                  : "bg-transparent border-b-2 border-slate-800"
+                  ? `bg-white px-3 border-2 ${errors.lastname ? "border-red-500" : "border-slate-800"} focus-visible:border-blue-600 focus-visible:ring-0`
+                  : "bg-transparent border-b-2 border-slate-800 focus-visible:ring-0 focus-visible:border-slate-800 cursor-default"
               }`}
             />
             {errors.lastname && (
@@ -165,18 +168,18 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-slate-800 mb-2">
+            <Label className="block text-sm font-semibold text-slate-800 mb-2">
               Nickname:
-            </label>
-            <input
+            </Label>
+            <Input
               type="text"
               value={formData.username}
               onChange={(e) => handleInputChange("username", e.target.value)}
               readOnly={!isEditing}
-              className={`w-full py-2 text-slate-800 focus:outline-none transition-all rounded ${
+              className={`w-full py-2 text-slate-800 transition-all rounded ${
                 isEditing
-                  ? `bg-white px-3 border-2 ${errors.username ? "border-red-500" : "border-slate-800"} focus:border-slate-600`
-                  : "bg-transparent border-b-2 border-slate-800"
+                  ? `bg-white px-3 border-2 ${errors.username ? "border-red-500" : "border-slate-800"} focus-visible:border-slate-600 focus-visible:ring-0`
+                  : "bg-transparent border-b-2 border-slate-800 focus-visible:ring-0 focus-visible:border-slate-800 cursor-default"
               }`}
             />
             {errors.username && (
@@ -185,18 +188,18 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-slate-800 mb-2">
+            <Label className="block text-sm font-semibold text-slate-800 mb-2">
               E-mail:
-            </label>
-            <input
+            </Label>
+            <Input
               type="email"
               value={formData.email}
               onChange={(e) => handleInputChange("email", e.target.value)}
               readOnly={!isEditing}
-              className={`w-full py-2 text-slate-800 focus:outline-none transition-all rounded ${
+              className={`w-full py-2 text-slate-800 transition-all rounded ${
                 isEditing
-                  ? `bg-white px-3 border-2 ${errors.email ? "border-red-500" : "border-slate-800"} focus:border-slate-600`
-                  : "bg-transparent border-b-2 border-slate-800"
+                  ? `bg-white px-3 border-2 ${errors.email ? "border-red-500" : "border-slate-800"} focus-visible:border-slate-600 focus-visible:ring-0`
+                  : "bg-transparent border-b-2 border-slate-800 focus-visible:ring-0 focus-visible:border-slate-800 cursor-default"
               }`}
             />
             {errors.email && (
@@ -205,15 +208,12 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-slate-800 mb-2">
+            <Label className="block text-sm font-semibold text-slate-800 mb-2">
               Role:
-            </label>
-            <input
-              type="text"
-              value={user.roles?.join(", ") || ""}
-              readOnly
-              className="w-full border-2 border-slate-800 bg-gray-100 py-2 px-3 text-slate-800 focus:outline-none text-gray-600 rounded"
-            />
+            </Label>
+            <p className="py-2 text-slate-800 capitalize">
+              {user.roles?.join(", ") || ""}
+            </p>
           </div>
         </div>
 

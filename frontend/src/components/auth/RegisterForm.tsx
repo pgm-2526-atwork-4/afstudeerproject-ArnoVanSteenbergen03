@@ -10,6 +10,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { Footer } from "@/components/Footer";
+import { registerSchema } from "@shared/schemas/auth";
+import { z } from "zod/v4";
 
 interface RegisterFormProps {
   role: string;
@@ -33,14 +35,20 @@ export function RegisterForm({ role, onBack }: RegisterFormProps) {
     e.preventDefault();
     setError("");
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
-      return;
+    try {
+      registerSchema.parse({
+        email,
+        firstname: firstName,
+        lastname: lastName,
+        password,
+        confirmPassword,
+        role,
+      });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        setError(err.issues[0].message);
+        return;
+      }
     }
 
     setLoading(true);
@@ -53,6 +61,10 @@ export function RegisterForm({ role, onBack }: RegisterFormProps) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const clearError = () => {
+    if (error) setError("");
   };
 
   return (
@@ -88,8 +100,7 @@ export function RegisterForm({ role, onBack }: RegisterFormProps) {
                 type="text"
                 placeholder="First name"
                 value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                required
+                onChange={(e) => { setFirstName(e.target.value); clearError(); }}
                 className="px-4 py-4 bg-white border-2 border-slate-400 rounded-2xl placeholder-slate-500 focus:outline-none focus:border-orange-600"
               />
             </div>
@@ -103,8 +114,7 @@ export function RegisterForm({ role, onBack }: RegisterFormProps) {
                 type="text"
                 placeholder="Last name"
                 value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                required
+                onChange={(e) => { setLastName(e.target.value); clearError(); }}
                 className="px-4 py-4 bg-white border-2 border-slate-400 rounded-2xl placeholder-slate-500 focus:outline-none focus:border-orange-600"
               />
             </div>
@@ -118,8 +128,7 @@ export function RegisterForm({ role, onBack }: RegisterFormProps) {
                 type="email"
                 placeholder="E-mail"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+                onChange={(e) => { setEmail(e.target.value); clearError(); }}
                 className="px-4 py-4 bg-white border-2 border-slate-400 rounded-2xl placeholder-slate-500 focus:outline-none focus:border-orange-600"
               />
             </div>
@@ -134,8 +143,7 @@ export function RegisterForm({ role, onBack }: RegisterFormProps) {
                   type={showPassword ? "text" : "password"}
                   placeholder="Password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
+                  onChange={(e) => { setPassword(e.target.value); clearError(); }}
                   className="px-4 py-4 bg-white border-2 border-slate-400 rounded-2xl placeholder-slate-500 focus:outline-none focus:border-orange-600"
                 />
                 <button
@@ -165,8 +173,7 @@ export function RegisterForm({ role, onBack }: RegisterFormProps) {
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="Repeat password"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
+                  onChange={(e) => { setConfirmPassword(e.target.value); clearError(); }}
                   className="px-4 py-4 bg-white border-2 border-slate-400 rounded-2xl placeholder-slate-500 focus:outline-none focus:border-orange-600"
                 />
                 <button

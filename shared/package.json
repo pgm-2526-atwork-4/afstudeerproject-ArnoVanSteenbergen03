@@ -1,0 +1,8 @@
+{
+  "name": "@shared/validators",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "dependencies": {
+    "zod": "^4.3.6"
+  }
+}

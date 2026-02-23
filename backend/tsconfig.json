@@ -8,6 +8,7 @@
     "baseUrl": "./src",
     "paths": {
       "@/*": ["./*"],
+      "@shared/*": ["../../shared/*"],
       "@config/*": ["./config/*"],
       "@db/*": ["./db/*"],
       "@middleware/*": ["./middleware/*"],

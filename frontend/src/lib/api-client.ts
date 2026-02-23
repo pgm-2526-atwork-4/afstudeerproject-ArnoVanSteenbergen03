@@ -27,12 +27,15 @@ export async function register(
   });
 
   if (!response.ok) {
+    let errorMessage = "Registration failed";
     try {
       const error = await response.json();
-      throw new Error(error.error || "Registration failed");
+      errorMessage = error.error || errorMessage;
     } catch {
-      throw new Error(`Registration failed: ${response.statusText}`);
+      // JSON parsing failed, use status text
+      errorMessage = `Registration failed: ${response.statusText}`;
     }
+    throw new Error(errorMessage);
   }
 
   // Wait for session to be established
@@ -61,12 +64,15 @@ export async function login(
   });
 
   if (!response.ok) {
+    let errorMessage = "Login failed";
     try {
       const error = await response.json();
-      throw new Error(error.error || "Login failed");
+      errorMessage = error.error || errorMessage;
     } catch {
-      throw new Error(`Login failed: ${response.statusText}`);
+      // JSON parsing failed, use status text
+      errorMessage = `Login failed: ${response.statusText}`;
     }
+    throw new Error(errorMessage);
   }
 
   // Wait for session to be established
@@ -146,7 +152,14 @@ export async function updateProfile(data: User, rolePrefix: string) {
   );
 
   if (!response.ok) {
-    throw new Error("Failed to update profile");
+    let errorMessage = "Failed to update profile";
+    try {
+      const error = await response.json();
+      errorMessage = error.error || errorMessage;
+    } catch {
+      // JSON parsing failed
+    }
+    throw new Error(errorMessage);
   }
 
   return response.json();

@@ -5,6 +5,8 @@ import { userRoles, users, roles } from "@/db/schema";
 import bcrypt from "bcrypt";
 import { eq } from "drizzle-orm";
 import { requireAuth, requireRoles } from "@/middleware/auth";
+import { registerApiSchema, loginSchema } from "@shared/schemas/auth";
+import { z } from "zod/v4";
 
 const router = Router();
 
@@ -24,11 +26,8 @@ router.post(
 // Register
 router.post("/register", async (req: Request, res: Response) => {
   try {
-    const { email, firstname, lastname, password, role } = req.body;
-
-    if (!email || !firstname || !lastname || !password || !role) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
+    const validated = registerApiSchema.parse(req.body);
+    const { email, firstname, lastname, password, role } = validated;
 
     const existingUser = await db.query.users.findFirst({
       where: eq(users.email, email),
@@ -38,14 +37,15 @@ router.post("/register", async (req: Request, res: Response) => {
       return res.status(409).json({ error: "Email already registered" });
     }
 
-    // Auto-generate username from first + last name
     let username = `${firstname}${lastname}`.toLowerCase();
     let counter = 1;
-    
+
     // Check if username already exists, add number if it does
-    while (await db.query.users.findFirst({
-      where: eq(users.username, username),
-    })) {
+    while (
+      await db.query.users.findFirst({
+        where: eq(users.username, username),
+      })
+    ) {
       username = `${firstname}${lastname}${counter}`.toLowerCase();
       counter++;
     }
@@ -90,13 +90,23 @@ router.post("/register", async (req: Request, res: Response) => {
       });
     });
   } catch (error: any) {
-    console.error("Registration error:", error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: z.prettifyError(error) });
+    }
     res.status(500).json({ error: "Registration failed" });
   }
 });
 
 // Login
 router.post("/login", (req: Request, res: Response, next: NextFunction) => {
+  try {
+    loginSchema.parse(req.body);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: z.prettifyError(error) });
+    }
+  }
+
   passport.authenticate("local", (err: any, user: any, info: any) => {
     if (err) {
       return res.status(500).json({ error: "Server error" });

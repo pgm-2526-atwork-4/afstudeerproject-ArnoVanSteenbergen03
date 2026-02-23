@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { updateProfile } from "@/lib/api-client";
+import { updateProfileSchema } from "@shared/schemas/profile";
+import { z } from "zod/v4";
 
 interface ProfileScreenProps {
   user: User;
@@ -16,6 +18,7 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
   const { logout } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     firstname: user.firstname || "",
     lastname: user.lastname || "",
@@ -40,20 +43,40 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
       ...prev,
       [field]: value,
     }));
+    if (errors[field]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   const handleSave = async () => {
+    setErrors({});
     try {
       setIsLoading(true);
-      await updateProfile({
+      const validated = updateProfileSchema.parse({
         firstname: formData.firstname,
         lastname: formData.lastname,
         username: formData.username,
         email: formData.email,
-      }, "provider");
+      });
+      await updateProfile(validated, "provider");
       setIsEditing(false);
     } catch (error) {
-      console.error("Save failed:", error);
+      if (error instanceof z.ZodError) {
+        const fieldErrors: Record<string, string> = {};
+        error.issues.forEach((issue) => {
+          const field = issue.path[0] as string;
+          if (!fieldErrors[field]) {
+            fieldErrors[field] = issue.message;
+          }
+        });
+        setErrors(fieldErrors);
+        return;
+      }
+      setErrors({ general: error instanceof Error ? error.message : "Save failed. Please try again." });
     } finally {
       setIsLoading(false);
     }
@@ -66,6 +89,7 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
       username: user.username,
       email: user.email,
     });
+    setErrors({});
     setIsEditing(false);
   };
 
@@ -94,6 +118,12 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
         </Button>
 
         <div className="w-full space-y-6">
+          {errors.general && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {errors.general}
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-semibold text-slate-800 mb-2">
               Name:
@@ -105,10 +135,13 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
               readOnly={!isEditing}
               className={`w-full py-2 text-slate-800 focus:outline-none transition-all rounded ${
                 isEditing
-                  ? "bg-white px-3 border-2 border-slate-800 focus:border-blue-600"
+                  ? `bg-white px-3 border-2 ${errors.firstname ? "border-red-500" : "border-slate-800"} focus:border-blue-600`
                   : "bg-transparent border-b-2 border-slate-800"
               }`}
             />
+            {errors.firstname && (
+              <span className="text-red-500 text-sm mt-1">{errors.firstname}</span>
+            )}
           </div>
 
           <div>
@@ -122,10 +155,13 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
               readOnly={!isEditing}
               className={`w-full py-2 text-slate-800 focus:outline-none transition-all rounded ${
                 isEditing
-                  ? "bg-white px-3 border-2 border-slate-800 focus:border-blue-600"
+                  ? `bg-white px-3 border-2 ${errors.lastname ? "border-red-500" : "border-slate-800"} focus:border-blue-600`
                   : "bg-transparent border-b-2 border-slate-800"
               }`}
             />
+            {errors.lastname && (
+              <span className="text-red-500 text-sm mt-1">{errors.lastname}</span>
+            )}
           </div>
 
           <div>
@@ -139,10 +175,13 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
               readOnly={!isEditing}
               className={`w-full py-2 text-slate-800 focus:outline-none transition-all rounded ${
                 isEditing
-                  ? "bg-white px-3 border-2 border-slate-800 focus:border-slate-600"
+                  ? `bg-white px-3 border-2 ${errors.username ? "border-red-500" : "border-slate-800"} focus:border-slate-600`
                   : "bg-transparent border-b-2 border-slate-800"
               }`}
             />
+            {errors.username && (
+              <span className="text-red-500 text-sm mt-1">{errors.username}</span>
+            )}
           </div>
 
           <div>
@@ -156,10 +195,13 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
               readOnly={!isEditing}
               className={`w-full py-2 text-slate-800 focus:outline-none transition-all rounded ${
                 isEditing
-                  ? "bg-white px-3 border-2 border-slate-800 focus:border-slate-600"
+                  ? `bg-white px-3 border-2 ${errors.email ? "border-red-500" : "border-slate-800"} focus:border-slate-600`
                   : "bg-transparent border-b-2 border-slate-800"
               }`}
             />
+            {errors.email && (
+              <span className="text-red-500 text-sm mt-1">{errors.email}</span>
+            )}
           </div>
 
           <div>

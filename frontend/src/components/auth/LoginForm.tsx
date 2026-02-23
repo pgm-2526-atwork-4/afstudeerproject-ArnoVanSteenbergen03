@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff } from "lucide-react";
+import { loginSchema } from "@shared/schemas/auth";
+import { z } from "zod/v4";
 
 export function LoginForm() {
   const router = useRouter();
@@ -21,6 +23,16 @@ export function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    try {
+      loginSchema.parse({ email, password });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        setError(err.issues[0].message);
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
@@ -31,6 +43,16 @@ export function LoginForm() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    if (error) setError("");
+  };
+
+  const handlePasswordChange = (value: string) => {
+    setPassword(value);
+    if (error) setError("");
   };
 
   return (
@@ -44,8 +66,7 @@ export function LoginForm() {
           type="email"
           placeholder="E-mail"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
+          onChange={(e) => handleEmailChange(e.target.value)}
           className="px-4 py-4 bg-white border-2 border-slate-400 rounded-2xl placeholder-slate-500 focus:outline-none focus:border-orange-600 text-slate-800"
         />
       </div>
@@ -60,8 +81,7 @@ export function LoginForm() {
             type={showPassword ? "text" : "password"}
             placeholder="Password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
+            onChange={(e) => handlePasswordChange(e.target.value)}
             className="px-4 py-4 bg-white border-2 border-slate-400 rounded-2xl placeholder-slate-500 focus:outline-none focus:border-orange-600 text-slate-800"
           />
           <button

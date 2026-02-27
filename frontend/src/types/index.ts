@@ -5,8 +5,10 @@ export {
   type LoginCredentials,
   type RegisterCredentials,
   type AuthContextType,
+  type DistributionCenter,
   userSchema,
   authResponseSchema,
   loginCredentialsSchema,
   registerCredentialsSchema,
+  distributionCenterSchema,
 } from "@shared/schemas/types";

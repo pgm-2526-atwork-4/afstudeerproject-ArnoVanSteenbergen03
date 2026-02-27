@@ -1,4 +1,4 @@
-import { User, AuthResponse, LoginCredentials, RegisterCredentials } from "@/types";
+import { User, AuthResponse, LoginCredentials, RegisterCredentials, DistributionCenter } from "@/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -21,7 +21,6 @@ export async function register(
       const error = await response.json();
       errorMessage = error.error || errorMessage;
     } catch {
-      // JSON parsing failed, use status text
       errorMessage = `Registration failed: ${response.statusText}`;
     }
     throw new Error(errorMessage);
@@ -58,7 +57,6 @@ export async function login(
       const error = await response.json();
       errorMessage = error.error || errorMessage;
     } catch {
-      // JSON parsing failed, use status text
       errorMessage = `Login failed: ${response.statusText}`;
     }
     throw new Error(errorMessage);
@@ -149,9 +147,55 @@ export async function updateProfile(
       const error = await response.json();
       errorMessage = error.error || errorMessage;
     } catch {
-      // JSON parsing failed
     }
     throw new Error(errorMessage);
+  }
+
+  return response.json();
+}
+
+//// Distribution Centers API calls
+
+export async function getDistributionCenters() {
+  const response = await fetch(`${API_BASE_URL}/admin/distro`, {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    try {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to fetch distribution centers");
+    } catch {
+      throw new Error(`Failed to fetch distribution centers: ${response.statusText}`);
+    }
+  }
+
+  return response.json();
+}
+
+
+export async function updateDistributionCenter(
+  id: string,
+  data: Partial<DistributionCenter>,
+) {
+  const response = await fetch(`${API_BASE_URL}/admin/distro/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    try {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to update distribution center");
+    } catch {
+      throw new Error(`Failed to update distribution center: ${response.statusText}`);
+    }
   }
 
   return response.json();

@@ -129,7 +129,10 @@ export async function getProfile(): Promise<User> {
   return response.json();
 }
 
-export async function updateProfile(data: User, rolePrefix: string) {
+export async function updateProfile(
+  data: { firstname: string; lastname: string; username: string; email: string },
+  rolePrefix: string,
+) {
   const response = await fetch(
     `${API_BASE_URL}/${rolePrefix}/profile`,
     {

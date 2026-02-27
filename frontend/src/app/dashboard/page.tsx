@@ -18,6 +18,8 @@ export default function DashboardPage() {
       router.push("/provider");
     } else if (user?.roles?.includes("volunteer")) {
       router.push("/volunteer");
+    } else if (user?.roles?.includes("admin")) {
+      router.push("/admin");
     }
   }, [user, loading, router]);
 

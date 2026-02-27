@@ -7,6 +7,7 @@ import authRouter from "@/routes/auth";
 import "@/config/passport";
 import providerRouter from "@/routes/provider/index";
 import volunteerRouter from "@/routes/volunteer/index";
+import adminRouter from "@/routes/admin/index";
 
 dotenv.config();
 
@@ -51,6 +52,7 @@ app.use("/api/auth", authRouter);
 // Role-based routes
 app.use("/api/provider", providerRouter);
 app.use("/api/volunteer", volunteerRouter);
+app.use("/api/admin", adminRouter);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

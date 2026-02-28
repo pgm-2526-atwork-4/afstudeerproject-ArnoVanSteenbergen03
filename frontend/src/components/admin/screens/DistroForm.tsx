@@ -1,6 +1,7 @@
 "use client";
 
 import { DistributionCenter } from "@/types";
+import { useOperatingInfo } from "@/hooks/useOperatingInfo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,21 +23,17 @@ export default function DistroForm({
   isLoading = false,
   error,
 }: DistroFormProps) {
+  const { operatingInfo, days, toggleDay, updateTime, isDayOpen, getHours } =
+    useOperatingInfo(initialData?.operatingInfo);
+
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
-    type: (initialData?.type as "provider" | "distribution_center") || "distribution_center",
+    type:
+      (initialData?.type as "provider" | "distribution_center") ||
+      "distribution_center",
     contactInfo: {
       phone: initialData?.contactInfo?.phone || "",
       email: initialData?.contactInfo?.email || "",
-    },
-    operatingInfo: {
-      monday: initialData?.operatingInfo?.monday || "",
-      tuesday: initialData?.operatingInfo?.tuesday || "",
-      wednesday: initialData?.operatingInfo?.wednesday || "",
-      thursday: initialData?.operatingInfo?.thursday || "",
-      friday: initialData?.operatingInfo?.friday || "",
-      saturday: initialData?.operatingInfo?.saturday || "",
-      sunday: initialData?.operatingInfo?.sunday || "",
     },
     coordinates: {
       lat: initialData?.geojson?.coordinates[1] || 0,
@@ -52,9 +49,9 @@ export default function DistroForm({
   };
 
   const handleNestedChange = (
-    section: "contactInfo" | "operatingInfo" | "coordinates",
+    section: "contactInfo" | "coordinates",
     field: string,
-    value: string | number
+    value: string | number,
   ) => {
     setFormData((prev) => {
       if (section === "contactInfo") {
@@ -62,14 +59,6 @@ export default function DistroForm({
           ...prev,
           contactInfo: {
             ...prev.contactInfo,
-            [field]: value,
-          },
-        };
-      } else if (section === "operatingInfo") {
-        return {
-          ...prev,
-          operatingInfo: {
-            ...prev.operatingInfo,
             [field]: value,
           },
         };
@@ -93,7 +82,7 @@ export default function DistroForm({
       name: formData.name,
       type: formData.type,
       contactInfo: formData.contactInfo,
-      operatingInfo: formData.operatingInfo,
+      operatingInfo,
       geojson: {
         type: "Point",
         coordinates: [formData.coordinates.lng, formData.coordinates.lat],
@@ -156,7 +145,9 @@ export default function DistroForm({
                   onChange={(e) => handleChange("type", e.target.value)}
                   className="w-full px-3 py-2 border-2 border-slate-800 rounded"
                 >
-                  <option value="distribution_center">Distribution Center</option>
+                  <option value="distribution_center">
+                    Distribution Center
+                  </option>
                   <option value="provider">Provider</option>
                 </select>
               </div>
@@ -204,29 +195,63 @@ export default function DistroForm({
               Operating Hours
             </h2>
 
-            <div className="grid grid-cols-2 gap-4">
-              {["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].map(
-                (day) => (
-                  <div key={day}>
-                    <Label className="block text-sm font-semibold text-slate-800 mb-2">
-                      {day.charAt(0).toUpperCase() + day.slice(1)}
-                    </Label>
-                    <Input
-                      type="text"
-                      placeholder="e.g., 9AM-5PM"
-                      value={
-                        formData.operatingInfo[
-                          day as keyof typeof formData.operatingInfo
-                        ]
-                      }
-                      onChange={(e) =>
-                        handleNestedChange("operatingInfo", day, e.target.value)
-                      }
-                      className="w-full px-3 py-2 border-2 border-slate-800 rounded text-sm"
-                    />
+            <div className="space-y-4">
+              {days.map((day) => (
+                <div
+                  key={day}
+                  className="border-2 border-slate-300 rounded-lg p-4"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-slate-800 capitalize">
+                      {day}
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => toggleDay(day)}
+                      className={`px-3 py-1 rounded text-sm font-semibold transition-colors ${
+                        isDayOpen(day)
+                          ? "bg-green-500 text-white"
+                          : "bg-slate-300 text-slate-600"
+                      }`}
+                    >
+                      {isDayOpen(day) ? "Open" : "Closed"}
+                    </button>
                   </div>
-                )
-              )}
+
+                  {isDayOpen(day) && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="block text-sm font-semibold text-slate-800 mb-2">
+                          Opens
+                        </Label>
+                        <Input
+                          type="time"
+                          value={getHours(day)?.open || ""}
+                          onChange={(e) =>
+                            updateTime(day, "open", e.target.value)
+                          }
+                          className="w-full px-3 py-2 border-2 border-slate-800 rounded"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label className="block text-sm font-semibold text-slate-800 mb-2">
+                          Closes
+                        </Label>
+                        <Input
+                          type="time"
+                          value={getHours(day)?.close || ""}
+                          onChange={(e) =>
+                            updateTime(day, "close", e.target.value)
+                          }
+                          className="w-full px-3 py-2 border-2 border-slate-800 rounded"
+                          required
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
 
@@ -248,7 +273,7 @@ export default function DistroForm({
                     handleNestedChange(
                       "coordinates",
                       "lat",
-                      parseFloat(e.target.value)
+                      parseFloat(e.target.value),
                     )
                   }
                   className="w-full px-3 py-2 border-2 border-slate-800 rounded"
@@ -268,7 +293,7 @@ export default function DistroForm({
                     handleNestedChange(
                       "coordinates",
                       "lng",
-                      parseFloat(e.target.value)
+                      parseFloat(e.target.value),
                     )
                   }
                   className="w-full px-3 py-2 border-2 border-slate-800 rounded"
@@ -287,8 +312,8 @@ export default function DistroForm({
               {isLoading
                 ? "Saving..."
                 : initialData
-                ? "Update Center"
-                : "Create Center"}
+                  ? "Update Center"
+                  : "Create Center"}
             </Button>
             <Link href="/admin/distribution-centers" className="flex-1">
               <Button

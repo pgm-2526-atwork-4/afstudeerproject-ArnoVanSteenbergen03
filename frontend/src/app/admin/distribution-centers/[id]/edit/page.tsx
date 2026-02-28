@@ -30,7 +30,7 @@ export default function EditDistributionCenterPage() {
             method: "GET",
             credentials: "include",
             cache: "no-store",
-          }
+          },
         );
 
         if (!response.ok) {
@@ -78,12 +78,14 @@ export default function EditDistributionCenterPage() {
           },
           credentials: "include",
           body: JSON.stringify(data),
-        }
+        },
       );
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to update distribution center");
+        throw new Error(
+          errorData.error || "Failed to update distribution center",
+        );
       }
 
       router.push("/admin/distribution-centers");

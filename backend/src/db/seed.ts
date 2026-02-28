@@ -84,7 +84,15 @@ async function main() {
           coordinates: [faker.location.longitude(), faker.location.latitude()],
         },
         type: i < 4 ? "provider" : "distribution_center",
-        operatingInfo: { opens: "08:00", closes: "17:00" },
+        operatingInfo: {
+          monday: { open: "08:00", close: "17:00" },
+          tuesday: { open: "08:00", close: "17:00" },
+          wednesday: { open: "08:00", close: "17:00" },
+          thursday: { open: "08:00", close: "17:00" },
+          friday: { open: "08:00", close: "16:00" },
+          saturday: null,
+          sunday: null,
+        },
         contactInfo: {
           phone: faker.phone.number(),
           email: faker.internet.email(),

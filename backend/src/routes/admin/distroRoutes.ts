@@ -2,7 +2,7 @@ import { Router, Request, Response } from "express";
 import { db } from "@/config/database";
 import { places } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { distributionCenterSchema } from "@shared/schemas/types";
+import { distributionCenterSchema } from "@shared/index";
 
 const router = Router();
 
@@ -91,7 +91,10 @@ router.put("/:id", async (req: Request, res: Response) => {
     res.json(updated[0]);
   } catch (error) {
     console.error("Update place error:", error);
-    res.status(500).json({ error: "Failed to update distribution center" });
+    res.status(500).json({ 
+      error: "Failed to update distribution center",
+      details: error instanceof Error ? error.message : "Unknown error"
+    });
   }
 });
 

@@ -1,4 +1,4 @@
-// Re-export all types from shared Zod schemas (single source of truth)
+// Re-export all types from shared (single source of truth)
 export {
   type User,
   type AuthResponse,
@@ -6,9 +6,13 @@ export {
   type RegisterCredentials,
   type AuthContextType,
   type DistributionCenter,
+  type OperatingInfo,
+  type TimeRange,
   userSchema,
   authResponseSchema,
   loginCredentialsSchema,
   registerCredentialsSchema,
   distributionCenterSchema,
-} from "@shared/schemas/types";
+  operatingInfoSchema,
+  timeRangeSchema,
+} from "@shared/index";

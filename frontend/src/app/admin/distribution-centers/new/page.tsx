@@ -33,18 +33,23 @@ export default function NewDistributionCenterPage() {
       setIsSubmitting(true);
       setError(null);
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/distro`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/distro`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(data),
         },
-        credentials: "include",
-        body: JSON.stringify(data),
-      });
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create distribution center");
+        throw new Error(
+          errorData.error || "Failed to create distribution center",
+        );
       }
 
       router.push("/admin/distribution-centers");
@@ -57,7 +62,11 @@ export default function NewDistributionCenterPage() {
 
   return (
     <>
-      <DistroForm onSubmit={handleSubmit} isLoading={isSubmitting} error={error} />
+      <DistroForm
+        onSubmit={handleSubmit}
+        isLoading={isSubmitting}
+        error={error}
+      />
       <AdminNavigation />
     </>
   );

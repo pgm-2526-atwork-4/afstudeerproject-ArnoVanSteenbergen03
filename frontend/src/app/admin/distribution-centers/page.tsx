@@ -15,7 +15,7 @@ export default function DistributionCentersPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   useRequireRole("admin");
-  
+
   const [centers, setCenters] = useState<DistributionCenter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +28,9 @@ export default function DistributionCentersPage() {
         setCenters(data);
         setError(null);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch centers");
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch centers",
+        );
         setCenters([]);
       } finally {
         setIsLoading(false);
@@ -72,7 +74,7 @@ export default function DistributionCentersPage() {
 
         <div className="max-w-4xl mx-auto w-full">
           <div className="mb-6">
-            <Button 
+            <Button
               onClick={() => router.push("/admin/distribution-centers/new")}
               className="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2"
             >
@@ -122,13 +124,20 @@ export default function DistributionCentersPage() {
                         )}
                         {center.operatingInfo && (
                           <p className="mt-2">
-                            <span className="font-semibold">Operating Hours:</span>
+                            <span className="font-semibold">
+                              Operating Hours:
+                            </span>
                             <br />
                             {Object.entries(center.operatingInfo)
                               .filter(([, value]) => value)
                               .map(([day, hours]) => (
                                 <span key={day} className="block text-xs">
-                                  {day.charAt(0).toUpperCase() + day.slice(1)}: {hours}
+                                  {day.charAt(0).toUpperCase() + day.slice(1)}:{" "}
+                                  {hours &&
+                                  typeof hours === "object" &&
+                                  "open" in hours
+                                    ? `${hours.open} - ${hours.close}`
+                                    : String(hours)}
                                 </span>
                               ))}
                           </p>
@@ -137,7 +146,11 @@ export default function DistributionCentersPage() {
                     </div>
                     <div className="flex gap-2">
                       <Button
-                        onClick={() => router.push(`/admin/distribution-centers/${center.id}/edit`)}
+                        onClick={() =>
+                          router.push(
+                            `/admin/distribution-centers/${center.id}/edit`,
+                          )
+                        }
                         variant="outline"
                         className="border-slate-800 text-slate-800 hover:bg-slate-100"
                       >

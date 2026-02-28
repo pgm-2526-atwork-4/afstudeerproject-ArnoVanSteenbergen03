@@ -51,36 +51,3 @@ export interface AuthContextType {
   ) => Promise<void>;
   logout: () => Promise<void>;
 }
-
-// Distribution Center schema
-
-export const distributionCenterSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  type: z.enum(["provider", "distribution_center"]),
-  geojson: z.object({
-    type: z.literal("Point"),
-    coordinates: z.tuple([z.number(), z.number()]),
-  }),
-  operatingInfo: z
-    .object({
-      monday: z.string().optional(),
-      tuesday: z.string().optional(),
-      wednesday: z.string().optional(),
-      thursday: z.string().optional(),
-      friday: z.string().optional(),
-      saturday: z.string().optional(),
-      sunday: z.string().optional(),
-    })
-    .optional(),
-  contactInfo: z
-    .object({
-      phone: z.string().optional(),
-      email: z.email().optional(),
-    })
-    .optional(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-
-export type DistributionCenter = z.infer<typeof distributionCenterSchema>;

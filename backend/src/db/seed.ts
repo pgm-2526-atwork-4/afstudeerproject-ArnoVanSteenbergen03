@@ -105,9 +105,9 @@ async function main() {
   const insertedVehicles = await db
     .insert(vehicles)
     .values([
-      { vehicleType: "bikebag", amount: 4 },
-      { vehicleType: "bikecart", amount: 2 },
-      { vehicleType: "van", amount: 1 },
+      { vehicleType: "bikebag", icon: "Backpack", amount: 4 },
+      { vehicleType: "bikecart", icon: "ShoppingCart", amount: 2 },
+      { vehicleType: "van", icon: "Truck", amount: 1 },
     ])
     .returning();
 

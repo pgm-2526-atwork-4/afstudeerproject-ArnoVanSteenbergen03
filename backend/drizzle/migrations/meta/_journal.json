@@ -50,6 +50,13 @@
       "when": 1771597669184,
       "tag": "0006_glamorous_robbie_robertson",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1772289035349,
+      "tag": "0007_unknown_slyde",
+      "breakpoints": true
     }
   ]
 }

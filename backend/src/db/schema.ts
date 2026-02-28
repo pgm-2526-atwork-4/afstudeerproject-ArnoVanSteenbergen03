@@ -99,6 +99,7 @@ export const foodItems = pgTable("food_items", {
 export const vehicles = pgTable("vehicles", {
   id: uuid("id").primaryKey().defaultRandom(),
   vehicleType: text("vehicle_type").notNull(), // Bikebags, bikecarts, ...?
+  icon: text("icon").notNull(), // Icon name or SVG string
   amount: integer("amount").notNull(), // Amount of vehicles stored (for later explansion)
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

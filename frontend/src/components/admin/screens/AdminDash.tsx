@@ -69,9 +69,7 @@ export default function AdminDash({ user }: AdminDashProps) {
                   key={stat.label}
                   className="bg-white border-2 border-slate-800 rounded-lg p-4 flex flex-col items-center justify-center"
                 >
-                  <IconComponent
-                    className={`w-8 h-8 mb-2 ${stat.color}`}
-                  />
+                  <IconComponent className={`w-8 h-8 mb-2 ${stat.color}`} />
                   <div className="text-2xl font-bold text-slate-800">
                     {stat.value}
                   </div>
@@ -85,36 +83,42 @@ export default function AdminDash({ user }: AdminDashProps) {
         </div>
 
         {/* Management Buttons */}
-        <div className="space-y-3 mb-8">
-          <Link href="/admin/suppliers">
-            <Button className="w-full bg-white border-2 border-slate-800 text-slate-800 hover:bg-slate-50 font-semibold py-3 rounded-lg flex items-center justify-between px-4">
-              <div className="flex items-center gap-3">
-                <Package className="w-5 h-5" />
-                <span>Manage Suppliers</span>
-              </div>
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </Link>
+        <div className="mb-8 space-y-4">
+          <div>
+            <Link href="/admin/suppliers">
+              <Button className="w-full bg-white border-2 border-slate-800 text-slate-800 hover:bg-slate-50 font-semibold py-3 rounded-lg flex items-center justify-between px-4">
+                <div className="flex items-center gap-3">
+                  <Package className="w-5 h-5" />
+                  <span>Manage Suppliers</span>
+                </div>
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
 
-          <Link href="/admin/distribution-centers">
-            <Button className="w-full bg-white border-2 border-slate-800 text-slate-800 hover:bg-slate-50 font-semibold py-3 rounded-lg flex items-center justify-between px-4">
-              <div className="flex items-center gap-3">
-                <Building2 className="w-5 h-5" />
-                <span>Manage Distribution Centers</span>
-              </div>
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </Link>
+          <div>
+            <Link href="/admin/distribution-centers">
+              <Button className="w-full bg-white border-2 border-slate-800 text-slate-800 hover:bg-slate-50 font-semibold py-3 rounded-lg flex items-center justify-between px-4">
+                <div className="flex items-center gap-3">
+                  <Building2 className="w-5 h-5" />
+                  <span>Manage Distribution Centers</span>
+                </div>
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
 
-          <Link href="/admin/users">
-            <Button className="w-full bg-white border-2 border-slate-800 text-slate-800 hover:bg-slate-50 font-semibold py-3 rounded-lg flex items-center justify-between px-4">
-              <div className="flex items-center gap-3">
-                <Users className="w-5 h-5" />
-                <span>Manage Users & Permissions</span>
-              </div>
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </Link>
+          <div>
+            <Link href="/admin/users">
+              <Button className="w-full bg-white border-2 border-slate-800 text-slate-800 hover:bg-slate-50 font-semibold py-3 rounded-lg flex items-center justify-between px-4">
+                <div className="flex items-center gap-3">
+                  <Users className="w-5 h-5" />
+                  <span>Manage Users & Permissions</span>
+                </div>
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Quick Stats */}
@@ -129,7 +133,9 @@ export default function AdminDash({ user }: AdminDashProps) {
                 className="flex justify-between items-center pb-3 border-b border-slate-200 last:border-b-0"
               >
                 <span className="text-sm text-slate-700">{stat.label}:</span>
-                <span className="font-semibold text-slate-800">{stat.value}</span>
+                <span className="font-semibold text-slate-800">
+                  {stat.value}
+                </span>
               </div>
             ))}
           </div>

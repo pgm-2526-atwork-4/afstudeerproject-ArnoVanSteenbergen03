@@ -9,6 +9,7 @@ import { useState } from "react";
 interface FoodItem {
   id: string;
   itemName: string;
+  allergies: string;
   servings: string;
   expirationDate: string;
   freezerItem: boolean;
@@ -26,6 +27,7 @@ export default function FoodDetailsStep({ onNext, onCancel }: FoodDetailsStepPro
     {
       id: "1",
       itemName: "",
+      allergies: "",
       servings: "",
       expirationDate: "",
       freezerItem: false,
@@ -41,6 +43,7 @@ export default function FoodDetailsStep({ onNext, onCancel }: FoodDetailsStepPro
       {
         id: String(Date.now()),
         itemName: "",
+        allergies: "",
         servings: "",
         expirationDate: "",
         freezerItem: false,
@@ -97,6 +100,21 @@ export default function FoodDetailsStep({ onNext, onCancel }: FoodDetailsStepPro
                   value={item.itemName}
                   onChange={(e) =>
                     updateFoodItem(item.id, "itemName", e.target.value)
+                  }
+                  className="w-full px-3 py-2 border-2 border-slate-800 rounded"
+                />
+              </div>
+
+              <div>
+                <Label className="block text-sm font-semibold text-slate-800 mb-2">
+                  Allergies <span className="text-slate-500">(optional)</span>
+                </Label>
+                <Input
+                  type="text"
+                  placeholder="e.g., Peanuts, Dairy"
+                  value={item.allergies}
+                  onChange={(e) =>
+                    updateFoodItem(item.id, "allergies", e.target.value)
                   }
                   className="w-full px-3 py-2 border-2 border-slate-800 rounded"
                 />

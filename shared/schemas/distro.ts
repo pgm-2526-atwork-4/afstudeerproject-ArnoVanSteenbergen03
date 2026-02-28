@@ -1,4 +1,3 @@
-// Distribution Center schema
 import { z } from "zod";
 
 // Time format per day

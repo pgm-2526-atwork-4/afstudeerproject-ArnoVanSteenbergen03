@@ -26,6 +26,11 @@ interface DeliveryStepProps {
   ) => void;
   submitting: boolean;
   error: string | null;
+  initialPickupAddress?: string;
+  initialVehicleId?: string;
+  initialNotes?: string;
+  initialPickupTime?: string;
+  isEditing?: boolean;
 }
 
 export default function DeliveryStep({
@@ -34,13 +39,18 @@ export default function DeliveryStep({
   onSubmit,
   submitting,
   error,
+  initialPickupAddress = "",
+  initialVehicleId = "",
+  initialNotes = "",
+  initialPickupTime = "",
+  isEditing = false,
 }: DeliveryStepProps) {
-  const [pickupAddress, setPickupAddress] = useState("");
-  const [selectedVehicle, setSelectedVehicle] = useState<string>("");
+  const [pickupAddress, setPickupAddress] = useState(initialPickupAddress);
+  const [selectedVehicle, setSelectedVehicle] = useState<string>(initialVehicleId);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
-  const [notes, setNotes] = useState("");
-  const [pickupTime, setPickupTime] = useState("");
+  const [notes, setNotes] = useState(initialNotes);
+  const [pickupTime, setPickupTime] = useState(initialPickupTime);
   const [validationError, setValidationError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -193,7 +203,10 @@ export default function DeliveryStep({
           disabled={submitting}
           className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3"
         >
-          {submitting ? "Creating Order..." : "Finish Order"}
+          {submitting 
+            ? (isEditing ? "Updating Order..." : "Creating Order...")
+            : (isEditing ? "Update Order" : "Finish Order")
+          }
         </Button>
       </div>
     </div>

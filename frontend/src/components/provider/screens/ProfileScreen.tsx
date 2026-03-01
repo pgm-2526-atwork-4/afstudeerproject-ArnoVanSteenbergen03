@@ -239,7 +239,7 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
           ) : (
             <Button
               onClick={() => setIsEditing(true)}
-              className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded"
+              className="w-full bg-[#2D3E2D] hover:bg-[#1D2E1D] text-white font-bold py-3 rounded"
             >
               Edit Profile
             </Button>

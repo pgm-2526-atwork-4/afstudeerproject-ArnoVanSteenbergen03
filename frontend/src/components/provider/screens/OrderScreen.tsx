@@ -2,7 +2,7 @@
 
 import { User, Order } from "@shared/index";
 import { Button } from "@/components/ui/button";
-import { FileText, ChevronDown } from "lucide-react";
+import { FileText, ChevronDown, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { getProviderOrders } from "@/lib/api-client";
@@ -12,6 +12,7 @@ export default function OrdersScreen({ user }: { user: User }) {
   const [activeTab, setActiveTab] = useState("active");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -73,7 +74,7 @@ export default function OrdersScreen({ user }: { user: User }) {
           onClick={() => setActiveTab("active")}
           className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
             activeTab === "active"
-              ? "bg-slate-800 text-white"
+              ? "bg-[#2D3E2D] text-white"
               : "bg-white text-slate-800 border-2 border-slate-800"
           }`}
         >
@@ -83,7 +84,7 @@ export default function OrdersScreen({ user }: { user: User }) {
           onClick={() => setActiveTab("completed")}
           className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
             activeTab === "completed"
-              ? "bg-slate-800 text-white"
+              ? "bg-[#2D3E2D] text-white"
               : "bg-white text-slate-800 border-2 border-slate-800"
           }`}
         >
@@ -134,33 +135,60 @@ export default function OrdersScreen({ user }: { user: User }) {
               {displayedOrders.map((order, index) => (
                 <div
                   key={order.id}
-                  className="bg-white border-2 border-slate-800 rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer"
+                  className="bg-white border-2 border-slate-800 rounded-lg p-6 hover:shadow-md transition-shadow"
                 >
                   <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-baseline gap-4">
-                      <h3 className="text-lg font-bold text-slate-800">
-                        #{index + 1}
-                      </h3>
-                      <p className="text-sm text-slate-600">
-                        {formatDate(order.pickupTime)}
-                      </p>
-                    </div>
-                    <ChevronDown className="w-5 h-5 text-slate-600" />
+                    <h3 className="text-lg font-bold text-slate-800">
+                      #{index + 1}
+                    </h3>
+                    <p className="text-sm text-slate-600">
+                      {formatDate(order.pickupTime)}
+                    </p>
                   </div>
 
-                  <p className="text-slate-800 font-semibold mb-3">
+                  <p className="text-slate-800 font-semibold mb-4">
                     {order.details?.orderType === "repeated"
                       ? "Recurring Order"
                       : "Food Delivery"}{" "}
                     {order.notes && `- ${order.notes}`}
                   </p>
 
-                  <div className="flex items-center gap-2 text-slate-600">
+                  <div className="flex items-center gap-2 text-slate-600 mb-4">
                     <span className="text-lg">📍</span>
                     <p className="text-sm">
                       {order.pickupAddress}
                     </p>
                   </div>
+
+                  <div className="flex gap-3 pt-4 border-t border-slate-200">
+                    <Link href="/provider/chatroom" className="flex-1">
+                      <button className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-slate-800 text-slate-800 rounded-lg hover:bg-slate-50 font-semibold transition-colors">
+                        <MessageCircle className="w-5 h-5" />
+                        Chat
+                      </button>
+                    </Link>
+                    <button
+                      onClick={() => setExpandedOrderId(expandedOrderId === order.id ? null : order.id)}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-slate-800 text-slate-800 rounded-lg hover:bg-slate-50 font-semibold transition-colors"
+                    >
+                      <ChevronDown
+                        className={`w-5 h-5 transition-transform ${
+                          expandedOrderId === order.id ? "rotate-180" : ""
+                        }`}
+                      />
+                      Details
+                    </button>
+                  </div>
+
+                  {expandedOrderId === order.id && (
+                    <div className="mt-4 pt-4 border-t border-slate-200">
+                      <Link href={`/provider/edit-order/${order.id}`} className="block">
+                        <Button className="w-full bg-[#2D3E2D] hover:bg-[#1D2E1D] text-white font-bold py-3 rounded">
+                          Edit Order
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

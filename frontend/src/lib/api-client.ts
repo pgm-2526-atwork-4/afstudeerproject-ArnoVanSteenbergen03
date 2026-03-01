@@ -271,3 +271,44 @@ export async function createOrder(data: CreateOrderInput) {
 
   return response.json();
 }
+
+// get order by id
+export async function getProviderOrderById(orderId: string) {
+  const response = await fetch(`${API_BASE_URL}/provider/orders/${orderId}`, {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    try {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to fetch order");
+    } catch {
+      throw new Error(`Failed to fetch order: ${response.statusText}`);
+    }
+  }
+
+  return response.json();
+}
+
+// update order
+export async function updateOrder(orderId: string, data: CreateOrderInput) {
+  const response = await fetch(`${API_BASE_URL}/provider/orders/${orderId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    try {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to update order");
+    } catch {
+      throw new Error(`Failed to update order: ${response.statusText}`);
+    }
+  }
+
+  return response.json();
+}

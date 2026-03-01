@@ -122,7 +122,7 @@ async function main() {
     .values(
       Array.from({ length: 15 }).map(() => ({
         providerId: pickOne(insertedUsers).id,
-        pickupLocationId: pickOne(providers).id,
+        pickupAddress: faker.location.streetAddress({ useFullAddress: true }),
         assignedCenterId: pickOne(centers).id,
         status: pickOne(["requested", "assigned", "completed"]),
         pickupTime: faker.date.soon({ days: 14 }),

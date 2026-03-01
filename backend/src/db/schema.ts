@@ -62,9 +62,7 @@ export const activities = pgTable("activities", {
   providerId: uuid("provider_id")
     .notNull()
     .references(() => users.id),
-  pickupLocationId: uuid("pickup_location_id")
-    .notNull()
-    .references(() => places.id),
+  pickupAddress: text("pickup_address").notNull(),
   assignedCenterId: uuid("assigned_center_id").references(() => places.id),
   status: varchar("status", { length: 50 }).notNull().default("requested"),
   pickupTime: timestamp("pickup_time").notNull(),
@@ -130,10 +128,6 @@ export const activitiesRelations = relations(activities, ({ one, many }) => ({
   provider: one(users, {
     fields: [activities.providerId],
     references: [users.id],
-  }),
-  pickupLocation: one(places, {
-    fields: [activities.pickupLocationId],
-    references: [places.id],
   }),
   assignedCenter: one(places, {
     fields: [activities.assignedCenterId],

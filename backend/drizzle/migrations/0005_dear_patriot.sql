@@ -1,1 +1,0 @@
-ALTER TABLE "food_items" ADD COLUMN "allergies" text;

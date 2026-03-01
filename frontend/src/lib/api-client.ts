@@ -1,6 +1,7 @@
-import { User, AuthResponse, LoginCredentials, RegisterCredentials, DistributionCenter } from "@/types";
+import { User, AuthResponse, LoginCredentials, RegisterCredentials, DistributionCenter, CreateOrderInput } from "@shared/index";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+////Auth calls
 
 // Register
 export async function register(
@@ -108,6 +109,7 @@ export async function logout(): Promise<void> {
 
 //// Profile API calls
 
+//get profile info
 export async function getProfile(): Promise<User> {
   const response = await fetch(`${API_BASE_URL}/profile`, {
     method: "GET",
@@ -127,6 +129,7 @@ export async function getProfile(): Promise<User> {
   return response.json();
 }
 
+//update profile info
 export async function updateProfile(
   data: { firstname: string; lastname: string; username: string; email: string },
   rolePrefix: string,
@@ -156,6 +159,8 @@ export async function updateProfile(
 
 //// Distribution Centers API calls
 
+//get distro center
+
 export async function getDistributionCenters() {
   const response = await fetch(`${API_BASE_URL}/admin/distro`, {
     method: "GET",
@@ -175,6 +180,7 @@ export async function getDistributionCenters() {
   return response.json();
 }
 
+//update distro center
 
 export async function updateDistributionCenter(
   id: string,
@@ -203,6 +209,7 @@ export async function updateDistributionCenter(
 
 //// Vehicles API calls
 
+//get all vehicles
 export async function getVehicles() {
   const response = await fetch(`${API_BASE_URL}/provider/vehicles`, {
     method: "GET",
@@ -216,6 +223,49 @@ export async function getVehicles() {
       throw new Error(error.error || "Failed to fetch vehicles");
     } catch {
       throw new Error(`Failed to fetch vehicles: ${response.statusText}`);
+    }
+  }
+
+  return response.json();
+}
+
+//// Orders API calls
+
+//get orders
+export async function getProviderOrders() {
+  const response = await fetch(`${API_BASE_URL}/provider/orders`, {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    try {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to fetch orders");
+    } catch {
+      throw new Error(`Failed to fetch orders: ${response.statusText}`);
+    }
+  }
+
+  return response.json();
+}
+
+//create order
+export async function createOrder(data: CreateOrderInput) {
+  const response = await fetch(`${API_BASE_URL}/provider/orders`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    try {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to create order");
+    } catch {
+      throw new Error(`Failed to create order: ${response.statusText}`);
     }
   }
 

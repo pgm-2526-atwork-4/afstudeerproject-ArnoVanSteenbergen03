@@ -12,11 +12,9 @@ router.get("/", requireAuth, requireRoles(["volunteer"]), async (req: Request, r
     const assignedActivities = await db
       .select({
         activity: activities,
-        pickupLocation: places,
         provider: users,
       })
       .from(activities)
-      .leftJoin(places, eq(activities.pickupLocationId, places.id))
       .leftJoin(users, eq(activities.providerId, users.id))
       .where(eq(activities.status, "accepted"));
 
@@ -46,11 +44,6 @@ router.get("/:id", requireAuth, requireRoles(["volunteer"]), async (req: Request
       .from(foodItems)
       .where(eq(foodItems.activityId, id));
 
-    const [pickupLocation] = await db
-      .select()
-      .from(places)
-      .where(eq(places.id, activity.pickupLocationId));
-
     const assignedCenter = activity.assignedCenterId
       ? (
           await db
@@ -68,7 +61,6 @@ router.get("/:id", requireAuth, requireRoles(["volunteer"]), async (req: Request
     return res.json({
       activity,
       foodItems: items,
-      pickupLocation,
       assignedCenter,
       provider,
     });

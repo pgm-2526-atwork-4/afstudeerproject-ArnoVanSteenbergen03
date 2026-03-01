@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { db } from "@/config/database";
-import { activities, foodItems, vehicles, places } from "@/db/schema";
+import { activities, foodItems, vehicles } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { requireAuth, requireRoles } from "@/middleware/auth";
 import { CreateOrderSchema } from "@shared/index";
@@ -14,7 +14,7 @@ router.post(
   requireRoles(["provider"]),
   async (req: Request, res: Response) => {
     try {
-      const userId = (req as any).userId;
+      const userId = (req.user as any).id;
 
       // Validate request body
       const validationResult = CreateOrderSchema.safeParse(req.body);
@@ -26,33 +26,12 @@ router.post(
       }
 
       const {
-        pickupLocationId,
+        pickupAddress,
         vehicleId,
         pickupTime,
         foodItems: foodItemsData,
         ...orderData
       } = validationResult.data;
-
-      // Verify locations exist
-      const [pickupLocation] = await db
-        .select()
-        .from(places)
-        .where(eq(places.id, pickupLocationId));
-
-      if (!pickupLocation) {
-        return res.status(404).json({ error: "Pickup location not found" });
-      }
-
-      if (orderData.assignedCenterId) {
-        const [assignedCenter] = await db
-          .select()
-          .from(places)
-          .where(eq(places.id, orderData.assignedCenterId));
-
-        if (!assignedCenter) {
-          return res.status(404).json({ error: "Assigned center not found" });
-        }
-      }
 
       // Verify vehicle exists
       const [vehicle] = await db
@@ -69,7 +48,7 @@ router.post(
         .insert(activities)
         .values({
           providerId: userId,
-          pickupLocationId,
+          pickupAddress,
           assignedCenterId: orderData.assignedCenterId || null,
           vehicleId,
           pickupTime: new Date(pickupTime),
@@ -121,34 +100,29 @@ router.get(
   requireRoles(["provider"]),
   async (req: Request, res: Response) => {
     try {
-      const userId = (req as any).userId;
+      const userId = (req.user as any).id;
 
       const providerOrders = await db
-        .select({
-          activity: activities,
-          foodItemCount: foodItems.id,
-        })
+        .select()
         .from(activities)
-        .leftJoin(foodItems, eq(foodItems.activityId, activities.id))
         .where(eq(activities.providerId, userId));
 
-      // Group by activity
-      const ordersMap = new Map();
-      providerOrders.forEach((row) => {
-        if (!ordersMap.has(row.activity.id)) {
-          ordersMap.set(row.activity.id, {
-            ...row.activity,
-            foodItemCount: 0,
-          });
-        }
-        if (row.foodItemCount) {
-          ordersMap.get(row.activity.id).foodItemCount += 1;
-        }
-      });
+      // Get food item count for each activity
+      const ordersWithCounts = await Promise.all(
+        providerOrders.map(async (activity) => {
+          const foodItemsList = await db
+            .select()
+            .from(foodItems)
+            .where(eq(foodItems.activityId, activity.id));
 
-      const orders = Array.from(ordersMap.values());
+          return {
+            ...activity,
+            foodItemCount: foodItemsList.length,
+          };
+        })
+      );
 
-      return res.json(orders);
+      return res.json(ordersWithCounts);
     } catch (error) {
       console.error("Error fetching orders:", error);
       res.status(500).json({ error: "Failed to fetch orders" });
@@ -163,7 +137,7 @@ router.get(
   requireRoles(["provider"]),
   async (req: Request, res: Response) => {
     try {
-      const userId = (req as any).userId as string;
+      const userId = (req.user as any).id as string;
       const id = req.params.id as string;
 
       const [order] = await db
@@ -198,7 +172,7 @@ router.patch(
   requireRoles(["provider"]),
   async (req: Request, res: Response) => {
     try {
-      const userId = (req as any).userId as string;
+      const userId = (req.user as any).id as string;
       const id = req.params.id as string;
       const { status, notes } = req.body;
 

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X, Plus } from "lucide-react";
 import { useState } from "react";
+import type { FoodItemData } from "@/app/provider/create-order/page";
 
 interface FoodItem {
   id: string;
@@ -18,24 +19,45 @@ interface FoodItem {
 }
 
 interface FoodDetailsStepProps {
-  onNext: () => void;
+  onNext: (foodItems: FoodItemData[], notes: string) => void;
   onCancel: () => void;
+  initialFoodItems?: FoodItemData[];
+  initialNotes?: string;
 }
 
-export default function FoodDetailsStep({ onNext, onCancel }: FoodDetailsStepProps) {
-  const [foodItems, setFoodItems] = useState<FoodItem[]>([
-    {
-      id: "1",
-      itemName: "",
-      allergies: "",
-      servings: "",
-      expirationDate: "",
-      freezerItem: false,
-      packageIncluded: false,
-    },
-  ]);
+export default function FoodDetailsStep({
+  onNext,
+  onCancel,
+  initialFoodItems,
+  initialNotes,
+}: FoodDetailsStepProps) {
+  const [foodItems, setFoodItems] = useState<FoodItem[]>(
+    initialFoodItems && initialFoodItems.length > 0
+      ? initialFoodItems.map((item, i) => ({
+          id: String(i + 1),
+          itemName: item.itemName,
+          allergies: item.allergies,
+          servings: String(item.servings),
+          expirationDate: item.expirationDate || "",
+          freezerItem: item.freezerItemIncluded,
+          packageIncluded: item.packageIncluded,
+          image: item.image,
+        }))
+      : [
+          {
+            id: "1",
+            itemName: "",
+            allergies: "",
+            servings: "",
+            expirationDate: "",
+            freezerItem: false,
+            packageIncluded: false,
+          },
+        ]
+  );
 
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState(initialNotes || "");
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const addFoodItem = () => {
     setFoodItems([
@@ -231,12 +253,38 @@ export default function FoodDetailsStep({ onNext, onCancel }: FoodDetailsStepPro
           Cancel Order
         </Button>
         <Button
-          onClick={onNext}
+          onClick={() => {
+            // Validate: all items must have a name and servings
+            const hasEmptyItems = foodItems.some(
+              (item) => !item.itemName.trim() || !item.servings
+            );
+            if (hasEmptyItems) {
+              setValidationError("Please fill in item name and servings for all food items.");
+              return;
+            }
+            setValidationError(null);
+
+            const itemsData: FoodItemData[] = foodItems.map((item) => ({
+              itemName: item.itemName,
+              allergies: item.allergies,
+              servings: parseInt(item.servings, 10),
+              expirationDate: item.expirationDate || undefined,
+              freezerItemIncluded: item.freezerItem,
+              packageIncluded: item.packageIncluded,
+              image: item.image || undefined,
+            }));
+
+            onNext(itemsData, notes);
+          }}
           className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3"
         >
           Continue to delivery
         </Button>
       </div>
+
+      {validationError && (
+        <p className="text-red-600 text-sm text-center">{validationError}</p>
+      )}
     </div>
   );
 }

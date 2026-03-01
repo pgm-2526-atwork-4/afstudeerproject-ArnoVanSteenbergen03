@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -17,15 +18,30 @@ interface Vehicle {
 interface DeliveryStepProps {
   onBack: () => void;
   onCancel: () => void;
+  onSubmit: (
+    pickupAddress: string,
+    vehicleId: string,
+    deliveryNotes: string,
+    pickupTime: string,
+  ) => void;
+  submitting: boolean;
+  error: string | null;
 }
 
-export default function DeliveryStep({ onBack, onCancel }: DeliveryStepProps) {
-  const [deliveryAddress, setDeliveryAddress] = useState("");
-  const [repeatDelivery, setRepeatDelivery] = useState(false);
+export default function DeliveryStep({
+  onBack,
+  onCancel,
+  onSubmit,
+  submitting,
+  error,
+}: DeliveryStepProps) {
+  const [pickupAddress, setPickupAddress] = useState("");
   const [selectedVehicle, setSelectedVehicle] = useState<string>("");
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState("");
+  const [pickupTime, setPickupTime] = useState("");
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchVehicles();
@@ -48,6 +64,25 @@ export default function DeliveryStep({ onBack, onCancel }: DeliveryStepProps) {
     return icons[iconName] || icons["Package"];
   };
 
+  const handleFinishOrder = () => {
+    if (!pickupAddress.trim()) {
+      setValidationError("Please enter a pickup address.");
+      return;
+    }
+    if (!selectedVehicle) {
+      setValidationError("Please select a vehicle type.");
+      return;
+    }
+    if (!pickupTime) {
+      setValidationError("Please select a pickup time.");
+      return;
+    }
+    setValidationError(null);
+
+    const pickupDateTime = new Date(pickupTime).toISOString();
+    onSubmit(pickupAddress, selectedVehicle, notes, pickupDateTime);
+  };
+
   return (
     <div className="space-y-6">
       <button
@@ -58,21 +93,34 @@ export default function DeliveryStep({ onBack, onCancel }: DeliveryStepProps) {
         Back
       </button>
 
+      {/* Pickup Address */}
       <div className="bg-white border-2 border-slate-800 rounded-lg p-6">
         <Label className="block text-sm font-semibold text-slate-800 mb-4">
-          Pick Up address
+          Pick Up Address
         </Label>
-        <select
-          value={deliveryAddress}
-          onChange={(e) => setDeliveryAddress(e.target.value)}
-          className="w-full px-3 py-2 border-2 border-slate-800 rounded bg-white"
-        >
-          <option value="">Enter address</option>
-          <option value="address1">Distribution Center 1</option>
-          <option value="address2">Distribution Center 2</option>
-        </select>
+        <Input
+          type="text"
+          placeholder="e.g., 123 Main St, Downtown"
+          value={pickupAddress}
+          onChange={(e) => setPickupAddress(e.target.value)}
+          className="w-full px-3 py-2 border-2 border-slate-800 rounded"
+        />
       </div>
 
+      {/* Pickup Time */}
+      <div className="bg-white border-2 border-slate-800 rounded-lg p-6">
+        <Label className="block text-sm font-semibold text-slate-800 mb-4">
+          Pickup Date & Time
+        </Label>
+        <Input
+          type="datetime-local"
+          value={pickupTime}
+          onChange={(e) => setPickupTime(e.target.value)}
+          className="w-full px-3 py-2 border-2 border-slate-800 rounded"
+        />
+      </div>
+
+      {/* Vehicle Selection */}
       <div className="bg-white border-2 border-slate-800 rounded-lg p-6">
         <Label className="block text-sm font-semibold text-slate-800 mb-4">
           Select vehicle type
@@ -99,7 +147,9 @@ export default function DeliveryStep({ onBack, onCancel }: DeliveryStepProps) {
                     <p className="text-sm font-semibold text-slate-800 capitalize">
                       {vehicle.vehicleType}
                     </p>
-                    <p className="text-xs text-slate-500">({vehicle.amount} available)</p>
+                    <p className="text-xs text-slate-500">
+                      ({vehicle.amount} available)
+                    </p>
                   </div>
                 </button>
               );
@@ -121,17 +171,29 @@ export default function DeliveryStep({ onBack, onCancel }: DeliveryStepProps) {
         />
       </div>
 
+      {/* Validation / API error */}
+      {(validationError || error) && (
+        <p className="text-red-600 text-sm text-center">
+          {validationError || error}
+        </p>
+      )}
+
       {/* Navigation Buttons */}
       <div className="flex gap-3">
         <Button
           onClick={onCancel}
           variant="outline"
           className="px-4 py-3"
+          disabled={submitting}
         >
           Cancel Order
         </Button>
-        <Button className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3">
-          Finish Order
+        <Button
+          onClick={handleFinishOrder}
+          disabled={submitting}
+          className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3"
+        >
+          {submitting ? "Creating Order..." : "Finish Order"}
         </Button>
       </div>
     </div>

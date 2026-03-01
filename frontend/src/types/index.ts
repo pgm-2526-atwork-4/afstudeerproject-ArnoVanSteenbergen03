@@ -8,6 +8,8 @@ export {
   type DistributionCenter,
   type OperatingInfo,
   type TimeRange,
+  type Order,
+  type CreateOrderInput,
   userSchema,
   authResponseSchema,
   loginCredentialsSchema,
@@ -15,4 +17,6 @@ export {
   distributionCenterSchema,
   operatingInfoSchema,
   timeRangeSchema,
+  orderSchema,
+  CreateOrderSchema,
 } from "@shared/index";

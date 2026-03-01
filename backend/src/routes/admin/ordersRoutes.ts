@@ -16,16 +16,10 @@ router.get("/", requireAuth, requireRoles(["admin"]), async (req: Request, res: 
       .select({
         activity: activities,
         provider: users,
-        pickupLocation: places,
-        assignedCenter: places,
         vehicle: vehicles,
       })
       .from(activities)
-      .leftJoin(users, eq(activities.providerId, users.id))
-      .leftJoin(
-        places,
-        eq(activities.pickupLocationId, places.id)
-      );
+      .leftJoin(users, eq(activities.providerId, users.id));
 
     // Build where clause based on filters
     let whereConditions = [];
@@ -83,11 +77,6 @@ router.get("/:id", requireAuth, requireRoles(["admin"]), async (req: Request, re
       .from(users)
       .where(eq(users.id, activity.providerId));
 
-    const [pickupLocation] = await db
-      .select()
-      .from(places)
-      .where(eq(places.id, activity.pickupLocationId));
-
     const assignedCenter = activity.assignedCenterId
       ? (
           await db
@@ -108,7 +97,6 @@ router.get("/:id", requireAuth, requireRoles(["admin"]), async (req: Request, re
       activity,
       foodItems: items,
       provider,
-      pickupLocation,
       assignedCenter,
       vehicle,
     });

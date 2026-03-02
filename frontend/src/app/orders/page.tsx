@@ -10,7 +10,7 @@ export default function OrdersPage() {
   if (!user) return null;
 
   return (
-    <ProtectedPage>
+    <ProtectedPage requiredPermission="read_food_items">
       <OrdersScreen user={user} />
     </ProtectedPage>
   );

@@ -49,7 +49,7 @@ export default function NewDistributionCenterPage() {
   };
 
   return (
-    <ProtectedPage>
+    <ProtectedPage requiredPermission="create_places">
       <DistroForm
         onSubmit={handleSubmit}
         isLoading={isSubmitting}

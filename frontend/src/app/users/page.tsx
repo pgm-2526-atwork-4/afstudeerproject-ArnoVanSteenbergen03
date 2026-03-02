@@ -1,14 +1,23 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import ProtectedPage from "@/components/ProtectedPage";
 import PermissionGate from "@/components/PermissionGate";
 import { useAuth } from "@/lib/auth-context";
+import { getApplicationCount } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowLeft, Plus, Edit2, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Edit2, Trash2, FileText } from "lucide-react";
 
 export default function UsersPage() {
   const { user } = useAuth();
+  const [pendingCount, setPendingCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    getApplicationCount()
+      .then((data) => setPendingCount(data.count))
+      .catch(() => setPendingCount(null));
+  }, []);
 
   if (!user) return null;
 
@@ -57,7 +66,7 @@ export default function UsersPage() {
   };
 
   return (
-    <ProtectedPage>
+    <ProtectedPage requiredPermission="read_users">
       <div className="flex flex-col min-h-[calc(100vh-100px)] bg-amber-50 p-4 pb-24">
         <div className="flex items-center justify-between mb-8">
           <Link href="/dashboard">
@@ -84,6 +93,22 @@ export default function UsersPage() {
                 <Plus className="w-5 h-5" />
                 Add New User
               </Button>
+            </div>
+          </PermissionGate>
+
+          <PermissionGate permission="read_applications">
+            <div className="mb-6">
+              <Link href="/applications">
+                <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2 relative">
+                  <FileText className="w-5 h-5" />
+                  Applications
+                  {pendingCount !== null && pendingCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full min-w-[24px] h-6 flex items-center justify-center px-1.5">
+                      {pendingCount}
+                    </span>
+                  )}
+                </Button>
+              </Link>
             </div>
           </PermissionGate>
 

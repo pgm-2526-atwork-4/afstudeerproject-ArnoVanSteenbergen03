@@ -10,7 +10,7 @@ export default function DeliveriesPage() {
   if (!user) return null;
 
   return (
-    <ProtectedPage>
+    <ProtectedPage requiredPermission="read_activities">
       <OrdersScreen user={user} />
     </ProtectedPage>
   );

@@ -11,57 +11,50 @@ import {
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
-import { usePermissions } from "@/hooks/usePermissions";
 
 interface NavItem {
   href: string;
   icon: React.ElementType;
   label: string;
-  permission?: string;
-  show?: boolean;
+  show: boolean;
 }
 
 export default function AppNavigation() {
   const pathname = usePathname();
   const { user } = useAuth();
-  const { hasPermission, hasAnyPermission } = usePermissions();
 
   if (!user) return null;
 
   const navItems: NavItem[] = [
-    // Admin dashboard — visible to users with any admin-like permission
+    // Admin dashboard
     {
       href: "/dashboard",
       icon: LayoutDashboard,
       label: "Dashboard",
-      show: hasAnyPermission(
-        "read_users",
-        "read_places",
-        "read_applications",
-      ),
+      show: user.userType === "admin",
     },
-    // Orders — visible to users who can manage food items (providers)
+    // Orders — for providers (and admins)
     {
       href: "/orders",
       icon: Package,
       label: "Orders",
-      permission: "read_food_items",
+      show: user.userType === "provider" || user.userType === "admin",
     },
-    // Deliveries — visible to users who can manage activities (volunteers)
+    // Deliveries — for volunteers (and admins)
     {
       href: "/deliveries",
       icon: Truck,
       label: "Deliveries",
-      permission: "read_activities",
+      show: user.userType === "volunteer" || user.userType === "admin",
     },
-    // Chat — visible to everyone
+    // Chat
     {
       href: "/chatroom",
       icon: MessageCircle,
       label: "Chat",
       show: true,
     },
-    // Profile — visible to everyone
+    // Profile
     {
       href: "/profile",
       icon: User,
@@ -70,11 +63,7 @@ export default function AppNavigation() {
     },
   ];
 
-  const visibleItems = navItems.filter((item) => {
-    if (item.show !== undefined) return item.show;
-    if (item.permission) return hasPermission(item.permission);
-    return true;
-  });
+  const visibleItems = navItems.filter((item) => item.show);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 border-t-2 border-slate-800 bg-white flex justify-around py-4 z-50">

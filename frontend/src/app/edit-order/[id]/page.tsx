@@ -152,7 +152,7 @@ export default function EditOrderPage() {
 
   if (loading) {
     return (
-      <ProtectedPage>
+      <ProtectedPage requiredPermission="update_food_items">
         <div className="flex flex-col min-h-[calc(100vh-100px)] bg-amber-50 p-4 items-center justify-center">
           <p className="text-slate-600">Loading order...</p>
         </div>
@@ -161,7 +161,7 @@ export default function EditOrderPage() {
   }
 
   return (
-    <ProtectedPage>
+    <ProtectedPage requiredPermission="update_food_items">
       <div className="flex flex-col min-h-[calc(100vh-100px)] bg-amber-50 p-4 pb-24">
         <div className="flex justify-center mb-12">
           <div className="text-center">

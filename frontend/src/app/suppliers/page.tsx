@@ -32,7 +32,7 @@ export default function SuppliersPage() {
   ];
 
   return (
-    <ProtectedPage>
+    <ProtectedPage requiredPermission="read_places">
       <div className="flex flex-col min-h-[calc(100vh-100px)] bg-amber-50 p-4 pb-24">
         <div className="flex items-center justify-between mb-8">
           <Link href="/dashboard">

@@ -5,18 +5,12 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import ProtectedPage from "@/components/ProtectedPage";
 import AdminDash from "@/components/admin/screens/AdminDash";
-import { usePermissions } from "@/hooks/usePermissions";
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
-  const { hasAnyPermission } = usePermissions();
   const router = useRouter();
 
-  const isAdmin = hasAnyPermission(
-    "read_users",
-    "read_places",
-    "read_applications",
-  );
+  const isAdmin = user?.userType === "admin";
 
   useEffect(() => {
     if (!loading && !user) {

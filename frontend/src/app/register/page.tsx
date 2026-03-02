@@ -1,17 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import RoleSelection from "@/components/auth/RoleSelection";
+import IntentionSelection from "@/components/auth/IntentionSelection";
 import { RegisterForm } from "@/components/auth/RegisterForm";
 
 export default function RegisterPage() {
-  const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const [selectedType, setSelectedType] = useState<"volunteer" | "provider" | null>(null);
 
-  if (!selectedRole) {
-    return <RoleSelection onRoleSelect={setSelectedRole} />;
+  if (!selectedType) {
+    return <IntentionSelection onSelect={setSelectedType} />;
   }
 
   return (
-    <RegisterForm role={selectedRole} onBack={() => setSelectedRole(null)} />
+    <RegisterForm userType={selectedType} onBack={() => setSelectedType(null)} />
   );
 }

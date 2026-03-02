@@ -14,11 +14,11 @@ import { registerSchema } from "@shared/schemas/auth";
 import { z } from "zod/v4";
 
 interface RegisterFormProps {
-  role: string;
+  userType: "volunteer" | "provider";
   onBack: () => void;
 }
 
-export function RegisterForm({ role, onBack }: RegisterFormProps) {
+export function RegisterForm({ userType, onBack }: RegisterFormProps) {
   const router = useRouter();
   const { register } = useAuth();
   const [firstName, setFirstName] = useState("");
@@ -42,7 +42,7 @@ export function RegisterForm({ role, onBack }: RegisterFormProps) {
         lastname: lastName,
         password,
         confirmPassword,
-        role,
+        userType,
       });
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -54,8 +54,8 @@ export function RegisterForm({ role, onBack }: RegisterFormProps) {
     setLoading(true);
 
     try {
-      await register(email, firstName, lastName, password, role);
-      router.push("/dashboard");
+      await register(email, firstName, lastName, password, userType);
+      router.push("/pending");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
@@ -84,7 +84,7 @@ export function RegisterForm({ role, onBack }: RegisterFormProps) {
             Registration
           </h1>
           <p className="text-center text-sm text-slate-600 mb-8 capitalize">
-            {role} Account
+            {userType} Account
           </p>
 
           <form

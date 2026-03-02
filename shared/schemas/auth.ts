@@ -16,7 +16,7 @@ export const registerSchema = z
     lastname: z.string().min(1, "Last name is required"),
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string().min(1, "Please confirm your password"),
-    role: z.enum(["volunteer", "provider"]),
+    userType: z.enum(["volunteer", "provider"]),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -31,7 +31,7 @@ export const registerApiSchema = z.object({
   firstname: z.string().min(1, "First name is required"),
   lastname: z.string().min(1, "Last name is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  role: z.enum(["volunteer", "provider"]),
+  userType: z.enum(["volunteer", "provider"]),
 });
 
 export type RegisterApiInput = z.infer<typeof registerApiSchema>;

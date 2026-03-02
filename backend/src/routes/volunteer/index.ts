@@ -1,11 +1,11 @@
 import { Router } from "express";
 import profileRouter from "./profileRoutes";
 import activityRouter from "./activityRoutes";
-import { requireAuth, requireRoles } from "@/middleware/auth";
+import { requireAuth, requireApproved } from "@/middleware/auth";
 
 const router = Router();
 
-router.use(requireAuth, requireRoles(["volunteer"]));
+router.use(requireAuth, requireApproved);
 
 router.use("/profile", profileRouter);
 router.use("/activities", activityRouter);

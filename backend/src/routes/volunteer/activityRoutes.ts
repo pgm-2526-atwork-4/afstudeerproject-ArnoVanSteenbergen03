@@ -2,12 +2,12 @@ import { Router, Request, Response } from "express";
 import { db } from "@/config/database";
 import { activities, foodItems, places, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { requireAuth, requireRoles } from "@/middleware/auth";
+import { requireAuth, requirePermission } from "@/middleware/auth";
 
 const router = Router();
 
-// GET /api/volunteer/activities - Get all assigned activities for volunteer
-router.get("/", requireAuth, requireRoles(["volunteer"]), async (req: Request, res: Response) => {
+//Get all assigned activities for volunteer
+router.get("/", requireAuth, requirePermission("read_activities"), async (req: Request, res: Response) => {
   try {
     const assignedActivities = await db
       .select({
@@ -25,8 +25,8 @@ router.get("/", requireAuth, requireRoles(["volunteer"]), async (req: Request, r
   }
 });
 
-// GET /api/volunteer/activities/:id - Get activity details with food items
-router.get("/:id", requireAuth, requireRoles(["volunteer"]), async (req: Request, res: Response) => {
+//Get activity details with food items
+router.get("/:id", requireAuth, requirePermission("read_activities"), async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
 
@@ -70,17 +70,16 @@ router.get("/:id", requireAuth, requireRoles(["volunteer"]), async (req: Request
   }
 });
 
-// PATCH /api/volunteer/activities/:id/status - Update activity status
+//Update activity status
 router.patch(
   "/:id/status",
   requireAuth,
-  requireRoles(["volunteer"]),
+  requirePermission("update_activities"),
   async (req: Request, res: Response) => {
     try {
       const id = req.params.id as string;
       const { status } = req.body;
 
-      // Validate status
       const validStatuses = ["in_progress", "completed"];
       if (!validStatuses.includes(status)) {
         return res.status(400).json({

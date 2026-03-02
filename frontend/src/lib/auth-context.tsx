@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { login, register, getCurrentUser, logout } from "./api-client";
-import { AuthContextType, User } from "@/types/Auth";
+import { AuthContextType, User } from "@/types";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -36,14 +36,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     firstname: string,
     lastname: string,
     password: string,
-    role: string,
+    userType: "volunteer" | "provider",
   ) => {
     const response = await register({
       email,
       firstname,
       lastname,
       password,
-      role,
+      userType,
     });
     await new Promise((resolve) => setTimeout(resolve, 300));
     setUser(response.user);

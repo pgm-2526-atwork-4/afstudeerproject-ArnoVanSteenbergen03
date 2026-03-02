@@ -43,6 +43,9 @@ passport.deserializeUser(async (id: string, done) => {
     const user = await db.query.users.findFirst({
       where: eq(users.id, id),
     });
+    if (!user) {
+      return done(null, false);
+    }
     done(null, user);
   } catch (err) {
     done(err);

@@ -212,7 +212,7 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
               Role:
             </Label>
             <p className="py-2 text-slate-800 capitalize">
-              {user.roles?.join(", ") || ""}
+              {user.userType || ""}
             </p>
           </div>
         </div>

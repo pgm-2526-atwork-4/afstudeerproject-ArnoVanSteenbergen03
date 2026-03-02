@@ -7,7 +7,9 @@ export const userSchema = z.object({
   username: z.string(),
   firstname: z.string(),
   lastname: z.string(),
-  roles: z.array(z.string()),
+  userType: z.string(),
+  isApproved: z.boolean(),
+  permissions: z.array(z.string()).optional(),
 });
 
 export type User = z.infer<typeof userSchema>;
@@ -32,7 +34,7 @@ export type LoginCredentials = z.infer<typeof loginCredentialsSchema>;
 export const registerCredentialsSchema = loginCredentialsSchema.extend({
   firstname: z.string(),
   lastname: z.string(),
-  role: z.string(),
+  userType: z.enum(["volunteer", "provider"]),
 });
 
 export type RegisterCredentials = z.infer<typeof registerCredentialsSchema>;
@@ -47,7 +49,7 @@ export interface AuthContextType {
     firstname: string,
     lastname: string,
     password: string,
-    role: string,
+    userType: "volunteer" | "provider",
   ) => Promise<void>;
   logout: () => Promise<void>;
 }

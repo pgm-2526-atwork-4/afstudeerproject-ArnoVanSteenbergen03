@@ -1,10 +1,10 @@
 import { Router, Request, Response, NextFunction } from "express";
 import passport from "passport";
 import { db } from "@/config/database";
-import { userRoles, users, roles } from "@/db/schema";
+import { users, applications, userPermissions, permissions } from "@/db/schema";
 import bcrypt from "bcrypt";
 import { eq } from "drizzle-orm";
-import { requireAuth, requireRoles } from "@/middleware/auth";
+import { requireAuth } from "@/middleware/auth";
 import { registerApiSchema, loginSchema } from "@shared/schemas/auth";
 import { z } from "zod/v4";
 
@@ -14,20 +14,11 @@ router.get("/", requireAuth, (req, res) => {
   res.json({ ok: true });
 });
 
-router.post(
-  "/",
-  requireAuth,
-  requireRoles(["provider", "admin"]),
-  (req, res) => {
-    res.json({ ok: true });
-  },
-);
-
 // Register
 router.post("/register", async (req: Request, res: Response) => {
   try {
     const validated = registerApiSchema.parse(req.body);
-    const { email, firstname, lastname, password, role } = validated;
+    const { email, firstname, lastname, password, userType } = validated;
 
     const existingUser = await db.query.users.findFirst({
       where: eq(users.email, email),
@@ -40,7 +31,6 @@ router.post("/register", async (req: Request, res: Response) => {
     let username = `${firstname}${lastname}`.toLowerCase();
     let counter = 1;
 
-    // Check if username already exists, add number if it does
     while (
       await db.query.users.findFirst({
         where: eq(users.username, username),
@@ -51,7 +41,7 @@ router.post("/register", async (req: Request, res: Response) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await db
+    const [newUser] = await db
       .insert(users)
       .values({
         email,
@@ -59,33 +49,29 @@ router.post("/register", async (req: Request, res: Response) => {
         lastname,
         username,
         password: hashedPassword,
+        userType,
+        isApproved: false,
       })
       .returning();
 
-    // Assign role
-    const roleRecord = await db.query.roles.findFirst({
-      where: eq(roles.roleName, role),
+    await db.insert(applications).values({
+      userId: newUser.id,
+      userType,
+      status: "pending",
     });
 
-    if (!roleRecord) {
-      return res.status(400).json({ error: "Invalid role" });
-    }
-
-    await db.insert(userRoles).values({
-      userId: newUser[0].id,
-      roleId: roleRecord.id,
-    });
-
-    req.login(newUser[0], (err: any) => {
+    req.login(newUser, (err: any) => {
       if (err) {
         return res.status(500).json({ error: "Login failed" });
       }
       res.status(201).json({
-        message: "Registration successful",
+        message: "Registration successful — awaiting admin approval",
         user: {
-          id: newUser[0].id,
-          email: newUser[0].email,
-          username: newUser[0].username,
+          id: newUser.id,
+          email: newUser.email,
+          username: newUser.username,
+          userType: newUser.userType,
+          isApproved: newUser.isApproved,
         },
       });
     });
@@ -127,38 +113,48 @@ router.post("/login", (req: Request, res: Response, next: NextFunction) => {
           id: user.id,
           email: user.email,
           username: user.username,
-          role: user.role,
+          userType: user.userType,
+          isApproved: user.isApproved,
         },
       });
     });
   })(req, res, next);
 });
 
-// Get current user
+// Get current user with permissions
 router.get("/me", requireAuth, async (req: Request, res: Response) => {
   if (!req.user) {
     return res.status(401).json({ error: "Not authenticated" });
   }
 
-  const user = req.user as any;
+  const userId = req.user.id;
 
   const fullUser = await db.query.users.findFirst({
-    where: eq(users.id, user.id),
+    where: eq(users.id, userId),
   });
 
-  const userRoleRecords = await db
-    .select({ roleName: roles.roleName })
-    .from(userRoles)
-    .innerJoin(roles, eq(userRoles.roleId, roles.id))
-    .where(eq(userRoles.userId, user.id));
+  if (!fullUser) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  // Fetch user's permission keys
+  const permRows = await db
+    .select({ key: permissions.key })
+    .from(userPermissions)
+    .innerJoin(permissions, eq(userPermissions.permissionId, permissions.id))
+    .where(eq(userPermissions.userId, userId));
+
+  const permissionKeys = permRows.map((r) => r.key);
 
   res.json({
-    id: fullUser!.id,
-    email: fullUser!.email,
-    username: fullUser!.username,
-    firstname: fullUser!.firstname,
-    lastname: fullUser!.lastname,
-    roles: userRoleRecords.map((r) => r.roleName),
+    id: fullUser.id,
+    email: fullUser.email,
+    username: fullUser.username,
+    firstname: fullUser.firstname,
+    lastname: fullUser.lastname,
+    userType: fullUser.userType,
+    isApproved: fullUser.isApproved,
+    permissions: permissionKeys,
   });
 });
 

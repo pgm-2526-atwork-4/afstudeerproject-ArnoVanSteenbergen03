@@ -11,12 +11,12 @@ export function useRequireRole(role: string) {
   useEffect(() => {
     if (!loading && !user) {
       router.push("/login");
-    } else if (!loading && user && !user.roles.includes(role)) {
+    } else if (!loading && user && user.userType !== role) {
       router.push("/dashboard");
     }
   }, [user, loading, router, role]);
 
-  const authorized = !loading && !!user && user.roles.includes(role);
+  const authorized = !loading && !!user && user.userType === role;
 
   return { user, loading, authorized };
 }

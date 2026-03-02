@@ -7,20 +7,20 @@ import Link from "next/link";
 import Image from "next/image";
 import { Footer } from "@/components/Footer";
 
-interface RoleSelectionProps {
-  onRoleSelect: (role: string) => void;
+interface IntentionSelectionProps {
+  onSelect: (userType: "volunteer" | "provider") => void;
 }
 
-export default function RoleSelection({ onRoleSelect }: RoleSelectionProps) {
-  const roles = [
+export default function IntentionSelection({ onSelect }: IntentionSelectionProps) {
+  const intentions = [
     {
-      id: "volunteer",
+      id: "volunteer" as const,
       name: "Volunteer",
       description: "Help us pick up orders from providers",
       image: "/images/volunteer.jpg",
     },
     {
-      id: "provider",
+      id: "provider" as const,
       name: "Provider",
       description:
         "Got any leftovers? Or wanna help a good cause? Let us pick up any food you're willing to donate!",
@@ -44,32 +44,32 @@ export default function RoleSelection({ onRoleSelect }: RoleSelectionProps) {
       <div className="flex-1 flex flex-col items-center px-4">
         <div className="w-full max-w-sm">
           <h1 className="text-2xl font-bold text-center text-slate-800 mb-8">
-            Choose your role
+            What would you like to do?
           </h1>
 
           <div className="space-y-4">
-            {roles.map((role) => (
+            {intentions.map((intention) => (
               <Card
-                key={role.id}
+                key={intention.id}
                 className="border-2 border-slate-300 rounded-2xl overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => onRoleSelect(role.id)}
+                onClick={() => onSelect(intention.id)}
               >
                 <CardContent className="space-y-3 p-4">
                   <div className="w-full h-32 bg-slate-200 rounded-xl overflow-hidden relative">
                     <Image
-                      src={role.image}
-                      alt={role.name}
+                      src={intention.image}
+                      alt={intention.name}
                       fill
                       className="object-cover"
                     />
                   </div>
 
                   <h2 className="text-xl font-semibold text-center text-slate-800">
-                    {role.name}
+                    {intention.name}
                   </h2>
 
                   <p className="text-sm text-slate-600 text-center">
-                    {role.description}
+                    {intention.description}
                   </p>
                 </CardContent>
               </Card>

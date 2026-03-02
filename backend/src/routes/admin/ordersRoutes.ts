@@ -3,12 +3,12 @@ import { db } from "@/config/database";
 import { activities, foodItems, places, users, vehicles } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod/v4";
-import { requireAuth, requireRoles } from "@/middleware/auth";
+import { requireAuth, requirePermission } from "@/middleware/auth";
 
 const router = Router();
 
-// GET /api/admin/orders - Get all orders with filters
-router.get("/", requireAuth, requireRoles(["admin"]), async (req: Request, res: Response) => {
+// Get all orders with filters
+router.get("/", requireAuth, requirePermission("read_activities"), async (req: Request, res: Response) => {
   try {
     const { status, providerId, centerId } = req.query;
 
@@ -53,8 +53,8 @@ router.get("/", requireAuth, requireRoles(["admin"]), async (req: Request, res: 
   }
 });
 
-// GET /api/admin/orders/:id - Get order details with all info
-router.get("/:id", requireAuth, requireRoles(["admin"]), async (req: Request, res: Response) => {
+//Get order details with all info
+router.get("/:id", requireAuth, requirePermission("read_activities"), async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
 
@@ -106,11 +106,11 @@ router.get("/:id", requireAuth, requireRoles(["admin"]), async (req: Request, re
   }
 });
 
-// PATCH /api/admin/orders/:id/assign-center - Assign order to distribution center
+//Assign order to distribution center
 router.patch(
   "/:id/assign-center",
   requireAuth,
-  requireRoles(["admin"]),
+  requirePermission("update_activities"),
   async (req: Request, res: Response) => {
     try {
       const id = req.params.id as string;
@@ -158,11 +158,11 @@ router.patch(
   }
 );
 
-// PATCH /api/admin/orders/:id/status - Update order status
+//Update order status
 router.patch(
   "/:id/status",
   requireAuth,
-  requireRoles(["admin"]),
+  requirePermission("update_activities"),
   async (req: Request, res: Response) => {
     try {
       const id = req.params.id as string;

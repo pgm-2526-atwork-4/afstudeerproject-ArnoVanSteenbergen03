@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from "express";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "@/config/database";
-import { roles, userRoles } from "@/db/schema";
+import { userPermissions, permissions } from "@/db/schema";
 import "@/types";
 
-// checks if the user is logged in
+// Checks if the user is logged in
 export const requireAuth = (
   req: Request,
   res: Response,
@@ -16,26 +16,72 @@ export const requireAuth = (
   next();
 };
 
+// Checks if the user account has been approved by an admin
+export const requireApproved = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  if (!req.user) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+  if (!(req.user as any).isApproved) {
+    return res
+      .status(403)
+      .json({ error: "Account pending approval by admin" });
+  }
+  next();
+};
 
-export function requireRoles(allowed: string[]) {
+// Checks if the user has a specific permission
+export function requirePermission(permissionKey: string) {
   return async (req: Request, res: Response, next: NextFunction) => {
-    
     if (!req.isAuthenticated?.() || !req.user) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ error: "Unauthorized" });
     }
 
     const userId = req.user.id;
 
     const rows = await db
-      .select({ roleName: roles.roleName })
-      .from(userRoles)
-      .innerJoin(roles, eq(userRoles.roleId, roles.id))
-      .where(eq(userRoles.userId, userId));
+      .select({ key: permissions.key })
+      .from(userPermissions)
+      .innerJoin(permissions, eq(userPermissions.permissionId, permissions.id))
+      .where(eq(userPermissions.userId, userId));
 
-    const userRoleSet = new Set(rows.map((r) => r.roleName));
-    const ok = allowed.some((r) => userRoleSet.has(r));
+    const userPerms = new Set(rows.map((r) => r.key));
 
-    if (!ok) return res.status(403).json({ message: "Forbidden" });
+    if (!userPerms.has(permissionKey)) {
+      return res
+        .status(403)
+        .json({ error: "Forbidden", missing: permissionKey });
+    }
+
+    next();
+  };
+}
+
+// Checks if the user has ALL of the listed permissions
+export function requirePermissions(...permissionKeys: string[]) {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    if (!req.isAuthenticated?.() || !req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const userId = req.user.id;
+
+    const rows = await db
+      .select({ key: permissions.key })
+      .from(userPermissions)
+      .innerJoin(permissions, eq(userPermissions.permissionId, permissions.id))
+      .where(eq(userPermissions.userId, userId));
+
+    const userPerms = new Set(rows.map((r) => r.key));
+    const missing = permissionKeys.filter((k) => !userPerms.has(k));
+
+    if (missing.length > 0) {
+      return res.status(403).json({ error: "Forbidden", missing });
+    }
+
     next();
   };
 }

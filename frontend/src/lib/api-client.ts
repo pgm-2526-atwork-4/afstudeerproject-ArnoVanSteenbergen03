@@ -27,16 +27,8 @@ export async function register(
     throw new Error(errorMessage);
   }
 
-  // Wait for session to be established
-  await new Promise((resolve) => setTimeout(resolve, 300));
-
-  const userWithRoles = await getCurrentUser();
-  const initialResponse = await response.json();
-
-  return {
-    message: initialResponse.message,
-    user: userWithRoles,
-  };
+  const data = await response.json();
+  return data;
 }
 
 // Login

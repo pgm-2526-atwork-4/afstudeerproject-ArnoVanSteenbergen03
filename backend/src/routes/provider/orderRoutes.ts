@@ -2,7 +2,7 @@ import { Router, Request, Response } from "express";
 import { db } from "@/config/database";
 import { activities, foodItems, vehicles } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
-import { requireAuth, requireRoles } from "@/middleware/auth";
+import { requireAuth, requirePermission } from "@/middleware/auth";
 import { CreateOrderSchema } from "@shared/index";
 
 const router = Router();
@@ -11,7 +11,7 @@ const router = Router();
 router.post(
   "/",
   requireAuth,
-  requireRoles(["provider"]),
+  requirePermission("create_activities"),
   async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
@@ -92,7 +92,7 @@ router.post(
 router.get(
   "/",
   requireAuth,
-  requireRoles(["provider"]),
+  requirePermission("read_activities"),
   async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
@@ -128,7 +128,7 @@ router.get(
 router.get(
   "/:id",
   requireAuth,
-  requireRoles(["provider"]),
+  requirePermission("read_activities"),
   async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id as string;
@@ -163,7 +163,7 @@ router.get(
 router.patch(
   "/:id",
   requireAuth,
-  requireRoles(["provider"]),
+  requirePermission("update_activities"),
   async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id as string;

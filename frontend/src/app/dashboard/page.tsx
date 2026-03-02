@@ -14,11 +14,20 @@ export default function DashboardPage() {
       return;
     }
 
-    if (user?.roles?.includes("provider")) {
+    if (!user) return;
+
+    // Not approved yet — show pending screen
+    if (!user.isApproved) {
+      router.push("/pending");
+      return;
+    }
+
+    // Redirect based on userType
+    if (user.userType === "provider") {
       router.push("/provider");
-    } else if (user?.roles?.includes("volunteer")) {
+    } else if (user.userType === "volunteer") {
       router.push("/volunteer");
-    } else if (user?.roles?.includes("admin")) {
+    } else if (user.userType === "admin") {
       router.push("/admin");
     }
   }, [user, loading, router]);

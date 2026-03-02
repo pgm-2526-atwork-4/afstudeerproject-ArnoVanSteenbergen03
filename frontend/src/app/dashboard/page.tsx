@@ -3,10 +3,20 @@
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import ProtectedPage from "@/components/ProtectedPage";
+import AdminDash from "@/components/admin/screens/AdminDash";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
+  const { hasAnyPermission } = usePermissions();
   const router = useRouter();
+
+  const isAdmin = hasAnyPermission(
+    "read_users",
+    "read_places",
+    "read_applications",
+  );
 
   useEffect(() => {
     if (!loading && !user) {
@@ -16,27 +26,37 @@ export default function DashboardPage() {
 
     if (!user) return;
 
-    // Not approved yet — show pending screen
     if (!user.isApproved) {
       router.push("/pending");
       return;
     }
 
-    // Redirect based on userType
-    if (user.userType === "provider") {
-      router.push("/provider");
-    } else if (user.userType === "volunteer") {
-      router.push("/volunteer");
-    } else if (user.userType === "admin") {
-      router.push("/admin");
+    // Non-admin users get redirected to their main page
+    if (!isAdmin) {
+      if (user.userType === "provider") {
+        router.push("/orders");
+      } else {
+        router.push("/deliveries");
+      }
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, isAdmin]);
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-amber-50">
         <p className="text-slate-600">Loading...</p>
       </div>
+    );
+  }
+
+  if (!user || !user.isApproved) return null;
+
+  // Admin users see the dashboard
+  if (isAdmin) {
+    return (
+      <ProtectedPage>
+        <AdminDash user={user} />
+      </ProtectedPage>
     );
   }
 

@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Truck, RefreshCw } from "lucide-react";
 import Link from "next/link";
-import { User } from "@/types/Auth";
+import { User } from "@/types";
 
 interface OrderScreenProps {
   user: User;
@@ -34,7 +34,7 @@ export default function NoDeliveriesScreen({ user }: OrderScreenProps) {
           Refresh
         </Button>
 
-        <Link href="/volunteer/deliveries">
+        <Link href="/deliveries">
           <Button variant="outline" className="border-slate-800 text-slate-800 hover:bg-slate-100 font-bold py-3 px-8 rounded">
             View My Deliveries
           </Button>

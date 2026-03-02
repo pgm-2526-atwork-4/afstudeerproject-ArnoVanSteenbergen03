@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X, Plus } from "lucide-react";
 import { useState } from "react";
-import type { FoodItemData } from "@/app/provider/create-order/page";
+import type { FoodItemData } from "@/types";
 
 interface FoodItem {
   id: string;

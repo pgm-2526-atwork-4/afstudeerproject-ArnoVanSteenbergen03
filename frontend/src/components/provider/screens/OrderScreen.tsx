@@ -113,7 +113,7 @@ export default function OrdersScreen({ user }: { user: User }) {
             </p>
 
             {activeTab === "active" && (
-              <Link href="/provider/create-order" className="inline-block">
+              <Link href="/create-order" className="inline-block">
                 <Button className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-6 px-8 text-lg rounded-lg">
                   <span className="mr-2">+</span>
                   Create Order
@@ -124,7 +124,7 @@ export default function OrdersScreen({ user }: { user: User }) {
         ) : (
           <div className="w-full max-w-2xl">
             <div className="flex justify-center mb-6">
-              <Link href="/provider/create-order" className="inline-block">
+              <Link href="/create-order" className="inline-block">
                 <Button className="bg-white border-2 border-slate-800 text-slate-800 hover:bg-slate-50 font-bold py-3 px-6 rounded-lg">
                   <span className="mr-2 text-xl">+</span>
                   Create new order
@@ -161,7 +161,7 @@ export default function OrdersScreen({ user }: { user: User }) {
                   </div>
 
                   <div className="flex gap-3 pt-4 border-t border-slate-200">
-                    <Link href="/provider/chatroom" className="flex-1">
+                    <Link href="/chatroom" className="flex-1">
                       <button className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-slate-800 text-slate-800 rounded-lg hover:bg-slate-50 font-semibold transition-colors">
                         <MessageCircle className="w-5 h-5" />
                         Chat
@@ -182,7 +182,7 @@ export default function OrdersScreen({ user }: { user: User }) {
 
                   {expandedOrderId === order.id && (
                     <div className="mt-4 pt-4 border-t border-slate-200">
-                      <Link href={`/provider/edit-order/${order.id}`} className="block">
+                      <Link href={`/edit-order/${order.id}`} className="block">
                         <Button className="w-full bg-[#2D3E2D] hover:bg-[#1D2E1D] text-white font-bold py-3 rounded">
                           Edit Order
                         </Button>

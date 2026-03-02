@@ -95,7 +95,7 @@ export default function DistroForm({
   return (
     <div className="flex flex-col min-h-[calc(100vh-100px)] bg-amber-50 p-4 pb-24">
       <div className="flex items-center justify-between mb-8">
-        <Link href="/admin/distribution-centers">
+        <Link href="/distribution-centers">
           <Button variant="ghost" className="p-0 h-auto hover:bg-transparent">
             <ArrowLeft className="w-6 h-6 text-slate-800" />
           </Button>
@@ -315,7 +315,7 @@ export default function DistroForm({
                   ? "Update Center"
                   : "Create Center"}
             </Button>
-            <Link href="/admin/distribution-centers" className="flex-1">
+            <Link href="/distribution-centers" className="flex-1">
               <Button
                 type="button"
                 variant="outline"

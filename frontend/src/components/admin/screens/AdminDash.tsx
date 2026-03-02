@@ -85,7 +85,7 @@ export default function AdminDash({ user }: AdminDashProps) {
         {/* Management Buttons */}
         <div className="mb-8 space-y-4">
           <div>
-            <Link href="/admin/suppliers">
+            <Link href="/suppliers">
               <Button className="w-full bg-white border-2 border-slate-800 text-slate-800 hover:bg-slate-50 font-semibold py-3 rounded-lg flex items-center justify-between px-4">
                 <div className="flex items-center gap-3">
                   <Package className="w-5 h-5" />
@@ -97,7 +97,7 @@ export default function AdminDash({ user }: AdminDashProps) {
           </div>
 
           <div>
-            <Link href="/admin/distribution-centers">
+            <Link href="/distribution-centers">
               <Button className="w-full bg-white border-2 border-slate-800 text-slate-800 hover:bg-slate-50 font-semibold py-3 rounded-lg flex items-center justify-between px-4">
                 <div className="flex items-center gap-3">
                   <Building2 className="w-5 h-5" />
@@ -109,7 +109,7 @@ export default function AdminDash({ user }: AdminDashProps) {
           </div>
 
           <div>
-            <Link href="/admin/users">
+            <Link href="/users">
               <Button className="w-full bg-white border-2 border-slate-800 text-slate-800 hover:bg-slate-50 font-semibold py-3 rounded-lg flex items-center justify-between px-4">
                 <div className="flex items-center gap-3">
                   <Users className="w-5 h-5" />

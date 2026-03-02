@@ -16,7 +16,6 @@ router.post(
     try {
       const userId = (req.user as any).id;
 
-      // Validate request body
       const validationResult = CreateOrderSchema.safeParse(req.body);
       if (!validationResult.success) {
         return res.status(400).json({
@@ -33,7 +32,6 @@ router.post(
         ...orderData
       } = validationResult.data;
 
-      // Verify vehicle exists
       const [vehicle] = await db
         .select()
         .from(vehicles)
@@ -42,8 +40,6 @@ router.post(
       if (!vehicle) {
         return res.status(404).json({ error: "Vehicle not found" });
       }
-
-      // Create activity
       const [newActivity] = await db
         .insert(activities)
         .values({
@@ -61,7 +57,6 @@ router.post(
         })
         .returning();
 
-      // Create food items
       const createdFoodItems = await db
         .insert(foodItems)
         .values(
@@ -107,7 +102,6 @@ router.get(
         .from(activities)
         .where(eq(activities.providerId, userId));
 
-      // Get food item count for each activity
       const ordersWithCounts = await Promise.all(
         providerOrders.map(async (activity) => {
           const foodItemsList = await db
@@ -176,7 +170,6 @@ router.patch(
       const id = req.params.id as string;
       const { status, notes } = req.body;
 
-      // Validate status
       const validStatuses = [
         "requested",
         "accepted",

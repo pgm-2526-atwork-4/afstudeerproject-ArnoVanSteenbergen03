@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { OperatingInfo, TimeRange } from "@shared";
+import { OperatingInfo, TimeRange } from "@shared/index";
 
 const DAYS = [
   "monday",

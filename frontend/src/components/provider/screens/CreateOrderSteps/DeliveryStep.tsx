@@ -103,7 +103,6 @@ export default function DeliveryStep({
         Back
       </button>
 
-      {/* Pickup Address */}
       <div className="bg-white border-2 border-slate-800 rounded-lg p-6">
         <Label className="block text-sm font-semibold text-slate-800 mb-4">
           Pick Up Address
@@ -117,7 +116,6 @@ export default function DeliveryStep({
         />
       </div>
 
-      {/* Pickup Time */}
       <div className="bg-white border-2 border-slate-800 rounded-lg p-6">
         <Label className="block text-sm font-semibold text-slate-800 mb-4">
           Pickup Date & Time
@@ -130,7 +128,6 @@ export default function DeliveryStep({
         />
       </div>
 
-      {/* Vehicle Selection */}
       <div className="bg-white border-2 border-slate-800 rounded-lg p-6">
         <Label className="block text-sm font-semibold text-slate-800 mb-4">
           Select vehicle type
@@ -168,7 +165,6 @@ export default function DeliveryStep({
         )}
       </div>
 
-      {/* Extra Notes */}
       <div className="bg-white border-2 border-slate-800 rounded-lg p-6">
         <Label className="block text-sm font-semibold text-slate-800 mb-4">
           Extra notes about the Delivery
@@ -181,14 +177,12 @@ export default function DeliveryStep({
         />
       </div>
 
-      {/* Validation / API error */}
       {(validationError || error) && (
         <p className="text-red-600 text-sm text-center">
           {validationError || error}
         </p>
       )}
 
-      {/* Navigation Buttons */}
       <div className="flex gap-3">
         <Button
           onClick={onCancel}

@@ -117,7 +117,6 @@ export default function CreateOrderPage() {
           </div>
         </div>
 
-        {/* Step Indicator - Only show after type selection */}
         {currentStep > 0 && (
           <div className="max-w-2xl mx-auto w-full mb-8">
             <div className="flex items-center justify-center gap-4">
@@ -156,7 +155,6 @@ export default function CreateOrderPage() {
           </div>
         )}
 
-        {/* Step Content */}
         <div className="max-w-2xl mx-auto w-full flex-1">
           {currentStep === 0 && (
             <OrderTypeStep onSelectOrderType={handleSelectOrderType} />

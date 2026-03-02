@@ -90,7 +90,6 @@ export default function FoodDetailsStep({
 
   return (
     <div className="space-y-6">
-      {/* Food Items */}
       <div className="space-y-4">
         {foodItems.map((item, index) => (
           <div
@@ -221,7 +220,6 @@ export default function FoodDetailsStep({
         ))}
       </div>
 
-      {/* Add Another Food Item */}
       <button
         onClick={addFoodItem}
         className="w-full border-2 border-dashed border-slate-800 rounded-lg py-3 text-slate-800 font-semibold hover:bg-slate-50 flex items-center justify-center gap-2"
@@ -230,7 +228,6 @@ export default function FoodDetailsStep({
         Add Another Food Item
       </button>
 
-      {/* Extra Notes */}
       <div className="bg-white border-2 border-slate-800 rounded-lg p-6">
         <Label className="block text-sm font-semibold text-slate-800 mb-4">
           Extra notes about the food
@@ -243,7 +240,6 @@ export default function FoodDetailsStep({
         />
       </div>
 
-      {/* Navigation Buttons */}
       <div className="flex gap-3">
         <Button
           onClick={onCancel}
@@ -254,7 +250,6 @@ export default function FoodDetailsStep({
         </Button>
         <Button
           onClick={() => {
-            // Validate: all items must have a name and servings
             const hasEmptyItems = foodItems.some(
               (item) => !item.itemName.trim() || !item.servings
             );

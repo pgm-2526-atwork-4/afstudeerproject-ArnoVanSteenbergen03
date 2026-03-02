@@ -5,8 +5,9 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import { hash } from "bcrypt";
 import {
   users,
-  roles,
-  userRoles,
+  permissions,
+  userPermissions,
+  applications,
   places,
   vehicles,
   activities,
@@ -21,60 +22,224 @@ const db = drizzle(sql);
 
 faker.seed(42);
 
-function pickOne<T>(arr: T[]): T {
+function pickOne<T>(arr: readonly T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+// Types for seed data
+type Permission = { id: number; resource: string; action: string; key: string };
+type User = { id: string; userType: string };
+type Place = { id: string; type: string };
+type Vehicle = { id: string };
+
+// All resources and CRUD actions for generating permissions
+const RESOURCES = [
+  "activities",
+  "places",
+  "food_items",
+  "vehicles",
+  "users",
+  "applications",
+] as const;
+
+const ACTIONS = ["create", "read", "update", "delete"] as const;
+
 async function main() {
-  // roles
-  const insertedRoles = await db
-    .insert(roles)
-    .values([
-      { roleName: "admin" },
-      { roleName: "provider" },
-      { roleName: "volunteer" },
-      { roleName: "centerManager" },
-      { roleName: "manager" },
-    ])
+  const permissionValues = RESOURCES.flatMap((resource) =>
+    ACTIONS.map((action) => ({
+      resource,
+      action,
+      key: `${action}_${resource}`,
+      description: `${action.charAt(0).toUpperCase() + action.slice(1)} ${resource.replace(/_/g, " ")}`,
+    })),
+  );
+
+  const insertedPermissions = await db
+    .insert(permissions)
+    .values(permissionValues)
     .onConflictDoNothing()
     .returning();
 
-  const allRoles = insertedRoles.length
-    ? insertedRoles
-    : await db.select().from(roles);
+  const allPermissions: Permission[] = insertedPermissions.length
+    ? insertedPermissions
+    : await db.select().from(permissions);
 
-  // users
+  console.log(`Seeded ${allPermissions.length} permissions`);
+
   const passwordHash = await hash("Test1234!", 10);
-  const insertedUsers = await db
+
+  // Admin user (pre-approved, all permissions)
+  const [adminUser]: User[] = await db
+    .insert(users)
+    .values({
+      email: "admin@test.com",
+      firstname: "Admin",
+      lastname: "User",
+      username: "admin",
+      password: passwordHash,
+      userType: "admin",
+      isApproved: true,
+    })
+    .returning();
+
+  // Provider users (approved)
+  const providerUsers: User[] = await db
     .insert(users)
     .values(
-      Array.from({ length: 12 }).map(() => {
+      Array.from({ length: 4 }).map(() => {
         const firstname = faker.person.firstName();
         const lastname = faker.person.lastName();
-        let username = `${firstname}${lastname}`.toLowerCase();
         return {
           email: faker.internet.email().toLowerCase(),
           firstname,
           lastname,
-          username,
+          username: `${firstname}${lastname}`.toLowerCase(),
           password: passwordHash,
+          userType: "provider" as const,
+          isApproved: true,
         };
       }),
     )
     .returning();
 
-  // user_roles
-  for (const u of insertedUsers) {
-    const count = faker.number.int({ min: 1, max: 2 });
-    const picked = faker.helpers.arrayElements(allRoles, count);
+  // Volunteer users (approved)
+  const volunteerUsers: User[] = await db
+    .insert(users)
+    .values(
+      Array.from({ length: 4 }).map(() => {
+        const firstname = faker.person.firstName();
+        const lastname = faker.person.lastName();
+        return {
+          email: faker.internet.email().toLowerCase(),
+          firstname,
+          lastname,
+          username: `${firstname}${lastname}`.toLowerCase(),
+          password: passwordHash,
+          userType: "volunteer" as const,
+          isApproved: true,
+        };
+      }),
+    )
+    .returning();
+
+  // Pending users (not yet approved — will have applications)
+  const pendingUsers: User[] = await db
+    .insert(users)
+    .values(
+      Array.from({ length: 3 }).map(() => {
+        const firstname = faker.person.firstName();
+        const lastname = faker.person.lastName();
+        return {
+          email: faker.internet.email().toLowerCase(),
+          firstname,
+          lastname,
+          username: `${firstname}${lastname}`.toLowerCase(),
+          password: passwordHash,
+          userType: pickOne(["provider", "volunteer"]),
+          isApproved: false,
+        };
+      }),
+    )
+    .returning();
+
+  const allApprovedUsers = [adminUser, ...providerUsers, ...volunteerUsers];
+
+  console.log(
+    `Seeded ${allApprovedUsers.length} approved + ${pendingUsers.length} pending users`,
+  );
+
+  // Admin gets ALL permissions
+  await db
+    .insert(userPermissions)
+    .values(
+      allPermissions.map((p) => ({
+        userId: adminUser.id,
+        permissionId: p.id,
+        grantedBy: adminUser.id,
+      })),
+    )
+    .onConflictDoNothing();
+
+  // Providers get activity + food_items CRUD + read places/vehicles
+  const providerPermKeys = [
+    "create_activities",
+    "read_activities",
+    "update_activities",
+    "delete_activities",
+    "create_food_items",
+    "read_food_items",
+    "update_food_items",
+    "delete_food_items",
+    "read_places",
+    "read_vehicles",
+  ];
+  const providerPerms = allPermissions.filter((p) =>
+    providerPermKeys.includes(p.key),
+  );
+
+  for (const u of providerUsers) {
     await db
-      .insert(userRoles)
-      .values(picked.map((r) => ({ userId: u.id, roleId: r.id })))
+      .insert(userPermissions)
+      .values(
+        providerPerms.map((p) => ({
+          userId: u.id,
+          permissionId: p.id,
+          grantedBy: adminUser.id,
+        })),
+      )
       .onConflictDoNothing();
   }
 
-  // places
-  const insertedPlaces = await db
+  // Volunteers get read activities + read places/vehicles
+  const volunteerPermKeys = [
+    "read_activities",
+    "update_activities",
+    "read_food_items",
+    "read_places",
+    "read_vehicles",
+  ];
+  const volunteerPerms = allPermissions.filter((p) =>
+    volunteerPermKeys.includes(p.key),
+  );
+
+  for (const u of volunteerUsers) {
+    await db
+      .insert(userPermissions)
+      .values(
+        volunteerPerms.map((p) => ({
+          userId: u.id,
+          permissionId: p.id,
+          grantedBy: adminUser.id,
+        })),
+      )
+      .onConflictDoNothing();
+  }
+
+  console.log("Seeded user permissions");
+
+  // Approved users get approved applications
+  for (const u of [...providerUsers, ...volunteerUsers]) {
+    await db.insert(applications).values({
+      userId: u.id,
+      userType: u.userType,
+      status: "approved",
+      reviewedBy: adminUser.id,
+      reviewedAt: faker.date.recent({ days: 30 }),
+    });
+  }
+
+  // Pending users get pending applications
+  for (const u of pendingUsers) {
+    await db.insert(applications).values({
+      userId: u.id,
+      userType: u.userType,
+      status: "pending",
+    });
+  }
+
+  console.log("Seeded applications");
+
+  const insertedPlaces: Place[] = await db
     .insert(places)
     .values(
       Array.from({ length: 8 }).map((_, i) => ({
@@ -101,8 +266,7 @@ async function main() {
     )
     .returning();
 
-  // vehicles
-  const insertedVehicles = await db
+  const insertedVehicles: Vehicle[] = await db
     .insert(vehicles)
     .values([
       { vehicleType: "bikebag", icon: "Backpack", amount: 4 },
@@ -111,48 +275,40 @@ async function main() {
     ])
     .returning();
 
-  // activities
-  const providers = insertedPlaces.filter((p) => p.type === "provider");
   const centers = insertedPlaces.filter(
-    (p) => p.type === "distribution_center",
+    (p: { id: string; type: string }) => p.type === "distribution_center",
   );
 
   const insertedActivities = await db
     .insert(activities)
     .values(
       Array.from({ length: 15 }).map(() => ({
-        providerId: pickOne(insertedUsers).id,
+        providerId: pickOne(providerUsers).id,
         pickupAddress: faker.location.streetAddress({ useFullAddress: true }),
         assignedCenterId: pickOne(centers).id,
         status: pickOne(["requested", "assigned", "completed"]),
         pickupTime: faker.date.soon({ days: 14 }),
         notes: faker.lorem.sentence(),
         details: { fragile: faker.datatype.boolean() },
+        freezerItemIncluded: faker.datatype.boolean(),
         vehicleId: pickOne(insertedVehicles).id,
       })),
     )
     .returning();
 
-  // food items
   for (const a of insertedActivities) {
     const count = faker.number.int({ min: 1, max: 4 });
     await db.insert(foodItems).values(
       Array.from({ length: count }).map(() => ({
         activityId: a.id,
         itemName: faker.commerce.productName(),
-        servings: faker.number.int({ min: 1, max: 40 }),
         expirationDate: faker.date.soon({ days: 5 }),
-        freezerItemIncluded: faker.datatype.boolean(),
         packageIncluded: faker.datatype.boolean(),
         image: faker.image.url(),
-        notes: faker.lorem.words(5),
         allergies: faker.helpers
           .arrayElements(
             ["gluten", "milk", "eggs", "nuts", "soy", "fish", "sesame"],
-            {
-              min: 0,
-              max: 3,
-            },
+            { min: 0, max: 3 },
           )
           .join(", "),
       })),

@@ -12,6 +12,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
+// new user schema
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   firstname: text("firstname").notNull(),
@@ -19,31 +20,52 @@ export const users = pgTable("users", {
   email: text("email").unique().notNull(),
   username: text("username").unique().notNull(),
   password: text("password").notNull(),
+  userType: varchar("user_type", { length: 20 }).notNull(), // provider, volunteer, admin, centerManager, manager
+  isApproved: boolean("is_approved").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const roles = pgTable("roles", {
+//permission table with all the permissions
+export const permissions = pgTable("permissions", {
   id: serial("id").primaryKey(),
-  roleName: text("name").unique().notNull(),
+  resource: text("resource").notNull(), // activities, places, orders
+  action: text("action").notNull(), // create, read, update, delete
+  key: text("key").unique().notNull(), //create_activities
+  description: text("description"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Join table so users can have multiple roles
-export const userRoles = pgTable(
-  "user_roles",
+// Join table: users <-> permissions
+export const userPermissions = pgTable(
+  "user_permissions",
   {
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    roleId: integer("role_id")
+    permissionId: integer("permission_id")
       .notNull()
-      .references(() => roles.id, { onDelete: "cascade" }),
-    createdAt: timestamp("created_at").defaultNow(),
+      .references(() => permissions.id, { onDelete: "cascade" }),
+    grantedBy: uuid("granted_by").references(() => users.id),
+    grantedAt: timestamp("granted_at").defaultNow(),
   },
-  (table) => [primaryKey({ columns: [table.userId, table.roleId] })],
+  (table) => [primaryKey({ columns: [table.userId, table.permissionId] })],
 );
+
+// Application table: holds pending signup requests for admin review
+export const applications = pgTable("applications", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  userType: varchar("user_type", { length: 20 }).notNull(), // provider, volunteer
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, approved, denied
+  reviewedBy: uuid("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  denialReason: text("denial_reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
 
 export const places = pgTable("places", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -68,6 +90,7 @@ export const activities = pgTable("activities", {
   pickupTime: timestamp("pickup_time").notNull(),
   notes: text("notes"),
   details: jsonb("details"),
+  freezerItemIncluded: boolean("freezer_item").notNull().default(false),
   vehicleId: uuid("vehicle_id").references(() => vehicles.id, {
     onDelete: "cascade",
   }),
@@ -82,13 +105,10 @@ export const foodItems = pgTable("food_items", {
     .notNull()
     .references(() => activities.id, { onDelete: "cascade" }),
   itemName: text("item_name").notNull(),
-  servings: integer("servings").notNull(),
   allergies: text("allergies"),
   expirationDate: timestamp("expiration_date"),
-  freezerItemIncluded: boolean("freezer_item").notNull().default(false),
   packageIncluded: boolean("package_included").notNull().default(false),
   image: text("image"),
-  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -103,24 +123,46 @@ export const vehicles = pgTable("vehicles", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-//Relations
+////Relations
+
 export const usersRelations = relations(users, ({ many }) => ({
   activitiesCreated: many(activities),
-  userRoles: many(userRoles),
+  userPermissions: many(userPermissions),
+  applications: many(applications),
 }));
 
-export const rolesRelations = relations(roles, ({ many }) => ({
-  userRoles: many(userRoles),
+export const permissionsRelations = relations(permissions, ({ many }) => ({
+  userPermissions: many(userPermissions),
 }));
 
-export const userRolesRelations = relations(userRoles, ({ one }) => ({
+export const userPermissionsRelations = relations(
+  userPermissions,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [userPermissions.userId],
+      references: [users.id],
+    }),
+    permission: one(permissions, {
+      fields: [userPermissions.permissionId],
+      references: [permissions.id],
+    }),
+    granter: one(users, {
+      fields: [userPermissions.grantedBy],
+      references: [users.id],
+      relationName: "grantedPermissions",
+    }),
+  }),
+);
+
+export const applicationsRelations = relations(applications, ({ one }) => ({
   user: one(users, {
-    fields: [userRoles.userId],
+    fields: [applications.userId],
     references: [users.id],
   }),
-  role: one(roles, {
-    fields: [userRoles.roleId],
-    references: [roles.id],
+  reviewer: one(users, {
+    fields: [applications.reviewedBy],
+    references: [users.id],
+    relationName: "reviewedApplications",
   }),
 }));
 

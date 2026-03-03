@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
 import passport from "passport";
 import dotenv from "dotenv";
 import authRouter from "@/routes/auth";
@@ -12,6 +13,7 @@ import adminRouter from "@/routes/admin/index";
 dotenv.config();
 
 const app = express();
+const PgStore = connectPgSimple(session);
 
 // Middleware
 app.use(
@@ -25,7 +27,13 @@ app.use(express.urlencoded({ extended: true }));
 
 // Session & Auth configuration
 app.use(
+  //doesnt log me out during development
   session({
+    store: new PgStore({
+      conString: process.env.DATABASE_URL,
+      createTableIfMissing: true,
+    }),
+    //
     secret: process.env.SESSION_SECRET || "dev-secret",
     resave: false,
     saveUninitialized: false,

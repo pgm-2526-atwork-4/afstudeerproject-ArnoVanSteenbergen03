@@ -46,7 +46,7 @@ export const userPermissions = pgTable(
     permissionId: integer("permission_id")
       .notNull()
       .references(() => permissions.id, { onDelete: "cascade" }),
-    grantedBy: uuid("granted_by").references(() => users.id),
+    grantedBy: uuid("granted_by").references(() => users.id, { onDelete: "set null" }),
     grantedAt: timestamp("granted_at").defaultNow(),
   },
   (table) => [primaryKey({ columns: [table.userId, table.permissionId] })],
@@ -60,7 +60,7 @@ export const applications = pgTable("applications", {
     .references(() => users.id, { onDelete: "cascade" }),
   userType: varchar("user_type", { length: 20 }).notNull(), // provider, volunteer
   status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, approved, denied
-  reviewedBy: uuid("reviewed_by").references(() => users.id),
+  reviewedBy: uuid("reviewed_by").references(() => users.id, { onDelete: "set null" }),
   reviewedAt: timestamp("reviewed_at"),
   denialReason: text("denial_reason"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -82,7 +82,7 @@ export const activities = pgTable("activities", {
   id: uuid("id").primaryKey().defaultRandom(),
   providerId: uuid("provider_id")
     .notNull()
-    .references(() => users.id),
+    .references(() => users.id, { onDelete: "cascade" }),
   pickupAddress: text("pickup_address").notNull(),
   assignedCenterId: uuid("assigned_center_id").references(() => places.id),
   status: varchar("status", { length: 50 }).notNull().default("requested"),

@@ -4,8 +4,16 @@ import { useEffect, useState } from "react";
 import ProtectedPage from "@/components/ProtectedPage";
 import PermissionGate from "@/components/PermissionGate";
 import { useAuth } from "@/lib/auth-context";
-import { getApplicationCount, getUsers, AdminUser } from "@/lib/api-client";
+import { getApplicationCount, getUsers, deleteUser, AdminUser } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import Link from "next/link";
 import { ArrowLeft, Plus, Edit2, Trash2, FileText, Loader2 } from "lucide-react";
 
@@ -16,6 +24,9 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState<string>("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [confirmDeleteName, setConfirmDeleteName] = useState<string>("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     getApplicationCount()
@@ -44,6 +55,33 @@ export default function UsersPage() {
   }, [roleFilter]);
 
   if (!user) return null;
+
+  const openDeleteModal = (userId: string, username: string) => {
+    setConfirmDeleteId(userId);
+    setConfirmDeleteName(username);
+  };
+
+  const closeDeleteModal = () => {
+    if (!deleteLoading) {
+      setConfirmDeleteId(null);
+      setConfirmDeleteName("");
+    }
+  };
+
+  const performDelete = async () => {
+    if (!confirmDeleteId) return;
+    setDeleteLoading(true);
+    try {
+      await deleteUser(confirmDeleteId);
+      setUsers((prev) => prev.filter((u) => u.id !== confirmDeleteId));
+      setConfirmDeleteId(null);
+      setConfirmDeleteName("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete user");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
@@ -170,17 +208,20 @@ export default function UsersPage() {
                   </div>
                   <div className="flex gap-2">
                     <PermissionGate permission="update_users">
-                      <Button
-                        variant="outline"
-                        className="border-slate-800 text-slate-800 hover:bg-slate-100"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </Button>
+                      <Link href={`/users/${usr.id}/edit`}>
+                        <Button
+                          variant="outline"
+                          className="border-slate-800 text-slate-800 hover:bg-slate-100"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                      </Link>
                     </PermissionGate>
                     <PermissionGate permission="delete_users">
                       <Button
                         variant="outline"
                         className="border-red-500 text-red-500 hover:bg-red-50"
+                        onClick={() => openDeleteModal(usr.id, usr.username)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -193,6 +234,33 @@ export default function UsersPage() {
           )}
         </div>
       </div>
+
+      {/* Delete confirmation modal */}
+      <Dialog open={confirmDeleteId !== null} onOpenChange={(open) => { if (!open) closeDeleteModal(); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete User</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete <span className="font-semibold text-slate-900">{confirmDeleteName}</span>? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={closeDeleteModal} disabled={deleteLoading}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={performDelete}
+              disabled={deleteLoading}
+            >
+              {deleteLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : null}
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </ProtectedPage>
   );
 }

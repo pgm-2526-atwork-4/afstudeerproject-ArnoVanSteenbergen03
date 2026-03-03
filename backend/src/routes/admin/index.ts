@@ -4,6 +4,7 @@ import profileRouter from "./profileRoutes";
 import distroRouter from "./distroRoutes";
 import ordersRouter from "./ordersRoutes";
 import applicationsRouter from "./applicationsRoutes";
+import usersRouter from "./userRoutes";
 
 const router = Router();
 
@@ -13,5 +14,6 @@ router.use("/profile", profileRouter);
 router.use("/distro", distroRouter);
 router.use("/orders", ordersRouter);
 router.use("/applications", applicationsRouter);
+router.use("/users", usersRouter);
 
 export default router;

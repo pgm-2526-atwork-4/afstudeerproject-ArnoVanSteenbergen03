@@ -1,8 +1,8 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { db } from "@/config/database";
-import { users } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { users, applications } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
 passport.use(
@@ -46,7 +46,21 @@ passport.deserializeUser(async (id: string, done) => {
     if (!user) {
       return done(null, false);
     }
-    done(null, user);
+
+    // Compute isApproved from applications table
+    const approvedApp = await db.query.applications.findFirst({
+      where: and(
+        eq(applications.userId, user.id),
+        eq(applications.status, "approved"),
+      ),
+    });
+
+    const userWithApproval = {
+      ...user,
+      isApproved: user.userType === "admin" || !!approvedApp,
+    };
+
+    done(null, userWithApproval);
   } catch (err) {
     done(err);
   }

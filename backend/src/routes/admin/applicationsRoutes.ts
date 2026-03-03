@@ -116,11 +116,6 @@ router.post(
         })
         .where(eq(applications.id, id));
 
-      await db
-        .update(users)
-        .set({ isApproved: true })
-        .where(eq(users.id, application.userId));
-
       if (permissionIds && permissionIds.length > 0) {
         const validPermissions = await db
           .select({ id: permissions.id })

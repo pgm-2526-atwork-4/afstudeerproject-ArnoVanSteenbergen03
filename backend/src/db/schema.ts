@@ -21,7 +21,6 @@ export const users = pgTable("users", {
   username: text("username").unique().notNull(),
   password: text("password").notNull(),
   userType: varchar("user_type", { length: 20 }).notNull(), // provider, volunteer, admin, centerManager, manager
-  isApproved: boolean("is_approved").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

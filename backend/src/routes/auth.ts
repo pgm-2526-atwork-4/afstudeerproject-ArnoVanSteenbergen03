@@ -3,7 +3,7 @@ import passport from "passport";
 import { db } from "@/config/database";
 import { users, applications, userPermissions, permissions } from "@/db/schema";
 import bcrypt from "bcrypt";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { requireAuth } from "@/middleware/auth";
 import { registerApiSchema, loginSchema } from "@shared/schemas/auth";
 import { z } from "zod/v4";
@@ -50,7 +50,6 @@ router.post("/register", async (req: Request, res: Response) => {
         username,
         password: hashedPassword,
         userType,
-        isApproved: false,
       })
       .returning();
 
@@ -71,7 +70,7 @@ router.post("/register", async (req: Request, res: Response) => {
           email: newUser.email,
           username: newUser.username,
           userType: newUser.userType,
-          isApproved: newUser.isApproved,
+          isApproved: false,
         },
       });
     });
@@ -102,10 +101,18 @@ router.post("/login", (req: Request, res: Response, next: NextFunction) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    req.login(user, (loginErr: any) => {
+    req.login(user, async (loginErr: any) => {
       if (loginErr) {
         return res.status(500).json({ error: "Login failed" });
       }
+
+      // Compute isApproved from applications table
+      const approvedApp = await db.query.applications.findFirst({
+        where: and(
+          eq(applications.userId, user.id),
+          eq(applications.status, "approved"),
+        ),
+      });
 
       res.json({
         message: "Login successful",
@@ -114,7 +121,7 @@ router.post("/login", (req: Request, res: Response, next: NextFunction) => {
           email: user.email,
           username: user.username,
           userType: user.userType,
-          isApproved: user.isApproved,
+          isApproved: user.userType === "admin" || !!approvedApp,
         },
       });
     });
@@ -146,6 +153,16 @@ router.get("/me", requireAuth, async (req: Request, res: Response) => {
 
   const permissionKeys = permRows.map((r) => r.key);
 
+  // Compute isApproved from applications table
+  const approvedApp = await db.query.applications.findFirst({
+    where: and(
+      eq(applications.userId, userId),
+      eq(applications.status, "approved"),
+    ),
+  });
+
+  const isApproved = fullUser.userType === "admin" || !!approvedApp;
+
   res.json({
     id: fullUser.id,
     email: fullUser.email,
@@ -153,7 +170,7 @@ router.get("/me", requireAuth, async (req: Request, res: Response) => {
     firstname: fullUser.firstname,
     lastname: fullUser.lastname,
     userType: fullUser.userType,
-    isApproved: fullUser.isApproved,
+    isApproved,
     permissions: permissionKeys,
   });
 });

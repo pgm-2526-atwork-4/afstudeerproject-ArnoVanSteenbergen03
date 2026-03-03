@@ -4,14 +4,18 @@ import { useEffect, useState } from "react";
 import ProtectedPage from "@/components/ProtectedPage";
 import PermissionGate from "@/components/PermissionGate";
 import { useAuth } from "@/lib/auth-context";
-import { getApplicationCount } from "@/lib/api-client";
+import { getApplicationCount, getUsers, AdminUser } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowLeft, Plus, Edit2, Trash2, FileText } from "lucide-react";
+import { ArrowLeft, Plus, Edit2, Trash2, FileText, Loader2 } from "lucide-react";
 
 export default function UsersPage() {
   const { user } = useAuth();
   const [pendingCount, setPendingCount] = useState<number | null>(null);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [roleFilter, setRoleFilter] = useState<string>("");
 
   useEffect(() => {
     getApplicationCount()
@@ -19,32 +23,27 @@ export default function UsersPage() {
       .catch(() => setPendingCount(null));
   }, []);
 
-  if (!user) return null;
+  useEffect(() => {
+    let cancelled = false;
+    const fetchUsers = async () => {
+      try {
+        const data = await getUsers(roleFilter || undefined);
+        if (!cancelled) {
+          setUsers(data);
+          setError(null);
+        }
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to fetch users");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    setLoading(true);
+    fetchUsers();
+    return () => { cancelled = true; };
+  }, [roleFilter]);
 
-  // Mock data - replace with API call
-  const users = [
-    {
-      id: 1,
-      username: "admin_user",
-      email: "admin@example.com",
-      role: "admin",
-      status: "Active",
-    },
-    {
-      id: 2,
-      username: "manager_user",
-      email: "manager@example.com",
-      role: "provider",
-      status: "Active",
-    },
-    {
-      id: 3,
-      username: "volunteer_user",
-      email: "volunteer@example.com",
-      role: "volunteer",
-      status: "Active",
-    },
-  ];
+  if (!user) return null;
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
@@ -59,11 +58,7 @@ export default function UsersPage() {
     }
   };
 
-  const getStatusBadgeColor = (status: string) => {
-    return status === "Active"
-      ? "bg-green-100 text-green-800 border-green-300"
-      : "bg-red-100 text-red-800 border-red-300";
-  };
+
 
   return (
     <ProtectedPage requiredPermission="read_users">
@@ -112,6 +107,38 @@ export default function UsersPage() {
             </div>
           </PermissionGate>
 
+          <div className="mb-6">
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              className="w-full border-2 border-slate-800 rounded-lg px-4 py-3 bg-white text-slate-800 font-semibold"
+            >
+              <option value="">All Roles</option>
+              <option value="admin">Admin</option>
+              <option value="provider">Provider</option>
+              <option value="volunteer">Volunteer</option>
+            </select>
+          </div>
+
+          {loading && (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-slate-600" />
+            </div>
+          )}
+
+          {error && (
+            <div className="bg-red-100 border border-red-300 text-red-700 rounded-lg p-4 mb-4">
+              {error}
+            </div>
+          )}
+
+          {!loading && !error && users.length === 0 && (
+            <div className="text-center text-slate-500 py-12">
+              No users found.
+            </div>
+          )}
+
+          {!loading && !error && (
           <div className="space-y-4">
             {users.map((usr) => (
               <div
@@ -132,22 +159,13 @@ export default function UsersPage() {
                         <span className="font-semibold">Role:</span>
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-semibold border ${getRoleBadgeColor(
-                            usr.role,
+                            usr.userType,
                           )}`}
                         >
-                          {usr.role}
+                          {usr.userType}
                         </span>
                       </div>
-                      <div className="flex gap-2 items-center">
-                        <span className="font-semibold">Status:</span>
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusBadgeColor(
-                            usr.status,
-                          )}`}
-                        >
-                          {usr.status}
-                        </span>
-                      </div>
+
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -172,6 +190,7 @@ export default function UsersPage() {
               </div>
             ))}
           </div>
+          )}
         </div>
       </div>
     </ProtectedPage>

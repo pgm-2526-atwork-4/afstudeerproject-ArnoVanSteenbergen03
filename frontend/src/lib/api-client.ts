@@ -388,3 +388,39 @@ export async function denyApplication(id: string, reason?: string) {
 
   return response.json();
 }
+
+// ── Users (Admin) ───────────────────────────────────────────────────
+
+export interface AdminUser {
+  id: string;
+  username: string;
+  email: string;
+  firstname: string;
+  lastname: string;
+  userType: string;
+  createdAt: string;
+}
+
+export async function getUsers(role?: string): Promise<AdminUser[]> {
+  const params = new URLSearchParams();
+  if (role) params.set("role", role);
+
+  const url = `${API_BASE_URL}/admin/users${params.toString() ? `?${params}` : ""}`;
+
+  const response = await fetch(url, {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    try {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to fetch users");
+    } catch {
+      throw new Error(`Failed to fetch users: ${response.statusText}`);
+    }
+  }
+
+  return response.json();
+}

@@ -78,7 +78,6 @@ async function main() {
       username: "admin",
       password: passwordHash,
       userType: "admin",
-      isApproved: true,
     })
     .returning();
 
@@ -96,7 +95,6 @@ async function main() {
           username: `${firstname}${lastname}`.toLowerCase(),
           password: passwordHash,
           userType: "provider" as const,
-          isApproved: true,
         };
       }),
     )
@@ -116,7 +114,6 @@ async function main() {
           username: `${firstname}${lastname}`.toLowerCase(),
           password: passwordHash,
           userType: "volunteer" as const,
-          isApproved: true,
         };
       }),
     )
@@ -136,7 +133,6 @@ async function main() {
           username: `${firstname}${lastname}`.toLowerCase(),
           password: passwordHash,
           userType: pickOne(["provider", "volunteer"]),
-          isApproved: false,
         };
       }),
     )
@@ -217,8 +213,8 @@ async function main() {
 
   console.log("Seeded user permissions");
 
-  // Approved users get approved applications
-  for (const u of [...providerUsers, ...volunteerUsers]) {
+  // Approved users get approved applications (including admin)
+  for (const u of [adminUser, ...providerUsers, ...volunteerUsers]) {
     await db.insert(applications).values({
       userId: u.id,
       userType: u.userType,

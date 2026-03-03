@@ -45,7 +45,6 @@ export default function AdminDash({ user }: AdminDashProps) {
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-100px)] bg-amber-50 p-4 pb-24">
-      {/* Header */}
       <div className="flex justify-center mb-8">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-slate-800 mb-2">Admin</h1>
@@ -53,14 +52,12 @@ export default function AdminDash({ user }: AdminDashProps) {
         </div>
       </div>
 
-      {/* System Overview */}
       <div className="max-w-2xl mx-auto w-full">
         <div className="mb-8">
           <h2 className="text-xl font-semibold text-slate-800 mb-4">
             System Overview
           </h2>
 
-          {/* Stats Grid */}
           <div className="grid grid-cols-2 gap-4 mb-6">
             {stats.map((stat) => {
               const IconComponent = stat.icon;
@@ -82,7 +79,6 @@ export default function AdminDash({ user }: AdminDashProps) {
           </div>
         </div>
 
-        {/* Management Buttons */}
         <div className="mb-8 space-y-4">
           <div>
             <Link href="/suppliers">
@@ -121,7 +117,6 @@ export default function AdminDash({ user }: AdminDashProps) {
           </div>
         </div>
 
-        {/* Quick Stats */}
         <div className="bg-white border-2 border-slate-800 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-slate-800 mb-4">
             Quick Stats

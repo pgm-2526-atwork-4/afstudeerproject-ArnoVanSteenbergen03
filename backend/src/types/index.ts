@@ -9,7 +9,7 @@ declare global {
       username: string;
       password: string;
       userType: string;
-      isApproved: boolean;
+      isApproved?: boolean;
       createdAt: Date | null;
       updatedAt: Date | null;
     }

@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import OrderTypeStep from "@/components/provider/screens/CreateOrderSteps/OrderTypeStep";
-import FoodDetailsStep from "@/components/provider/screens/CreateOrderSteps/FoodDetailsStep";
-import DeliveryStep from "@/components/provider/screens/CreateOrderSteps/DeliveryStep";
+import OrderTypeStep from "@/components/orders/CreateOrderSteps/OrderTypeStep";
+import FoodDetailsStep from "@/components/orders/CreateOrderSteps/FoodDetailsStep";
+import DeliveryStep from "@/components/orders/CreateOrderSteps/DeliveryStep";
 import ProtectedPage from "@/components/ProtectedPage";
 import { getProviderOrderById, updateOrder } from "@/lib/api-client";
 import type { FoodItemData, OrderFormData } from "@/types";

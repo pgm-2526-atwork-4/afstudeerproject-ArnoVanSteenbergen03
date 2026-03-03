@@ -1,7 +1,7 @@
 "use client";
 
 import ProtectedPage from "@/components/ProtectedPage";
-import DistroForm from "@/components/admin/screens/DistroForm";
+import DistroForm from "@/components/distribution-centers/DistroForm";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";

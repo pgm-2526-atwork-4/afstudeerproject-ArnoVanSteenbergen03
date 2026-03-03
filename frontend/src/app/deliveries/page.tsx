@@ -1,7 +1,7 @@
 "use client";
 
 import ProtectedPage from "@/components/ProtectedPage";
-import OrdersScreen from "@/components/volunteer/screens/OrderScreen";
+import OrdersScreen from "@/components/deliveries/OrderScreen";
 import { useAuth } from "@/lib/auth-context";
 
 export default function DeliveriesPage() {

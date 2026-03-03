@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import ProtectedPage from "@/components/ProtectedPage";
-import AdminDash from "@/components/admin/screens/AdminDash";
+import AdminDash from "@/components/dashboard/AdminDash";
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();

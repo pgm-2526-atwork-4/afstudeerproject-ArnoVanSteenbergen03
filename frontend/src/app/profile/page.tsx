@@ -1,7 +1,7 @@
 "use client";
 
 import ProtectedPage from "@/components/ProtectedPage";
-import ProfileScreen from "@/components/screens/ProfileScreen";
+import ProfileScreen from "@/components/profile/ProfileScreen";
 import { useAuth } from "@/lib/auth-context";
 
 export default function ProfilePage() {

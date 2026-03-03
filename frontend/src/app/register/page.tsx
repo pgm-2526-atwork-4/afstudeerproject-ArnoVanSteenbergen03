@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import IntentionSelection from "@/components/auth/IntentionSelection";
-import { RegisterForm } from "@/components/auth/RegisterForm";
+import IntentionSelection from "@/components/register/IntentionSelection";
+import { RegisterForm } from "@/components/register/RegisterForm";
 
 export default function RegisterPage() {
   const [selectedType, setSelectedType] = useState<"volunteer" | "provider" | null>(null);

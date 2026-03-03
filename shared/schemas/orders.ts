@@ -41,3 +41,30 @@ export const orderSchema = z.object({
 });
 
 export type Order = z.infer<typeof orderSchema>;
+
+// Food item form data
+export const foodItemDataSchema = z.object({
+  itemName: z.string(),
+  allergies: z.string(),
+  servings: z.number(),
+  expirationDate: z.string().optional(),
+  freezerItemIncluded: z.boolean(),
+  packageIncluded: z.boolean(),
+  image: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export type FoodItemData = z.infer<typeof foodItemDataSchema>;
+
+// Order form data
+export const orderFormDataSchema = z.object({
+  orderType: z.enum(["single", "repeated"]),
+  foodItems: z.array(foodItemDataSchema),
+  foodNotes: z.string(),
+  pickupAddress: z.string(),
+  vehicleId: z.string(),
+  deliveryNotes: z.string(),
+  pickupTime: z.string(),
+});
+
+export type OrderFormData = z.infer<typeof orderFormDataSchema>;

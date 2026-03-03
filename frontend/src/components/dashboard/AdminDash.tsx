@@ -37,12 +37,6 @@ export default function AdminDash({ user }: AdminDashProps) {
     },
   ];
 
-  const quickStats = [
-    { label: "Registered Suppliers", value: "2" },
-    { label: "Total Managers", value: "2" },
-    { label: "System Admins", value: "0" },
-  ];
-
   return (
     <div className="flex flex-col min-h-[calc(100vh-100px)] bg-amber-50 p-4 pb-24">
       <div className="flex justify-center mb-8">
@@ -114,25 +108,6 @@ export default function AdminDash({ user }: AdminDashProps) {
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
-          </div>
-        </div>
-
-        <div className="bg-white border-2 border-slate-800 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-slate-800 mb-4">
-            Quick Stats
-          </h3>
-          <div className="space-y-3">
-            {quickStats.map((stat) => (
-              <div
-                key={stat.label}
-                className="flex justify-between items-center pb-3 border-b border-slate-200 last:border-b-0"
-              >
-                <span className="text-sm text-slate-700">{stat.label}:</span>
-                <span className="font-semibold text-slate-800">
-                  {stat.value}
-                </span>
-              </div>
-            ))}
           </div>
         </div>
       </div>

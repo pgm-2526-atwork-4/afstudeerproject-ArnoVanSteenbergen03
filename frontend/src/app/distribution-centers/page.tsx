@@ -4,10 +4,21 @@ import ProtectedPage from "@/components/ProtectedPage";
 import PermissionGate from "@/components/PermissionGate";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-import { getDistributionCenters } from "@/lib/api-client";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  getDistributionCenters,
+  deleteDistributionCenter,
+} from "@/lib/api-client";
 import { DistributionCenter } from "@/types";
 import Link from "next/link";
-import { ArrowLeft, Plus, Edit2, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Edit2, Trash2, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -18,6 +29,10 @@ export default function DistributionCentersPage() {
   const [centers, setCenters] = useState<DistributionCenter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<DistributionCenter | null>(
+    null,
+  );
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const fetchCenters = async () => {
@@ -41,6 +56,24 @@ export default function DistributionCentersPage() {
     }
   }, [loading, user]);
 
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      setIsDeleting(true);
+      await deleteDistributionCenter(deleteTarget.id);
+      setCenters((prev) => prev.filter((c) => c.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to delete distribution center",
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (!user) return null;
 
   return (
@@ -48,10 +81,7 @@ export default function DistributionCentersPage() {
       <div className="flex flex-col min-h-[calc(100vh-100px)] bg-amber-50 p-4 pb-24">
         <div className="flex items-center justify-between mb-8">
           <Link href="/dashboard">
-            <Button
-              variant="ghost"
-              className="p-0 h-auto hover:bg-transparent"
-            >
+            <Button variant="ghost" className="p-0 h-auto hover:bg-transparent">
               <ArrowLeft className="w-6 h-6 text-slate-800" />
             </Button>
           </Link>
@@ -154,6 +184,7 @@ export default function DistributionCentersPage() {
                       </PermissionGate>
                       <PermissionGate permission="delete_places">
                         <Button
+                          onClick={() => setDeleteTarget(center)}
                           variant="outline"
                           className="border-red-500 text-red-500 hover:bg-red-50"
                         >
@@ -168,6 +199,45 @@ export default function DistributionCentersPage() {
           )}
         </div>
       </div>
+
+      <Dialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Distribution Center</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete{" "}
+              <span className="font-semibold">{deleteTarget?.name}</span>? This
+              action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteTarget(null)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </ProtectedPage>
   );
 }

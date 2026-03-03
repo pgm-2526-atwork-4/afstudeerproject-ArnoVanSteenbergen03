@@ -10,27 +10,24 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-interface DistroFormProps {
+interface SupplierFormProps {
   initialData?: DistributionCenter;
   onSubmit: (data: Partial<DistributionCenter>) => Promise<void>;
   isLoading?: boolean;
   error?: string | null;
 }
 
-export default function DistroForm({
+export default function SupplierForm({
   initialData,
   onSubmit,
   isLoading = false,
   error,
-}: DistroFormProps) {
+}: SupplierFormProps) {
   const { operatingInfo, days, toggleDay, updateTime, isDayOpen, getHours } =
     useOperatingInfo(initialData?.operatingInfo);
 
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
-    type:
-      (initialData?.type as "supplier" | "distribution_center") ||
-      "distribution_center",
     contactInfo: {
       phone: initialData?.contactInfo?.phone || "",
       email: initialData?.contactInfo?.email || "",
@@ -80,7 +77,7 @@ export default function DistroForm({
 
     const submitData: Partial<DistributionCenter> = {
       name: formData.name,
-      type: formData.type,
+      type: "supplier",
       contactInfo: formData.contactInfo,
       operatingInfo,
       geojson: {
@@ -95,14 +92,14 @@ export default function DistroForm({
   return (
     <div className="flex flex-col min-h-[calc(100vh-100px)] bg-amber-50 p-4 pb-24">
       <div className="flex items-center justify-between mb-8">
-        <Link href="/distribution-centers">
+        <Link href="/suppliers">
           <Button variant="ghost" className="p-0 h-auto hover:bg-transparent">
             <ArrowLeft className="w-6 h-6 text-slate-800" />
           </Button>
         </Link>
         <div className="text-center flex-1">
           <h1 className="text-3xl font-bold text-slate-800">
-            {initialData ? "Edit" : "Add"} Distribution Center
+            {initialData ? "Edit" : "Add"} Supplier
           </h1>
           <div className="h-1 bg-slate-800 w-48 mx-auto mt-2"></div>
         </div>
@@ -134,22 +131,6 @@ export default function DistroForm({
                   className="w-full px-3 py-2 border-2 border-slate-800 rounded"
                   required
                 />
-              </div>
-
-              <div>
-                <Label className="block text-sm font-semibold text-slate-800 mb-2">
-                  Type
-                </Label>
-                <select
-                  value={formData.type}
-                  onChange={(e) => handleChange("type", e.target.value)}
-                  className="w-full px-3 py-2 border-2 border-slate-800 rounded"
-                >
-                  <option value="distribution_center">
-                    Distribution Center
-                  </option>
-                  <option value="supplier">Supplier</option>
-                </select>
               </div>
             </div>
           </div>
@@ -312,10 +293,10 @@ export default function DistroForm({
               {isLoading
                 ? "Saving..."
                 : initialData
-                  ? "Update Center"
-                  : "Create Center"}
+                  ? "Update Supplier"
+                  : "Create Supplier"}
             </Button>
-            <Link href="/distribution-centers" className="flex-1">
+            <Link href="/suppliers" className="flex-1">
               <Button
                 type="button"
                 variant="outline"

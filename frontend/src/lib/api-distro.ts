@@ -47,3 +47,20 @@ export async function updateDistributionCenter(
 
   return response.json();
 }
+
+// Delete distribution center
+export async function deleteDistributionCenter(id: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/admin/distro/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    try {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to delete distribution center");
+    } catch {
+      throw new Error(`Failed to delete distribution center: ${response.statusText}`);
+    }
+  }
+}

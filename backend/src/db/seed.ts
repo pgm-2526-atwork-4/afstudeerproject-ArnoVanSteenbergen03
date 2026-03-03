@@ -244,7 +244,7 @@ async function main() {
           type: "Point",
           coordinates: [faker.location.longitude(), faker.location.latitude()],
         },
-        type: i < 4 ? "provider" : "distribution_center",
+        type: i < 4 ? "supplier" : "distribution_center",
         operatingInfo: {
           monday: { open: "08:00", close: "17:00" },
           tuesday: { open: "08:00", close: "17:00" },

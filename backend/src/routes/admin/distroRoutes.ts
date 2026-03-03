@@ -6,7 +6,7 @@ import { distributionCenterSchema } from "@shared/index";
 
 const router = Router();
 
-// GET all distribution centers
+// get all distribution centers
 router.get("/", async (req: Request, res: Response) => {
   try {
     const allPlaces = await db.query.places.findMany({
@@ -19,7 +19,7 @@ router.get("/", async (req: Request, res: Response) => {
   }
 });
 
-// CREATE new distribution center
+// create new distribution center
 router.post("/", async (req: Request, res: Response) => {
   try {
     const validated = distributionCenterSchema.omit({ id: true, createdAt: true, updatedAt: true }).parse(req.body);
@@ -42,7 +42,7 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
-// GET single distribution center
+// get single distribution center
 router.get("/:id", async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
@@ -61,7 +61,7 @@ router.get("/:id", async (req: Request, res: Response) => {
   }
 });
 
-// UPDATE distribution center
+// update distribution center
 router.put("/:id", async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
@@ -95,6 +95,25 @@ router.put("/:id", async (req: Request, res: Response) => {
       error: "Failed to update distribution center",
       details: error instanceof Error ? error.message : "Unknown error"
     });
+  }
+});
+
+// delete distribution center
+router.delete("/:id", async (req: Request<{ id: string }>, res: Response) => {
+  try {
+    const place = await db.query.places.findFirst({
+      where: eq(places.id, req.params.id),
+    });
+
+    if (!place) {
+      return res.status(404).json({ error: "Distribution center not found" });
+    }
+
+    await db.delete(places).where(eq(places.id, req.params.id));
+    res.json({ message: "Distribution center deleted successfully" });
+  } catch (error) {
+    console.error("Delete place error:", error);
+    res.status(500).json({ error: "Failed to delete distribution center" });
   }
 });
 

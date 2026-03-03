@@ -27,7 +27,7 @@ export const operatingHoursSchema = operatingInfoSchema;
 export const distributionCenterSchema = z.object({
   id: z.string(),
   name: z.string(),
-  type: z.enum(["provider", "distribution_center"]),
+  type: z.enum(["supplier", "distribution_center"]),
   geojson: z.object({
     type: z.literal("Point"),
     coordinates: z.tuple([z.number(), z.number()]),

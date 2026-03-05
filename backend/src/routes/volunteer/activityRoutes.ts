@@ -1,27 +1,92 @@
 import { Router, Request, Response } from "express";
 import { db } from "@/config/database";
-import { activities, foodItems, places, users } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { activities, goods, collectionActivities, places, users } from "@/db/schema";
+import { eq, and, isNull } from "drizzle-orm";
 import { requireAuth, requirePermission } from "@/middleware/auth";
 
 const router = Router();
 
-//Get all assigned activities for volunteer
-router.get("/", requireAuth, requirePermission("read_activities"), async (req: Request, res: Response) => {
+// Get open (unassigned) orders
+router.get("/open", requireAuth, requirePermission("read_activities"), async (_req: Request, res: Response) => {
   try {
-    const assignedActivities = await db
+    const openOrders = await db
       .select({
         activity: activities,
         provider: users,
       })
       .from(activities)
       .leftJoin(users, eq(activities.providerId, users.id))
-      .where(eq(activities.status, "accepted"));
+      .where(
+        and(
+          eq(activities.status, "requested"),
+          isNull(activities.assignedDriver)
+        )
+      );
 
-    return res.json(assignedActivities);
+    return res.json(openOrders);
   } catch (error) {
-    console.error("Error fetching activities:", error);
-    res.status(500).json({ error: "Failed to fetch activities" });
+    console.error("Error fetching open orders:", error);
+    res.status(500).json({ error: "Failed to fetch open orders" });
+  }
+});
+
+// Get my deliveries
+router.get("/mine", requireAuth, requirePermission("read_activities"), async (req: Request, res: Response) => {
+  try {
+    const userId = (req.user as any).id as string;
+
+    const myDeliveries = await db
+      .select({
+        activity: activities,
+        provider: users,
+      })
+      .from(activities)
+      .leftJoin(users, eq(activities.providerId, users.id))
+      .where(eq(activities.assignedDriver, userId));
+
+    return res.json(myDeliveries);
+  } catch (error) {
+    console.error("Error fetching my deliveries:", error);
+    res.status(500).json({ error: "Failed to fetch deliveries" });
+  }
+});
+
+// Accept an order
+router.patch("/:id/accept", requireAuth, requirePermission("update_activities"), async (req: Request, res: Response) => {
+  try {
+    const userId = (req.user as any).id as string;
+    const id = req.params.id as string;
+
+    const [activity] = await db
+      .select()
+      .from(activities)
+      .where(eq(activities.id, id));
+
+    if (!activity) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    if (activity.assignedDriver) {
+      return res.status(400).json({ error: "Order has already been accepted by another driver" });
+    }
+
+    const [updatedActivity] = await db
+      .update(activities)
+      .set({
+        assignedDriver: userId,
+        status: "accepted",
+        updatedAt: new Date(),
+      })
+      .where(eq(activities.id, id))
+      .returning();
+
+    return res.json({
+      message: "Order accepted",
+      activity: updatedActivity,
+    });
+  } catch (error) {
+    console.error("Error accepting order:", error);
+    res.status(500).json({ error: "Failed to accept order" });
   }
 });
 
@@ -39,10 +104,17 @@ router.get("/:id", requireAuth, requirePermission("read_activities"), async (req
       return res.status(404).json({ error: "Activity not found" });
     }
 
-    const items = await db
+    const collectionActivityRows = await db
       .select()
-      .from(foodItems)
-      .where(eq(foodItems.activityId, id));
+      .from(collectionActivities)
+      .where(eq(collectionActivities.activityId, id));
+
+    let items: (typeof goods.$inferSelect)[] = [];
+    if (collectionActivityRows.length > 0) {
+      const caIds = collectionActivityRows.map((ca) => ca.id);
+      const allGoods = await db.select().from(goods);
+      items = allGoods.filter((g) => caIds.includes(g.sourceActivityId));
+    }
 
     const assignedCenter = activity.assignedCenterId
       ? (
@@ -60,7 +132,7 @@ router.get("/:id", requireAuth, requirePermission("read_activities"), async (req
 
     return res.json({
       activity,
-      foodItems: items,
+      goods: items,
       assignedCenter,
       provider,
     });

@@ -85,6 +85,9 @@ export const activities = pgTable("activities", {
   providerId: uuid("provider_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
+  assignedDriver: uuid("assigned_driver").references(() => users.id, {
+    onDelete: "set null",
+  }),
   location: text("location").notNull(),
   activityType: varchar("activity_type", { length: 20 }).notNull(), // collection, distribution, hygiene, other
   assignedCenterId: uuid("assigned_center_id").references(() => places.id),

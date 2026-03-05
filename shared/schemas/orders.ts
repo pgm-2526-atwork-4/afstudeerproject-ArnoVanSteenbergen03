@@ -1,24 +1,26 @@
 import { z } from "zod";
 
-// Validation schemas
-export const FoodItemSchema = z.object({
-  itemName: z.string().min(1, "Item name is required"),
-  allergies: z.string().default(""),
-  servings: z.number().int().positive("Servings must be a positive number"),
+// Validation schemas for goods items
+export const GoodsSchema = z.object({
+  goodType: z.enum(["food", "clothing", "household", "equipment"]).default("food"),
+  category: z.string().min(1, "Category is required"),
+  name: z.string().min(1, "Item name is required"),
+  quantity: z.number().positive("Quantity must be a positive number"),
+  unit: z.enum(["kg", "items", "boxes", "pallets", "liters"]).default("items"),
+  allergies: z.string().optional(),
   expirationDate: z.string().optional(),
-  freezerItemIncluded: z.boolean().default(false),
   packageIncluded: z.boolean().default(false),
   image: z.string().optional(),
   notes: z.string().optional(),
 });
 
 export const CreateOrderSchema = z.object({
-  pickupAddress: z.string().min(1, "Pickup address is required"),
+  location: z.string().min(1, "Location is required"),
   assignedCenterId: z.string().optional(),
   vehicleId: z.string(),
-  pickupTime: z.string(),
+  orderTime: z.string(),
   notes: z.string().optional(),
-  foodItems: z.array(FoodItemSchema).min(1, "At least one food item is required"),
+  goods: z.array(GoodsSchema).min(1, "At least one good item is required"),
   orderType: z.enum(["single", "repeated"]).default("single"),
   repeatDetails: z.object({
     frequency: z.enum(["daily", "weekly", "biweekly", "monthly"]).optional(),
@@ -32,39 +34,98 @@ export type CreateOrderInput = z.infer<typeof CreateOrderSchema>;
 export const orderSchema = z.object({
   id: z.string(),
   status: z.string(),
-  pickupTime: z.string(),
-  pickupAddress: z.string(),
+  orderTime: z.string(),
+  location: z.string(),
   assignedCenterId: z.string().optional(),
   notes: z.string().optional(),
   details: z.any().optional(),
-  foodItemCount: z.number(),
+  goodsCount: z.number(),
 });
 
 export type Order = z.infer<typeof orderSchema>;
 
-// Food item form data
-export const foodItemDataSchema = z.object({
-  itemName: z.string(),
-  allergies: z.string(),
-  servings: z.number(),
+// Goods item form data 
+export const goodsDataSchema = z.object({
+  goodType: z.enum(["food", "clothing", "household", "equipment"]).default("food"),
+  category: z.string(),
+  name: z.string(),
+  quantity: z.number(),
+  unit: z.enum(["kg", "items", "boxes", "pallets", "liters"]).default("items"),
+  allergies: z.string().optional(),
   expirationDate: z.string().optional(),
-  freezerItemIncluded: z.boolean(),
   packageIncluded: z.boolean(),
   image: z.string().optional(),
   notes: z.string().optional(),
 });
 
-export type FoodItemData = z.infer<typeof foodItemDataSchema>;
+export type GoodsData = z.infer<typeof goodsDataSchema>;
+export const foodItemDataSchema = goodsDataSchema;
+export type FoodItemData = GoodsData;
+
+// API goods item (shape returned by backend from the goods DB table)
+export const apiGoodsItemSchema = z.object({
+  id: z.string(),
+  goodType: z.string(),
+  category: z.string(),
+  name: z.string(),
+  quantity: z.union([z.string(), z.number()]),
+  unit: z.string(),
+  status: z.string(),
+  sourcePlaceId: z.string().nullable().optional(),
+  currentPlaceId: z.string().nullable().optional(),
+  latitude: z.string().nullable().optional(),
+  longitude: z.string().nullable().optional(),
+  geom: z.unknown().nullable().optional(),
+  sourceActivityId: z.number().nullable().optional(),
+  distributionActivityId: z.string().nullable().optional(),
+  metadata: z.record(z.string(), z.unknown()).nullable().optional(),
+  notes: z.string().nullable().optional(),
+  createdBy: z.string().nullable().optional(),
+  createdAt: z.string().nullable().optional(),
+  updatedAt: z.string().nullable().optional(),
+  allergies: z.string().nullable().optional(),
+  expirationDate: z.string().nullable().optional(),
+  packageIncluded: z.boolean().nullable().optional(),
+  image: z.string().nullable().optional(),
+});
+
+export type ApiGoodsItem = z.infer<typeof apiGoodsItemSchema>;
 
 // Order form data
 export const orderFormDataSchema = z.object({
   orderType: z.enum(["single", "repeated"]),
-  foodItems: z.array(foodItemDataSchema),
-  foodNotes: z.string(),
-  pickupAddress: z.string(),
+  goods: z.array(goodsDataSchema),
+  goodsNotes: z.string(),
+  location: z.string(),
   vehicleId: z.string(),
   deliveryNotes: z.string(),
-  pickupTime: z.string(),
+  orderTime: z.string(),
 });
 
 export type OrderFormData = z.infer<typeof orderFormDataSchema>;
+
+// Delivery order (activity + provider info returned by volunteer endpoints)
+export const deliveryOrderSchema = z.object({
+  activity: z.object({
+    id: z.string(),
+    status: z.string(),
+    orderTime: z.string(),
+    location: z.string(),
+    notes: z.string().nullable(),
+    details: z.record(z.string(), z.unknown()).nullable(),
+    assignedCenterId: z.string().nullable(),
+    assignedDriver: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+  }),
+  provider: z
+    .object({
+      id: z.string(),
+      firstName: z.string(),
+      lastName: z.string(),
+      email: z.string(),
+    })
+    .nullable(),
+});
+
+export type DeliveryOrder = z.infer<typeof deliveryOrderSchema>;

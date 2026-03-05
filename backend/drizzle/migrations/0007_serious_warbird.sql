@@ -1,0 +1,2 @@
+ALTER TABLE "activities" ADD COLUMN "assigned_driver" uuid;--> statement-breakpoint
+ALTER TABLE "activities" ADD CONSTRAINT "activities_assigned_driver_users_id_fk" FOREIGN KEY ("assigned_driver") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;

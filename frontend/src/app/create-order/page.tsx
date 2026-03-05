@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import OrderTypeStep from "@/components/orders/CreateOrderSteps/OrderTypeStep";
-import FoodDetailsStep from "@/components/orders/CreateOrderSteps/FoodDetailsStep";
+import GoodsStep from "@/components/orders/CreateOrderSteps/GoodsStep";
 import DeliveryStep from "@/components/orders/CreateOrderSteps/DeliveryStep";
 import ProtectedPage from "@/components/ProtectedPage";
 import { createOrder } from "@/lib/api-client";
-import type { FoodItemData, OrderFormData } from "@/types";
+import type { GoodsData, OrderFormData } from "@/types";
 
 export default function CreateOrderPage() {
   const router = useRouter();
@@ -17,16 +17,16 @@ export default function CreateOrderPage() {
 
   const [formData, setFormData] = useState<OrderFormData>({
     orderType: "single",
-    foodItems: [],
-    foodNotes: "",
-    pickupAddress: "",
+    goods: [],
+    goodsNotes: "",
+    location: "",
     vehicleId: "",
     deliveryNotes: "",
-    pickupTime: new Date().toISOString(),
+    orderTime: new Date().toISOString(),
   });
 
   const steps = [
-    { number: 1, title: "Food Details" },
+    { number: 1, title: "Goods Details" },
     { number: 2, title: "Delivery" },
   ];
 
@@ -35,8 +35,8 @@ export default function CreateOrderPage() {
     setCurrentStep(1);
   };
 
-  const handleFoodDetailsNext = (foodItems: FoodItemData[], notes: string) => {
-    setFormData((prev) => ({ ...prev, foodItems, foodNotes: notes }));
+  const handleGoodsNext = (goods: GoodsData[], notes: string) => {
+    setFormData((prev) => ({ ...prev, goods, goodsNotes: notes }));
     setCurrentStep(2);
   };
 
@@ -50,27 +50,29 @@ export default function CreateOrderPage() {
   };
 
   const handleSubmitOrder = async (
-    pickupAddress: string,
+    location: string,
     vehicleId: string,
     deliveryNotes: string,
-    pickupTime: string,
+    orderTime: string,
   ) => {
     setSubmitting(true);
     setError(null);
 
     try {
       await createOrder({
-        pickupAddress,
+        location,
         vehicleId,
-        pickupTime,
-        notes: deliveryNotes || formData.foodNotes || undefined,
+        orderTime,
+        notes: deliveryNotes || formData.goodsNotes || undefined,
         orderType: formData.orderType,
-        foodItems: formData.foodItems.map((item) => ({
-          itemName: item.itemName,
-          allergies: item.allergies || "",
-          servings: item.servings,
+        goods: formData.goods.map((item) => ({
+          goodType: item.goodType,
+          category: item.category,
+          name: item.name,
+          quantity: item.quantity,
+          unit: item.unit,
+          allergies: item.allergies || undefined,
           expirationDate: item.expirationDate || undefined,
-          freezerItemIncluded: item.freezerItemIncluded,
           packageIncluded: item.packageIncluded,
           image: item.image || undefined,
           notes: item.notes || undefined,
@@ -140,11 +142,11 @@ export default function CreateOrderPage() {
             <OrderTypeStep onSelectOrderType={handleSelectOrderType} />
           )}
           {currentStep === 1 && (
-            <FoodDetailsStep
-              onNext={handleFoodDetailsNext}
+            <GoodsStep
+              onNext={handleGoodsNext}
               onCancel={handleCancel}
-              initialFoodItems={formData.foodItems}
-              initialNotes={formData.foodNotes}
+              initialGoods={formData.goods}
+              initialNotes={formData.goodsNotes}
             />
           )}
           {currentStep === 2 && (

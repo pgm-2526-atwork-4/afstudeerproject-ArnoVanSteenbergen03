@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { db } from "@/config/database";
-import { activities, foodItems, places, users, vehicles } from "@/db/schema";
+import { activities, goods, collectionActivities, places, users, vehicles } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod/v4";
 import { requireAuth, requirePermission } from "@/middleware/auth";
@@ -21,7 +21,6 @@ router.get("/", requireAuth, requirePermission("read_activities"), async (req: R
       .from(activities)
       .leftJoin(users, eq(activities.providerId, users.id));
 
-    // Build where clause based on filters
     let whereConditions = [];
 
     if (status) {
@@ -36,7 +35,6 @@ router.get("/", requireAuth, requirePermission("read_activities"), async (req: R
       whereConditions.push(eq(activities.assignedCenterId, centerId as string));
     }
 
-    // Note: Simplified - real implementation would need proper where clause building
     const allOrders = await query;
 
     const filteredOrders = allOrders.filter((order) => {
@@ -67,10 +65,17 @@ router.get("/:id", requireAuth, requirePermission("read_activities"), async (req
       return res.status(404).json({ error: "Order not found" });
     }
 
-    const items = await db
+    const collectionActivityRows = await db
       .select()
-      .from(foodItems)
-      .where(eq(foodItems.activityId, id));
+      .from(collectionActivities)
+      .where(eq(collectionActivities.activityId, id));
+
+    let items: (typeof goods.$inferSelect)[] = [];
+    if (collectionActivityRows.length > 0) {
+      const caIds = collectionActivityRows.map((ca) => ca.id);
+      const allGoods = await db.select().from(goods);
+      items = allGoods.filter((g) => caIds.includes(g.sourceActivityId));
+    }
 
     const [provider] = await db
       .select()
@@ -95,7 +100,7 @@ router.get("/:id", requireAuth, requirePermission("read_activities"), async (req
 
     return res.json({
       activity,
-      foodItems: items,
+      goods: items,
       provider,
       assignedCenter,
       vehicle,

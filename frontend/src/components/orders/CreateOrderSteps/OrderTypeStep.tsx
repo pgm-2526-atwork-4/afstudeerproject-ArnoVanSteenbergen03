@@ -31,7 +31,7 @@ export default function OrderTypeStep({
                 Single Order
               </h3>
               <p className="text-slate-600 text-sm">
-                One-time delivery of food items to a distribution center
+                One-time delivery of goods to a distribution center
               </p>
             </div>
           </CardContent>

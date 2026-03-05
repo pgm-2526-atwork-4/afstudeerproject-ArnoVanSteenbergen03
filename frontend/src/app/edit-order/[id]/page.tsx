@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import OrderTypeStep from "@/components/orders/CreateOrderSteps/OrderTypeStep";
-import FoodDetailsStep from "@/components/orders/CreateOrderSteps/FoodDetailsStep";
+import GoodsStep from "@/components/orders/CreateOrderSteps/GoodsStep";
 import DeliveryStep from "@/components/orders/CreateOrderSteps/DeliveryStep";
 import ProtectedPage from "@/components/ProtectedPage";
 import { getProviderOrderById, updateOrder } from "@/lib/api-client";
-import type { FoodItemData, OrderFormData } from "@/types";
+import type { GoodsData, ApiGoodsItem, OrderFormData } from "@/types";
 
 export default function EditOrderPage() {
   const router = useRouter();
@@ -21,16 +21,16 @@ export default function EditOrderPage() {
 
   const [formData, setFormData] = useState<OrderFormData>({
     orderType: "single",
-    foodItems: [],
-    foodNotes: "",
-    pickupAddress: "",
+    goods: [],
+    goodsNotes: "",
+    location: "",
     vehicleId: "",
     deliveryNotes: "",
-    pickupTime: new Date().toISOString(),
+    orderTime: new Date().toISOString(),
   });
 
   const steps = [
-    { number: 1, title: "Food Details" },
+    { number: 1, title: "Goods Details" },
     { number: 2, title: "Delivery" },
   ];
 
@@ -53,33 +53,34 @@ export default function EditOrderPage() {
 
         if (response && response.activity) {
           const order = response.activity;
-          const apiFoodItems = response.foodItems || [];
+          const apiGoods = response.goods || [];
 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const foodItems: FoodItemData[] = apiFoodItems.map((item: any) => ({
-            itemName: item.itemName,
+          const goods: GoodsData[] = apiGoods.map((item: ApiGoodsItem) => ({
+            goodType: item.goodType || "food",
+            category: item.category || "",
+            name: item.name,
+            quantity: item.quantity,
+            unit: item.unit || "items",
             allergies: item.allergies || "",
-            servings: item.servings,
             expirationDate: item.expirationDate
               ? new Date(item.expirationDate).toISOString().split("T")[0]
               : "",
-            freezerItemIncluded: item.freezerItemIncluded,
             packageIncluded: item.packageIncluded,
             image: item.image,
             notes: item.notes,
           }));
 
           const orderType = order.details?.orderType || "single";
-          const foodNotes = order.details?.foodNotes || "";
+          const goodsNotes = order.details?.goodsNotes || order.details?.foodNotes || "";
 
           setFormData({
             orderType,
-            foodItems,
-            foodNotes,
-            pickupAddress: order.pickupAddress || "",
+            goods,
+            goodsNotes,
+            location: order.location || "",
             vehicleId: order.vehicleId || "",
             deliveryNotes: order.notes || "",
-            pickupTime: order.pickupTime || new Date().toISOString(),
+            orderTime: order.orderTime || new Date().toISOString(),
           });
           setCurrentStep(1);
         }
@@ -100,8 +101,8 @@ export default function EditOrderPage() {
     setCurrentStep(1);
   };
 
-  const handleFoodDetailsNext = (foodItems: FoodItemData[], notes: string) => {
-    setFormData((prev) => ({ ...prev, foodItems, foodNotes: notes }));
+  const handleGoodsNext = (goods: GoodsData[], notes: string) => {
+    setFormData((prev) => ({ ...prev, goods, goodsNotes: notes }));
     setCurrentStep(2);
   };
 
@@ -115,27 +116,29 @@ export default function EditOrderPage() {
   };
 
   const handleSubmitOrder = async (
-    pickupAddress: string,
+    location: string,
     vehicleId: string,
     deliveryNotes: string,
-    pickupTime: string,
+    orderTime: string,
   ) => {
     setSubmitting(true);
     setError(null);
 
     try {
       await updateOrder(orderId, {
-        pickupAddress,
+        location,
         vehicleId,
-        pickupTime,
-        notes: deliveryNotes || formData.foodNotes || undefined,
+        orderTime,
+        notes: deliveryNotes || formData.goodsNotes || undefined,
         orderType: formData.orderType,
-        foodItems: formData.foodItems.map((item) => ({
-          itemName: item.itemName,
-          allergies: item.allergies || "",
-          servings: item.servings,
+        goods: formData.goods.map((item) => ({
+          goodType: item.goodType,
+          category: item.category,
+          name: item.name,
+          quantity: item.quantity,
+          unit: item.unit,
+          allergies: item.allergies || undefined,
           expirationDate: item.expirationDate || undefined,
-          freezerItemIncluded: item.freezerItemIncluded,
           packageIncluded: item.packageIncluded,
           image: item.image || undefined,
           notes: item.notes || undefined,
@@ -215,11 +218,11 @@ export default function EditOrderPage() {
             <OrderTypeStep onSelectOrderType={handleSelectOrderType} />
           )}
           {currentStep === 1 && (
-            <FoodDetailsStep
-              onNext={handleFoodDetailsNext}
+            <GoodsStep
+              onNext={handleGoodsNext}
               onCancel={handleCancel}
-              initialFoodItems={formData.foodItems}
-              initialNotes={formData.foodNotes}
+              initialGoods={formData.goods}
+              initialNotes={formData.goodsNotes}
             />
           )}
           {currentStep === 2 && (
@@ -229,10 +232,10 @@ export default function EditOrderPage() {
               onSubmit={handleSubmitOrder}
               submitting={submitting}
               error={error}
-              initialPickupAddress={formData.pickupAddress}
+              initialLocation={formData.location}
               initialVehicleId={formData.vehicleId}
               initialNotes={formData.deliveryNotes}
-              initialPickupTime={formatDateForInput(formData.pickupTime)}
+              initialOrderTime={formatDateForInput(formData.orderTime)}
               isEditing={true}
             />
           )}

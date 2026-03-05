@@ -1,17 +1,12 @@
 "use client";
 
 import ProtectedPage from "@/components/ProtectedPage";
-import OrdersScreen from "@/components/deliveries/OrderScreen";
-import { useAuth } from "@/lib/auth-context";
+import DeliveriesScreen from "@/components/deliveries/DeliveriesScreen";
 
 export default function DeliveriesPage() {
-  const { user } = useAuth();
-
-  if (!user) return null;
-
   return (
     <ProtectedPage requiredPermission="read_activities">
-      <OrdersScreen user={user} />
+      <DeliveriesScreen />
     </ProtectedPage>
   );
 }

@@ -142,21 +142,21 @@ export default function OrdersScreen({ user }: { user: User }) {
                       #{index + 1}
                     </h3>
                     <p className="text-sm text-slate-600">
-                      {formatDate(order.pickupTime)}
+                      {formatDate(order.orderTime)}
                     </p>
                   </div>
 
                   <p className="text-slate-800 font-semibold mb-4">
                     {order.details?.orderType === "repeated"
                       ? "Recurring Order"
-                      : "Food Delivery"}{" "}
+                      : "Delivery"}{" "}
                     {order.notes && `- ${order.notes}`}
                   </p>
 
                   <div className="flex items-center gap-2 text-slate-600 mb-4">
                     <span className="text-lg">📍</span>
                     <p className="text-sm">
-                      {order.pickupAddress}
+                      {order.location}
                     </p>
                   </div>
 

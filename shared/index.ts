@@ -3,5 +3,6 @@ export * from "./schemas/profile";
 export * from "./schemas/types";
 export * from "./schemas/distro";
 export * from "./schemas/orders";
+export * from "./schemas/vehicles";
 export * from "./schemas/applications";
 export * from "./schemas/users";

@@ -11,7 +11,8 @@ import {
   places,
   vehicles,
   activities,
-  foodItems,
+  goods,
+  collectionActivities,
 } from "./schema";
 
 const connectionString = process.env.DATABASE_URL;
@@ -280,10 +281,11 @@ async function main() {
     .values(
       Array.from({ length: 15 }).map(() => ({
         providerId: pickOne(providerUsers).id,
-        pickupAddress: faker.location.streetAddress({ useFullAddress: true }),
+        location: faker.location.streetAddress({ useFullAddress: true }),
+        activityType: "collection",
         assignedCenterId: pickOne(centers).id,
         status: pickOne(["requested", "assigned", "completed"]),
-        pickupTime: faker.date.soon({ days: 14 }),
+        orderTime: faker.date.soon({ days: 14 }),
         notes: faker.lorem.sentence(),
         details: { fragile: faker.datatype.boolean() },
         freezerItemIncluded: faker.datatype.boolean(),
@@ -293,20 +295,38 @@ async function main() {
     .returning();
 
   for (const a of insertedActivities) {
-    const count = faker.number.int({ min: 1, max: 4 });
-    await db.insert(foodItems).values(
-      Array.from({ length: count }).map(() => ({
+    // Create collection activity record
+    const [collectionActivity] = await db
+      .insert(collectionActivities)
+      .values({
         activityId: a.id,
-        itemName: faker.commerce.productName(),
-        expirationDate: faker.date.soon({ days: 5 }),
-        packageIncluded: faker.datatype.boolean(),
-        image: faker.image.url(),
-        allergies: faker.helpers
-          .arrayElements(
-            ["gluten", "milk", "eggs", "nuts", "soy", "fish", "sesame"],
-            { min: 0, max: 3 },
-          )
-          .join(", "),
+      })
+      .returning();
+
+    // Create goods for this collection activity
+    const count = faker.number.int({ min: 1, max: 4 });
+    await db.insert(goods).values(
+      Array.from({ length: count }).map(() => ({
+        goodType: pickOne(["food", "clothing", "household"]),
+        category: faker.commerce.department(),
+        name: faker.commerce.productName(),
+        quantity: String(faker.number.int({ min: 1, max: 100 })),
+        unit: pickOne(["kg", "items", "boxes", "pallets", "liters"]),
+        status: "available",
+        sourcePlaceId: pickOne(insertedPlaces).id,
+        currentPlaceId: pickOne(centers).id,
+        sourceActivityId: collectionActivity.id,
+        metadata: {
+          allergies: faker.helpers
+            .arrayElements(
+              ["gluten", "milk", "eggs", "nuts", "soy", "fish", "sesame"],
+              { min: 0, max: 3 },
+            )
+            .join(", "),
+          expirationDate: faker.date.soon({ days: 5 }),
+          packageIncluded: faker.datatype.boolean(),
+          image: faker.image.url(),
+        },
       })),
     );
   }

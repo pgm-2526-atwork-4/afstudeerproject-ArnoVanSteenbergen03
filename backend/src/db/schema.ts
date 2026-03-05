@@ -9,6 +9,8 @@ import {
   varchar,
   integer,
   primaryKey,
+  decimal,
+  index,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -77,16 +79,17 @@ export const places = pgTable("places", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-//This model is one pickup activitie, which has all the info for a driver
+//This model is one activitie, which has all the info for a driver
 export const activities = pgTable("activities", {
   id: uuid("id").primaryKey().defaultRandom(),
   providerId: uuid("provider_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  pickupAddress: text("pickup_address").notNull(),
+  location: text("location").notNull(),
+  activityType: varchar("activity_type", { length: 20 }).notNull(), // collection, distribution, hygiene, other
   assignedCenterId: uuid("assigned_center_id").references(() => places.id),
   status: varchar("status", { length: 50 }).notNull().default("requested"),
-  pickupTime: timestamp("pickup_time").notNull(),
+  orderTime: timestamp("order_time").notNull(),
   notes: text("notes"),
   details: jsonb("details"),
   freezerItemIncluded: boolean("freezer_item").notNull().default(false),
@@ -97,20 +100,64 @@ export const activities = pgTable("activities", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-//This is a modal that links to activities and has all the info for a food item that is being picked up.
-export const foodItems = pgTable("food_items", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  activityId: uuid("activity_id")
-    .notNull()
-    .references(() => activities.id, { onDelete: "cascade" }),
-  itemName: text("item_name").notNull(),
-  allergies: text("allergies"),
-  expirationDate: timestamp("expiration_date"),
-  packageIncluded: boolean("package_included").notNull().default(false),
-  image: text("image"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
+// Collection activities
+export const collectionActivities = pgTable(
+  "collection_activities",
+  {
+    id: serial("id").primaryKey(),
+    activityId: uuid("activity_id")
+      .notNull()
+      .references(() => activities.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [index("collection_activity_idx").on(table.activityId)]
+);
+
+// Goods table
+export const goods = pgTable(
+  "goods",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    goodType: text("good_type").notNull(), // 'food', 'clothing', 'household', 'equipment', etc.
+    category: text("category").notNull(), // specific category within type (e.g., 'produce', 'dairy' for food)
+    name: text("name").notNull(),
+    
+    // Quantity and measurement
+    quantity: decimal("quantity", { precision: 10, scale: 2 }).notNull(),
+    unit: text("unit").notNull(), // 'kg', 'items', 'boxes', 'pallets', 'liters', etc.
+    
+    // Status tracking
+    status: text("status").notNull().default("available"), // 'available', 'reserved', 'distributed', 'expired', 'discarded'
+    
+    // Location tracking
+    sourcePlaceId: uuid("source_place_id").references(() => places.id),
+    currentPlaceId: uuid("current_place_id").references(() => places.id),
+    
+    // Geographic coordinates
+    latitude: decimal("latitude", { precision: 10, scale: 7 }),
+    longitude: decimal("longitude", { precision: 10, scale: 7 }),
+    geom: jsonb("geom"),
+    
+    // Activity tracking
+    sourceActivityId: serial("source_activity_id").references(() => collectionActivities.id),
+    distributionActivityId: uuid("distribution_activity_id").references(() => activities.id, { onDelete: "set null" }),
+    
+    // Flexible metadata for type-specific information (e.g., allergies for food, size for clothing)
+    metadata: jsonb("metadata"),
+    
+    notes: text("notes"),
+    createdBy: uuid("created_by").references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("goods_type_status_idx").on(table.goodType, table.status),
+    index("goods_source_place_idx").on(table.sourcePlaceId),
+    index("goods_current_place_idx").on(table.currentPlaceId),
+    index("goods_source_activity_idx").on(table.sourceActivityId),
+  ]
+);
 
 //These are the different type of vihicles used for pickups
 export const vehicles = pgTable("vehicles", {
@@ -128,6 +175,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   activitiesCreated: many(activities),
   userPermissions: many(userPermissions),
   applications: many(applications),
+  goodsCreated: many(goods),
 }));
 
 export const permissionsRelations = relations(permissions, ({ many }) => ({
@@ -165,6 +213,11 @@ export const applicationsRelations = relations(applications, ({ one }) => ({
   }),
 }));
 
+export const placesRelations = relations(places, ({ many }) => ({
+  goodsSourced: many(goods, { relationName: "goodsSourcePlace" }),
+  goodsCurrent: many(goods, { relationName: "goodsCurrentPlace" }),
+}));
+
 export const activitiesRelations = relations(activities, ({ one, many }) => ({
   provider: one(users, {
     fields: [activities.providerId],
@@ -178,12 +231,45 @@ export const activitiesRelations = relations(activities, ({ one, many }) => ({
     fields: [activities.vehicleId],
     references: [vehicles.id],
   }),
-  foodItems: many(foodItems),
+  collectionActivity: one(collectionActivities, {
+    fields: [activities.id],
+    references: [collectionActivities.activityId],
+  }),
+  goodsDistributed: many(goods),
 }));
 
-export const foodItemsRelations = relations(foodItems, ({ one }) => ({
-  activity: one(activities, {
-    fields: [foodItems.activityId],
+export const collectionActivitiesRelations = relations(
+  collectionActivities,
+  ({ one, many }) => ({
+    activity: one(activities, {
+      fields: [collectionActivities.activityId],
+      references: [activities.id],
+    }),
+    goods: many(goods),
+  })
+);
+
+export const goodsRelations = relations(goods, ({ one }) => ({
+  sourcePlace: one(places, {
+    fields: [goods.sourcePlaceId],
+    references: [places.id],
+    relationName: "goodsSourcePlace",
+  }),
+  currentPlace: one(places, {
+    fields: [goods.currentPlaceId],
+    references: [places.id],
+    relationName: "goodsCurrentPlace",
+  }),
+  sourceActivity: one(collectionActivities, {
+    fields: [goods.sourceActivityId],
+    references: [collectionActivities.id],
+  }),
+  distributionActivity: one(activities, {
+    fields: [goods.distributionActivityId],
     references: [activities.id],
+  }),
+  creator: one(users, {
+    fields: [goods.createdBy],
+    references: [users.id],
   }),
 }));

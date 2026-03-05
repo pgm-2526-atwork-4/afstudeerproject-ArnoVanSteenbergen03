@@ -29,6 +29,27 @@
       "when": 1772540858827,
       "tag": "0003_abnormal_morph",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1772723708508,
+      "tag": "0004_sloppy_the_liberteens",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1772725441756,
+      "tag": "0005_early_hellfire_club",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1772725767551,
+      "tag": "0006_swift_sir_ram",
+      "breakpoints": true
     }
   ]
 }

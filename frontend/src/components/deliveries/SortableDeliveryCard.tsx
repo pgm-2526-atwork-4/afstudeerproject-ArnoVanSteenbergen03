@@ -9,6 +9,8 @@ export default function SortableDeliveryCard({
   setExpandedOrderId,
   formatTime,
   getVehicleIcon,
+  completingId,
+  handleComplete,
 }: CardProps) {
   const {
     attributes,
@@ -48,6 +50,8 @@ export default function SortableDeliveryCard({
             setExpandedOrderId={setExpandedOrderId}
             formatTime={formatTime}
             getVehicleIcon={getVehicleIcon}
+            completingId={completingId}
+            handleComplete={handleComplete}
           />
         </div>
       </div>

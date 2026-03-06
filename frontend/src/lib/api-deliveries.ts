@@ -65,3 +65,27 @@ export async function acceptDelivery(activityId: string) {
 
   return response.json();
 }
+
+// Complete a delivery
+export async function completeDelivery(activityId: string) {
+  const response = await fetch(
+    `${API_BASE_URL}/volunteer/activities/${activityId}/status`,
+    {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "completed" }),
+    },
+  );
+
+  if (!response.ok) {
+    try {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to complete delivery");
+    } catch {
+      throw new Error(`Failed to complete delivery: ${response.statusText}`);
+    }
+  }
+
+  return response.json();
+}

@@ -8,6 +8,7 @@ import {
   getOpenDeliveries,
   getMyDeliveries,
   acceptDelivery,
+  completeDelivery,
 } from "@/lib/api-client";
 import {
   DndContext,
@@ -32,6 +33,7 @@ export default function DeliveriesScreen() {
   const [myOrders, setMyOrders] = useState<DeliveryOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  const [completingId, setCompletingId] = useState<string | null>(null);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -94,6 +96,20 @@ export default function DeliveriesScreen() {
       );
     } finally {
       setAcceptingId(null);
+    }
+  };
+
+  const handleComplete = async (activityId: string) => {
+    try {
+      setCompletingId(activityId);
+      await completeDelivery(activityId);
+      await fetchData();
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : "Failed to complete delivery",
+      );
+    } finally {
+      setCompletingId(null);
     }
   };
 
@@ -249,6 +265,8 @@ export default function DeliveriesScreen() {
                       setExpandedOrderId={setExpandedOrderId}
                       formatTime={formatTime}
                       getVehicleIcon={getVehicleIcon}
+                      completingId={completingId}
+                      handleComplete={handleComplete}
                     />
                   ))}
                 </SortableContext>

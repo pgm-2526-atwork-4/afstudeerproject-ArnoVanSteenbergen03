@@ -1,6 +1,15 @@
+import { useState } from "react";
 import { DeliveryOrder } from "@shared/index";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, MapPin, Clock } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export interface CardProps {
   delivery: DeliveryOrder;
@@ -8,6 +17,8 @@ export interface CardProps {
   setExpandedOrderId: (id: string | null) => void;
   formatTime: (d: string) => string;
   getVehicleIcon: (icon?: string | null) => React.ReactNode;
+  completingId?: string | null;
+  handleComplete?: (id: string) => void;
 }
 
 export default function CardContent({
@@ -19,11 +30,15 @@ export default function CardContent({
   acceptingId,
   handleAccept,
   isOpen,
+  completingId,
+  handleComplete,
 }: CardProps & {
   acceptingId?: string | null;
   handleAccept?: (id: string) => void;
   isOpen?: boolean;
 }) {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const isCompleting = completingId === delivery.activity.id;
   return (
     <>
       <div className="flex items-start gap-2 mb-2">
@@ -104,8 +119,47 @@ export default function CardContent({
               &ldquo;{delivery.activity.notes}&rdquo;
             </div>
           )}
+
+          {handleComplete && delivery.activity.status !== "completed" && (
+            <Button
+              onClick={() => setConfirmOpen(true)}
+              disabled={isCompleting}
+              className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg text-sm"
+            >
+              {isCompleting ? "Completing..." : "Complete Order"}
+            </Button>
+          )}
         </div>
       )}
+
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Complete this delivery?</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to mark this delivery as completed? This
+              action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setConfirmOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => {
+                setConfirmOpen(false);
+                handleComplete?.(delivery.activity.id);
+              }}
+            >
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

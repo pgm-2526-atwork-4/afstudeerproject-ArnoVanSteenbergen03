@@ -147,10 +147,11 @@ export default function OrdersScreen({ user }: { user: User }) {
                   </div>
 
                   <p className="text-slate-800 font-semibold mb-4">
-                    {order.details?.orderType === "repeated"
-                      ? "Recurring Order"
-                      : "Delivery"}{" "}
-                    {order.notes && `- ${order.notes}`}
+                    {order.activityType
+                      ? order.activityType.charAt(0).toUpperCase() + order.activityType.slice(1)
+                      : "Delivery"}
+                    {order.firstGoodType && ` - ${order.firstGoodType.charAt(0).toUpperCase() + order.firstGoodType.slice(1)}`}
+                    {order.firstGoodCategory && ` · ${order.firstGoodCategory.charAt(0).toUpperCase() + order.firstGoodCategory.slice(1)}`}
                   </p>
 
                   <div className="flex items-center gap-2 text-slate-600 mb-4">
@@ -160,28 +161,59 @@ export default function OrdersScreen({ user }: { user: User }) {
                     </p>
                   </div>
 
-                  <div className="flex gap-3 pt-4 border-t border-slate-200">
-                    <Link href="/chatroom" className="flex-1">
-                      <button className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-slate-800 text-slate-800 rounded-lg hover:bg-slate-50 font-semibold transition-colors">
-                        <MessageCircle className="w-5 h-5" />
-                        Chat
-                      </button>
+                  <div className="flex items-center gap-4 pt-4 border-t border-slate-200">
+                    <Link href="/chatroom">
+                      <MessageCircle className="w-5 h-5 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer" />
                     </Link>
+                    <div className="flex-1" />
                     <button
                       onClick={() => setExpandedOrderId(expandedOrderId === order.id ? null : order.id)}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-slate-800 text-slate-800 rounded-lg hover:bg-slate-50 font-semibold transition-colors"
+                      className="p-0 bg-transparent border-none cursor-pointer"
                     >
                       <ChevronDown
-                        className={`w-5 h-5 transition-transform ${
+                        className={`w-5 h-5 text-slate-600 hover:text-slate-900 transition-all ${
                           expandedOrderId === order.id ? "rotate-180" : ""
                         }`}
                       />
-                      Details
                     </button>
                   </div>
 
                   {expandedOrderId === order.id && (
-                    <div className="mt-4 pt-4 border-t border-slate-200">
+                    <div className="mt-4 pt-4 border-t border-slate-200 space-y-3">
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <p className="text-slate-500">Pickup time</p>
+                          <p className="text-slate-800 font-medium">
+                            {new Date(order.orderTime).toLocaleString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-slate-500">Distribution center</p>
+                          <p className="text-slate-800 font-medium">
+                            {order.centerName ?? "Not assigned"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-slate-500">Status</p>
+                          <p className="text-slate-800 font-medium capitalize">{order.status}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-500">Items</p>
+                          <p className="text-slate-800 font-medium">{order.goodsCount}</p>
+                        </div>
+                      </div>
+                      {order.notes && (
+                        <div className="text-sm">
+                          <p className="text-slate-500">Notes</p>
+                          <p className="text-slate-800">{order.notes}</p>
+                        </div>
+                      )}
                       <Link href={`/edit-order/${order.id}`} className="block">
                         <Button className="w-full bg-[#2D3E2D] hover:bg-[#1D2E1D] text-white font-bold py-3 rounded">
                           Edit Order

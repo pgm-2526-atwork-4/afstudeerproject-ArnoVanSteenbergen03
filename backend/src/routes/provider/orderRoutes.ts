@@ -5,6 +5,7 @@ import {
   goods,
   vehicles,
   collectionActivities,
+  places,
 } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { requireAuth, requirePermission } from "@/middleware/auth";
@@ -142,9 +143,23 @@ router.get(
                 .where(eq(goods.sourceActivityId, collectionActivity[0].id))
             : [];
 
+          let centerName: string | null = null;
+          if (activity.assignedCenterId) {
+            const [center] = await db
+              .select({ name: places.name })
+              .from(places)
+              .where(eq(places.id, activity.assignedCenterId));
+            centerName = center?.name ?? null;
+          }
+
+          const firstGood = goodsList[0];
+
           return {
             ...activity,
             goodsCount: goodsList.length,
+            centerName,
+            firstGoodType: firstGood?.goodType ?? null,
+            firstGoodCategory: firstGood?.category ?? null,
           };
         })
       );

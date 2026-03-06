@@ -40,6 +40,10 @@ export const orderSchema = z.object({
   notes: z.string().optional(),
   details: z.any().optional(),
   goodsCount: z.number(),
+  activityType: z.string().optional(),
+  centerName: z.string().nullable().optional(),
+  firstGoodType: z.string().nullable().optional(),
+  firstGoodCategory: z.string().nullable().optional(),
 });
 
 export type Order = z.infer<typeof orderSchema>;
@@ -62,7 +66,7 @@ export type GoodsData = z.infer<typeof goodsDataSchema>;
 export const foodItemDataSchema = goodsDataSchema;
 export type FoodItemData = GoodsData;
 
-// API goods item (shape returned by backend from the goods DB table)
+// API goods item
 export const apiGoodsItemSchema = z.object({
   id: z.string(),
   goodType: z.string(),
@@ -104,7 +108,7 @@ export const orderFormDataSchema = z.object({
 
 export type OrderFormData = z.infer<typeof orderFormDataSchema>;
 
-// Delivery order (activity + provider info returned by volunteer endpoints)
+// Delivery order 
 export const deliveryOrderSchema = z.object({
   activity: z.object({
     id: z.string(),
@@ -124,6 +128,19 @@ export const deliveryOrderSchema = z.object({
       firstName: z.string(),
       lastName: z.string(),
       email: z.string(),
+    })
+    .nullable(),
+  vehicle: z
+    .object({
+      id: z.string(),
+      vehicleType: z.string(),
+      icon: z.string(),
+    })
+    .nullable(),
+  center: z
+    .object({
+      id: z.string(),
+      name: z.string(),
     })
     .nullable(),
 });

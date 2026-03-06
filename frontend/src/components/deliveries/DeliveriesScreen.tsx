@@ -2,13 +2,29 @@
 
 import { DeliveryOrder } from "@shared/index";
 import { Button } from "@/components/ui/button";
-import { FileText, ChevronDown, MapPin, Clock, Truck } from "lucide-react";
-import { useState, useEffect } from "react";
+import { FileText, Truck, icons } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
 import {
   getOpenDeliveries,
   getMyDeliveries,
   acceptDelivery,
 } from "@/lib/api-client";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import DeliveryCard from "./DeliveryCard";
+import SortableDeliveryCard from "./SortableDeliveryCard";
 
 export default function DeliveriesScreen() {
   const [activeTab, setActiveTab] = useState<"open" | "mine">("open");
@@ -19,7 +35,32 @@ export default function DeliveriesScreen() {
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = async () => {
+  const STORAGE_KEY = "delivery-order";
+
+  const applySavedOrder = useCallback((deliveries: DeliveryOrder[]) => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return deliveries;
+      const savedIds: string[] = JSON.parse(saved);
+      const map = new Map(deliveries.map((d) => [d.activity.id, d]));
+      const ordered: DeliveryOrder[] = [];
+      for (const id of savedIds) {
+        const item = map.get(id);
+        if (item) {
+          ordered.push(item);
+          map.delete(id);
+        }
+      }
+      for (const item of map.values()) {
+        ordered.push(item);
+      }
+      return ordered;
+    } catch {
+      return deliveries;
+    }
+  }, []);
+
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -28,18 +69,18 @@ export default function DeliveriesScreen() {
         getMyDeliveries(),
       ]);
       setOpenOrders(open);
-      setMyOrders(mine);
+      setMyOrders(applySavedOrder(mine));
     } catch (err) {
       console.error(err);
       setError("Failed to load deliveries");
     } finally {
       setLoading(false);
     }
-  };
+  }, [applySavedOrder]);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const handleAccept = async (activityId: string) => {
     try {
@@ -48,19 +89,12 @@ export default function DeliveriesScreen() {
       await fetchData();
       setActiveTab("mine");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to accept delivery");
+      setError(
+        err instanceof Error ? err.message : "Failed to accept delivery",
+      );
     } finally {
       setAcceptingId(null);
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
   };
 
   const formatTime = (dateString: string) => {
@@ -71,21 +105,37 @@ export default function DeliveriesScreen() {
     });
   };
 
-  const getStatusBadge = (status: string) => {
-    const styles: Record<string, string> = {
-      requested: "bg-yellow-100 text-yellow-800",
-      accepted: "bg-blue-100 text-blue-800",
-      in_progress: "bg-orange-100 text-orange-800",
-      completed: "bg-green-100 text-green-800",
-      cancelled: "bg-red-100 text-red-800",
-    };
-    return (
-      <span
-        className={`px-2 py-1 rounded-full text-xs font-semibold ${styles[status] || "bg-gray-100 text-gray-800"}`}
-      >
-        {status.replace("_", " ")}
-      </span>
-    );
+  const getVehicleIcon = (iconName?: string | null) => {
+    const IconComponent = iconName
+      ? icons[iconName as keyof typeof icons]
+      : null;
+    if (IconComponent) {
+      return <IconComponent className="w-5 h-5 text-slate-600" />;
+    }
+    return <Truck className="w-5 h-5 text-slate-600" />;
+  };
+
+  // DnD Sensors prevents accidental drags
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 5 },
+    }),
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setMyOrders((prev) => {
+      const oldIndex = prev.findIndex((d) => d.activity.id === active.id);
+      const newIndex = prev.findIndex((d) => d.activity.id === over.id);
+      const reordered = arrayMove(prev, oldIndex, newIndex);
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(reordered.map((d) => d.activity.id)),
+      );
+      return reordered;
+    });
   };
 
   const displayedOrders = activeTab === "open" ? openOrders : myOrders;
@@ -102,9 +152,7 @@ export default function DeliveriesScreen() {
     <div className="flex flex-col min-h-[calc(100vh-120px)] bg-amber-50 p-4">
       <div className="flex justify-center mb-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-slate-800 mb-4">
-            Deliveries
-          </h1>
+          <h1 className="text-3xl font-bold text-slate-800 mb-4">Deliveries</h1>
           <div className="h-1 bg-slate-800 w-32 mx-auto"></div>
         </div>
       </div>
@@ -183,107 +231,42 @@ export default function DeliveriesScreen() {
           </div>
         ) : (
           <div className="w-full max-w-2xl space-y-4">
-            {displayedOrders.map((delivery, index) => (
-              <div
-                key={delivery.activity.id}
-                className="bg-white border-2 border-slate-800 rounded-lg p-6 hover:shadow-md transition-shadow"
+            {activeTab === "mine" ? (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
               >
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="text-lg font-bold text-slate-800">
-                    Delivery #{index + 1}
-                  </h3>
-                  <div className="flex items-center gap-2">
-                    {getStatusBadge(delivery.activity.status)}
-                  </div>
-                </div>
-
-                {delivery.provider && (
-                  <p className="text-sm text-slate-500 mb-3">
-                    From:{" "}
-                    <span className="font-medium text-slate-700">
-                      {delivery.provider.firstName}{" "}
-                      {delivery.provider.lastName}
-                    </span>
-                  </p>
-                )}
-
-                <div className="flex items-center gap-2 text-slate-600 mb-2">
-                  <MapPin className="w-4 h-4 text-slate-400" />
-                  <p className="text-sm">{delivery.activity.location}</p>
-                </div>
-
-                <div className="flex items-center gap-2 text-slate-600 mb-2">
-                  <Clock className="w-4 h-4 text-slate-400" />
-                  <p className="text-sm">
-                    {formatDate(delivery.activity.orderTime)} at{" "}
-                    {formatTime(delivery.activity.orderTime)}
-                  </p>
-                </div>
-
-                {delivery.activity.notes && (
-                  <p className="text-sm text-slate-600 mt-2 italic">
-                    &ldquo;{delivery.activity.notes}&rdquo;
-                  </p>
-                )}
-
-                <div className="flex gap-3 pt-4 mt-4 border-t border-slate-200">
-                  {activeTab === "open" ? (
-                    <Button
-                      onClick={() => handleAccept(delivery.activity.id)}
-                      disabled={acceptingId === delivery.activity.id}
-                      className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg"
-                    >
-                      {acceptingId === delivery.activity.id
-                        ? "Accepting..."
-                        : "Accept Delivery"}
-                    </Button>
-                  ) : (
-                    <button
-                      onClick={() =>
-                        setExpandedOrderId(
-                          expandedOrderId === delivery.activity.id
-                            ? null
-                            : delivery.activity.id,
-                        )
-                      }
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-slate-800 text-slate-800 rounded-lg hover:bg-slate-50 font-semibold transition-colors"
-                    >
-                      <ChevronDown
-                        className={`w-5 h-5 transition-transform ${
-                          expandedOrderId === delivery.activity.id
-                            ? "rotate-180"
-                            : ""
-                        }`}
-                      />
-                      Details
-                    </button>
-                  )}
-                </div>
-
-                {expandedOrderId === delivery.activity.id &&
-                  activeTab === "mine" && (
-                    <div className="mt-4 pt-4 border-t border-slate-200 space-y-2">
-                      <div className="text-sm text-slate-600">
-                        <span className="font-medium">Status:</span>{" "}
-                        {delivery.activity.status.replace("_", " ")}
-                      </div>
-                      <div className="text-sm text-slate-600">
-                        <span className="font-medium">Created:</span>{" "}
-                        {formatDate(delivery.activity.createdAt)}
-                      </div>
-                      {delivery.activity.details && (
-                        <div className="text-sm text-slate-600">
-                          <span className="font-medium">Type:</span>{" "}
-                          {(delivery.activity.details as Record<string, unknown>).orderType ===
-                          "repeated"
-                            ? "Recurring"
-                            : "One-time"}
-                        </div>
-                      )}
-                    </div>
-                  )}
-              </div>
-            ))}
+                <SortableContext
+                  items={myOrders.map((d) => d.activity.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {myOrders.map((delivery) => (
+                    <SortableDeliveryCard
+                      key={delivery.activity.id}
+                      delivery={delivery}
+                      expandedOrderId={expandedOrderId}
+                      setExpandedOrderId={setExpandedOrderId}
+                      formatTime={formatTime}
+                      getVehicleIcon={getVehicleIcon}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
+            ) : (
+              displayedOrders.map((delivery) => (
+                <DeliveryCard
+                  key={delivery.activity.id}
+                  delivery={delivery}
+                  expandedOrderId={expandedOrderId}
+                  setExpandedOrderId={setExpandedOrderId}
+                  acceptingId={acceptingId}
+                  handleAccept={handleAccept}
+                  formatTime={formatTime}
+                  getVehicleIcon={getVehicleIcon}
+                />
+              ))
+            )}
           </div>
         )}
       </div>

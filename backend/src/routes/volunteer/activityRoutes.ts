@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { db } from "@/config/database";
-import { activities, goods, collectionActivities, places, users } from "@/db/schema";
+import { activities, goods, collectionActivities, places, users, vehicles } from "@/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
 import { requireAuth, requirePermission } from "@/middleware/auth";
 
@@ -13,9 +13,13 @@ router.get("/open", requireAuth, requirePermission("read_activities"), async (_r
       .select({
         activity: activities,
         provider: users,
+        vehicle: vehicles,
+        center: places,
       })
       .from(activities)
       .leftJoin(users, eq(activities.providerId, users.id))
+      .leftJoin(vehicles, eq(activities.vehicleId, vehicles.id))
+      .leftJoin(places, eq(activities.assignedCenterId, places.id))
       .where(
         and(
           eq(activities.status, "requested"),
@@ -39,9 +43,13 @@ router.get("/mine", requireAuth, requirePermission("read_activities"), async (re
       .select({
         activity: activities,
         provider: users,
+        vehicle: vehicles,
+        center: places,
       })
       .from(activities)
       .leftJoin(users, eq(activities.providerId, users.id))
+      .leftJoin(vehicles, eq(activities.vehicleId, vehicles.id))
+      .leftJoin(places, eq(activities.assignedCenterId, places.id))
       .where(eq(activities.assignedDriver, userId));
 
     return res.json(myDeliveries);

@@ -8,6 +8,7 @@ export const userSchema = z.object({
   firstname: z.string(),
   lastname: z.string(),
   userType: z.string(),
+  profileImage: z.string().nullable().optional(),
   isApproved: z.boolean(),
   permissions: z.array(z.string()).optional(),
 });

@@ -64,6 +64,13 @@ export type GoodsData = z.infer<typeof goodsDataSchema>;
 export const foodItemDataSchema = goodsDataSchema;
 export type FoodItemData = GoodsData;
 
+export const goodsFormItemSchema = goodsDataSchema.extend({
+  id: z.string(),
+  quantity: z.string(),
+});
+
+export type GoodsFormItem = z.infer<typeof goodsFormItemSchema>;
+
 // API goods item
 export const apiGoodsItemSchema = z.object({
   id: z.string(),

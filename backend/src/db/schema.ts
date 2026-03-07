@@ -22,6 +22,7 @@ export const users = pgTable("users", {
   email: text("email").unique().notNull(),
   username: text("username").unique().notNull(),
   password: text("password").notNull(),
+  profileImage: text("profile_image"),
   userType: varchar("user_type", { length: 20 }).notNull(), // provider, volunteer, admin, centerManager, manager
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

@@ -6,9 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { updateProfile } from "@/lib/api-client";
+import { updateProfile, uploadProfileImage } from "@/lib/api-client";
 import { updateProfileSchema } from "@shared/schemas/profile";
 import { z } from "zod/v4";
 
@@ -22,6 +22,9 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [profileImage, setProfileImage] = useState<string | null>(user.profileImage || null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     firstname: user.firstname || "",
     lastname: user.lastname || "",
@@ -65,7 +68,6 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
         username: formData.username,
         email: formData.email,
       });
-      // Derive the role prefix from the user's type for the API endpoint
       const rolePrefix = user.userType || "volunteer";
       await updateProfile(validated, rolePrefix);
       setIsEditing(false);
@@ -103,6 +105,23 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
     setIsEditing(false);
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    try {
+      const result = await uploadProfileImage(file);
+      setProfileImage(result.imageUrl);
+    } catch (error) {
+      setErrors({
+        general: error instanceof Error ? error.message : "Failed to upload image",
+      });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-[calc(100vh-120px)] bg-amber-50 p-4">
       <div className="flex justify-center mb-8">
@@ -114,17 +133,33 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
 
       <div className="flex-1 flex flex-col items-center justify-start px-4 max-w-sm mx-auto w-full">
         <div className="mb-6">
-          <div className="w-24 h-24 rounded-full border-4 border-slate-800 flex items-center justify-center bg-white">
-            <div className="text-slate-400 text-4xl">✕</div>
+          <div className="w-24 h-24 rounded-full border-4 border-slate-800 flex items-center justify-center bg-white overflow-hidden">
+            {profileImage ? (
+              <img
+                src={`${process.env.NEXT_PUBLIC_API_BASE_URL?.replace('/api', '')}${profileImage}`}
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="text-slate-400 text-4xl">✕</div>
+            )}
           </div>
         </div>
 
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={handleImageUpload}
+        />
         <Button
           variant="outline"
           className="mb-8 border-slate-800 text-slate-800 hover:bg-slate-100"
-          disabled={isEditing}
+          disabled={uploadingImage}
+          onClick={() => fileInputRef.current?.click()}
         >
-          Change profile image
+          {uploadingImage ? "Uploading..." : "Change profile image"}
         </Button>
 
         <div className="w-full space-y-6">

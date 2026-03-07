@@ -49,3 +49,49 @@ export async function updateProfile(
 
   return response.json();
 }
+
+// Upload profile image
+export async function uploadProfileImage(file: File): Promise<{ imageUrl: string }> {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const response = await fetch(`${API_BASE_URL}/upload/profile-image`, {
+    method: "POST",
+    credentials: "include",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    let errorMessage = "Failed to upload profile image";
+    try {
+      const error = await response.json();
+      errorMessage = error.error || errorMessage;
+    } catch {}
+    throw new Error(errorMessage);
+  }
+
+  return response.json();
+}
+
+// Upload goods image
+export async function uploadGoodsImage(file: File): Promise<{ imageUrl: string }> {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const response = await fetch(`${API_BASE_URL}/upload/goods-image`, {
+    method: "POST",
+    credentials: "include",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    let errorMessage = "Failed to upload image";
+    try {
+      const error = await response.json();
+      errorMessage = error.error || errorMessage;
+    } catch {}
+    throw new Error(errorMessage);
+  }
+
+  return response.json();
+}

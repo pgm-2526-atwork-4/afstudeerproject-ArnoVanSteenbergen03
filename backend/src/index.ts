@@ -4,7 +4,9 @@ import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import passport from "passport";
 import dotenv from "dotenv";
+import path from "path";
 import authRouter from "@/routes/auth";
+import uploadRouter from "@/routes/uploadRoutes";
 import "@/config/passport";
 import providerRouter from "@/routes/provider/index";
 import volunteerRouter from "@/routes/volunteer/index";
@@ -54,8 +56,14 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
+// Serve uploaded files
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
 // Auth routes
 app.use("/api/auth", authRouter);
+
+// Upload routes (authenticated)
+app.use("/api/upload", uploadRouter);
 
 // Role-based routes
 app.use("/api/provider", providerRouter);

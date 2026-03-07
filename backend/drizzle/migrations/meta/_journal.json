@@ -64,6 +64,13 @@
       "when": 1772885055752,
       "tag": "0008_nebulous_swarm",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1772886918773,
+      "tag": "0009_lumpy_sleeper",
+      "breakpoints": true
     }
   ]
 }

@@ -121,6 +121,7 @@ router.post("/login", (req: Request, res: Response, next: NextFunction) => {
           email: user.email,
           username: user.username,
           userType: user.userType,
+          profileImage: user.profileImage,
           isApproved: user.userType === "admin" || !!approvedApp,
         },
       });
@@ -170,6 +171,7 @@ router.get("/me", requireAuth, async (req: Request, res: Response) => {
     firstname: fullUser.firstname,
     lastname: fullUser.lastname,
     userType: fullUser.userType,
+    profileImage: fullUser.profileImage,
     isApproved,
     permissions: permissionKeys,
   });

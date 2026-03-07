@@ -148,17 +148,18 @@ export default function OrdersScreen({ user }: { user: User }) {
 
                   <p className="text-slate-800 font-semibold mb-4">
                     {order.activityType
-                      ? order.activityType.charAt(0).toUpperCase() + order.activityType.slice(1)
+                      ? order.activityType.charAt(0).toUpperCase() +
+                        order.activityType.slice(1)
                       : "Delivery"}
-                    {order.firstGoodType && ` - ${order.firstGoodType.charAt(0).toUpperCase() + order.firstGoodType.slice(1)}`}
-                    {order.firstGoodCategory && ` · ${order.firstGoodCategory.charAt(0).toUpperCase() + order.firstGoodCategory.slice(1)}`}
+                    {order.firstGoodType &&
+                      ` - ${order.firstGoodType.charAt(0).toUpperCase() + order.firstGoodType.slice(1)}`}
+                    {order.firstGoodCategory &&
+                      ` · ${order.firstGoodCategory.charAt(0).toUpperCase() + order.firstGoodCategory.slice(1)}`}
                   </p>
 
                   <div className="flex items-center gap-2 text-slate-600 mb-4">
                     <span className="text-lg">📍</span>
-                    <p className="text-sm">
-                      {order.location}
-                    </p>
+                    <p className="text-sm">{order.location}</p>
                   </div>
 
                   <div className="flex items-center gap-4 pt-4 border-t border-slate-200">
@@ -167,7 +168,11 @@ export default function OrdersScreen({ user }: { user: User }) {
                     </Link>
                     <div className="flex-1" />
                     <button
-                      onClick={() => setExpandedOrderId(expandedOrderId === order.id ? null : order.id)}
+                      onClick={() =>
+                        setExpandedOrderId(
+                          expandedOrderId === order.id ? null : order.id,
+                        )
+                      }
                       className="p-0 bg-transparent border-none cursor-pointer"
                     >
                       <ChevronDown
@@ -185,9 +190,6 @@ export default function OrdersScreen({ user }: { user: User }) {
                           <p className="text-slate-500">Pickup time</p>
                           <p className="text-slate-800 font-medium">
                             {new Date(order.orderTime).toLocaleString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
                               hour: "2-digit",
                               minute: "2-digit",
                             })}
@@ -201,24 +203,27 @@ export default function OrdersScreen({ user }: { user: User }) {
                         </div>
                         <div>
                           <p className="text-slate-500">Status</p>
-                          <p className="text-slate-800 font-medium capitalize">{order.status}</p>
+                          <p className="text-slate-800 font-medium capitalize">
+                            {order.status}
+                          </p>
                         </div>
                         <div>
                           <p className="text-slate-500">Items</p>
-                          <p className="text-slate-800 font-medium">{order.goodsCount}</p>
+                          <p className="text-slate-800 font-medium">
+                            {order.goodsCount}
+                          </p>
                         </div>
                       </div>
-                      {order.notes && (
-                        <div className="text-sm">
-                          <p className="text-slate-500">Notes</p>
-                          <p className="text-slate-800">{order.notes}</p>
-                        </div>
+                      {order.status !== "completed" && (
+                        <Link
+                          href={`/edit-order/${order.id}`}
+                          className="block"
+                        >
+                          <Button className="w-full bg-[#2D3E2D] hover:bg-[#1D2E1D] text-white font-bold py-3 rounded">
+                            Edit Order
+                          </Button>
+                        </Link>
                       )}
-                      <Link href={`/edit-order/${order.id}`} className="block">
-                        <Button className="w-full bg-[#2D3E2D] hover:bg-[#1D2E1D] text-white font-bold py-3 rounded">
-                          Edit Order
-                        </Button>
-                      </Link>
                     </div>
                   )}
                 </div>

@@ -108,15 +108,11 @@ export default function CardContent({
             <span className="font-medium">Status:</span>{" "}
             {delivery.activity.status.replace("_", " ")}
           </div>
-          {delivery.provider && (
-            <div className="text-sm text-slate-600">
-              <span className="font-medium">From:</span>{" "}
-              {delivery.provider.firstName} {delivery.provider.lastName}
-            </div>
-          )}
+
           {delivery.activity.notes && (
-            <div className="text-sm text-slate-600 italic">
-              &ldquo;{delivery.activity.notes}&rdquo;
+            <div className="text-sm text-slate-600">
+              <span className="font-medium">Delivery notes:</span> &ldquo;
+              {delivery.activity.notes}&rdquo;
             </div>
           )}
 
@@ -142,10 +138,7 @@ export default function CardContent({
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setConfirmOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
               Cancel
             </Button>
             <Button

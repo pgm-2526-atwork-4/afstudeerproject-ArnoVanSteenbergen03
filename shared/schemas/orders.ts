@@ -11,7 +11,6 @@ export const GoodsSchema = z.object({
   expirationDate: z.string().optional(),
   packageIncluded: z.boolean().default(false),
   image: z.string().optional(),
-  notes: z.string().optional(),
 });
 
 export const CreateOrderSchema = z.object({
@@ -59,7 +58,6 @@ export const goodsDataSchema = z.object({
   expirationDate: z.string().optional(),
   packageIncluded: z.boolean(),
   image: z.string().optional(),
-  notes: z.string().optional(),
 });
 
 export type GoodsData = z.infer<typeof goodsDataSchema>;
@@ -77,20 +75,16 @@ export const apiGoodsItemSchema = z.object({
   status: z.string(),
   sourcePlaceId: z.string().nullable().optional(),
   currentPlaceId: z.string().nullable().optional(),
-  latitude: z.string().nullable().optional(),
-  longitude: z.string().nullable().optional(),
-  geom: z.unknown().nullable().optional(),
   sourceActivityId: z.number().nullable().optional(),
   distributionActivityId: z.string().nullable().optional(),
   metadata: z.record(z.string(), z.unknown()).nullable().optional(),
-  notes: z.string().nullable().optional(),
+  image: z.string().nullable().optional(),
   createdBy: z.string().nullable().optional(),
   createdAt: z.string().nullable().optional(),
   updatedAt: z.string().nullable().optional(),
   allergies: z.string().nullable().optional(),
   expirationDate: z.string().nullable().optional(),
   packageIncluded: z.boolean().nullable().optional(),
-  image: z.string().nullable().optional(),
 });
 
 export type ApiGoodsItem = z.infer<typeof apiGoodsItemSchema>;

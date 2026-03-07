@@ -89,14 +89,13 @@ router.post(
             status: "available",
             sourcePlaceId: assignedCenterId || null,
             sourceActivityId: collectionActivity.id,
+            image: item.image || null,
             metadata: {
               allergies: item.allergies || null,
               expirationDate: item.expirationDate
                 ? new Date(item.expirationDate)
                 : null,
               packageIncluded: item.packageIncluded || false,
-              image: item.image || null,
-              notes: item.notes || null,
             },
           })),
         )
@@ -299,14 +298,13 @@ router.put(
             status: "available",
             sourcePlaceId: assignedCenterId || null,
             sourceActivityId: collectionActivity.id,
+            image: item.image || null,
             metadata: {
               allergies: item.allergies || null,
               expirationDate: item.expirationDate
                 ? new Date(item.expirationDate)
                 : null,
               packageIncluded: item.packageIncluded || false,
-              image: item.image || null,
-              notes: item.notes || null,
             },
           })),
         )

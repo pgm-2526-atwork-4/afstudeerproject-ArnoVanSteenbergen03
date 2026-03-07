@@ -45,6 +45,18 @@ const RESOURCES = [
 
 const ACTIONS = ["create", "read", "update", "delete"] as const;
 
+// Page-view permissions (resource = "page", action = "view")
+const PAGE_KEYS = [
+  "view_dashboard",
+  "view_orders",
+  "view_deliveries",
+  "view_chatroom",
+  "view_profile",
+  "view_users",
+  "view_suppliers",
+  "view_distribution_centers",
+] as const;
+
 async function main() {
   const permissionValues = RESOURCES.flatMap((resource) =>
     ACTIONS.map((action) => ({
@@ -55,9 +67,17 @@ async function main() {
     })),
   );
 
+  // Add page-view permissions
+  const pagePermissionValues = PAGE_KEYS.map((key) => ({
+    resource: "page",
+    action: "view",
+    key,
+    description: `View ${key.replace("view_", "").replace(/_/g, " ")} page`,
+  }));
+
   const insertedPermissions = await db
     .insert(permissions)
-    .values(permissionValues)
+    .values([...permissionValues, ...pagePermissionValues])
     .onConflictDoNothing()
     .returning();
 
@@ -169,6 +189,9 @@ async function main() {
     "delete_food_items",
     "read_places",
     "read_vehicles",
+    "view_orders",
+    "view_chatroom",
+    "view_profile",
   ];
   const providerPerms = allPermissions.filter((p) =>
     providerPermKeys.includes(p.key),
@@ -194,6 +217,9 @@ async function main() {
     "read_food_items",
     "read_places",
     "read_vehicles",
+    "view_deliveries",
+    "view_chatroom",
+    "view_profile",
   ];
   const volunteerPerms = allPermissions.filter((p) =>
     volunteerPermKeys.includes(p.key),
@@ -316,6 +342,7 @@ async function main() {
         sourcePlaceId: pickOne(insertedPlaces).id,
         currentPlaceId: pickOne(centers).id,
         sourceActivityId: collectionActivity.id,
+        image: faker.image.url(),
         metadata: {
           allergies: faker.helpers
             .arrayElements(
@@ -325,7 +352,6 @@ async function main() {
             .join(", "),
           expirationDate: faker.date.soon({ days: 5 }),
           packageIncluded: faker.datatype.boolean(),
-          image: faker.image.url(),
         },
       })),
     );

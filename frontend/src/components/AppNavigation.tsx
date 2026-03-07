@@ -11,59 +11,56 @@ import {
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface NavItem {
   href: string;
   icon: React.ElementType;
   label: string;
-  show: boolean;
+  permission: string;
 }
 
 export default function AppNavigation() {
   const pathname = usePathname();
   const { user } = useAuth();
+  const { hasPermission } = usePermissions();
 
   if (!user) return null;
 
   const navItems: NavItem[] = [
-    // Admin dashboard
     {
       href: "/dashboard",
       icon: LayoutDashboard,
       label: "Dashboard",
-      show: user.userType === "admin",
+      permission: "view_dashboard",
     },
-    // Orders — for providers (and admins)
     {
       href: "/orders",
       icon: Package,
       label: "Orders",
-      show: user.userType === "provider" || user.userType === "admin",
+      permission: "view_orders",
     },
-    // Deliveries — for volunteers (and admins)
     {
       href: "/deliveries",
       icon: Truck,
       label: "Deliveries",
-      show: user.userType === "volunteer" || user.userType === "admin",
+      permission: "view_deliveries",
     },
-    // Chat
     {
       href: "/chatroom",
       icon: MessageCircle,
       label: "Chat",
-      show: true,
+      permission: "view_chatroom",
     },
-    // Profile
     {
       href: "/profile",
       icon: User,
       label: "Account",
-      show: true,
+      permission: "view_profile",
     },
   ];
 
-  const visibleItems = navItems.filter((item) => item.show);
+  const visibleItems = navItems.filter((item) => hasPermission(item.permission));
 
   return (
     <div className="fixed bottom-0 left-0 right-0 border-t-2 border-slate-800 bg-white flex justify-around py-4 z-50">

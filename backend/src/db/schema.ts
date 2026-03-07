@@ -54,7 +54,7 @@ export const userPermissions = pgTable(
   (table) => [primaryKey({ columns: [table.userId, table.permissionId] })],
 );
 
-// Application table: holds pending signup requests for admin review
+// Application table
 export const applications = pgTable("applications", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id")
@@ -67,6 +67,7 @@ export const applications = pgTable("applications", {
   denialReason: text("denial_reason"),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
 
 export const places = pgTable("places", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -126,30 +127,20 @@ export const goods = pgTable(
     category: text("category").notNull(), // specific category within type (e.g., 'produce', 'dairy' for food)
     name: text("name").notNull(),
     
-    // Quantity and measurement
     quantity: decimal("quantity", { precision: 10, scale: 2 }).notNull(),
     unit: text("unit").notNull(), // 'kg', 'items', 'boxes', 'pallets', 'liters', etc.
     
-    // Status tracking
     status: text("status").notNull().default("available"), // 'available', 'reserved', 'distributed', 'expired', 'discarded'
     
-    // Location tracking
     sourcePlaceId: uuid("source_place_id").references(() => places.id),
     currentPlaceId: uuid("current_place_id").references(() => places.id),
     
-    // Geographic coordinates
-    latitude: decimal("latitude", { precision: 10, scale: 7 }),
-    longitude: decimal("longitude", { precision: 10, scale: 7 }),
-    geom: jsonb("geom"),
-    
-    // Activity tracking
     sourceActivityId: serial("source_activity_id").references(() => collectionActivities.id),
     distributionActivityId: uuid("distribution_activity_id").references(() => activities.id, { onDelete: "set null" }),
-    
-    // Flexible metadata for type-specific information (e.g., allergies for food, size for clothing)
+   
     metadata: jsonb("metadata"),
     
-    notes: text("notes"),
+    image: text("image"),
     createdBy: uuid("created_by").references(() => users.id),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),

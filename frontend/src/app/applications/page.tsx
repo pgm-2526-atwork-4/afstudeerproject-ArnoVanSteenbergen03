@@ -73,9 +73,11 @@ export default function ApplicationsPage() {
   }, []);
 
   const permissionGrid = useMemo(() => {
-    const resources = [...new Set(allPermissions.map((p) => p.resource))];
+    const crudPermissions = allPermissions.filter((p) => p.resource !== "page");
+    const pagePermissions = allPermissions.filter((p) => p.resource === "page");
+    const resources = [...new Set(crudPermissions.map((p) => p.resource))];
     const actions = ["create", "read", "update", "delete"];
-    return { resources, actions };
+    return { resources, actions, crudPermissions, pagePermissions };
   }, [allPermissions]);
 
   const getPermissionByResourceAction = (
@@ -100,7 +102,17 @@ export default function ApplicationsPage() {
 
   const openApproveModal = (app: Application) => {
     setApprovingApp(app);
-    setSelectedPermissionIds(new Set());
+    // Auto-suggest page permissions based on user type
+    const suggestedPageKeys: string[] = [];
+    if (app.userType === "provider") {
+      suggestedPageKeys.push("view_orders", "view_chatroom", "view_profile");
+    } else if (app.userType === "volunteer") {
+      suggestedPageKeys.push("view_deliveries", "view_chatroom", "view_profile");
+    }
+    const suggestedIds = allPermissions
+      .filter((p) => suggestedPageKeys.includes(p.key))
+      .map((p) => p.id);
+    setSelectedPermissionIds(new Set(suggestedIds));
   };
 
   const togglePermission = (permId: number) => {
@@ -117,7 +129,7 @@ export default function ApplicationsPage() {
 
   const toggleResourceRow = (resource: string) => {
     const resourcePerms = allPermissions.filter(
-      (p) => p.resource === resource,
+      (p) => p.resource === resource && resource !== "page",
     );
     const allSelected = resourcePerms.every((p) =>
       selectedPermissionIds.has(p.id),
@@ -213,6 +225,12 @@ export default function ApplicationsPage() {
 
   const formatResource = (r: string) =>
     r
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+
+  const formatPageKey = (key: string) =>
+    key
+      .replace("view_", "")
       .replace(/_/g, " ")
       .replace(/\b\w/g, (c) => c.toUpperCase());
 
@@ -420,6 +438,31 @@ export default function ApplicationsPage() {
             </div>
 
             <div className="flex-1 overflow-auto p-6">
+              <h3 className="text-sm font-semibold text-slate-700 mb-3">Page Access</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
+                {permissionGrid.pagePermissions.map((perm) => (
+                  <label
+                    key={perm.id}
+                    className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      selectedPermissionIds.has(perm.id)
+                        ? "bg-green-50 border-green-400"
+                        : "bg-white border-slate-200 hover:bg-slate-50"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 rounded accent-green-600"
+                      checked={selectedPermissionIds.has(perm.id)}
+                      onChange={() => togglePermission(perm.id)}
+                    />
+                    <span className="text-sm font-medium text-slate-800">
+                      {formatPageKey(perm.key)}
+                    </span>
+                  </label>
+                ))}
+              </div>
+
+              <h3 className="text-sm font-semibold text-slate-700 mb-3">Data Permissions</h3>
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-sm">
                   <thead>
@@ -430,12 +473,25 @@ export default function ApplicationsPage() {
                             type="checkbox"
                             className="w-4 h-4 rounded accent-slate-800"
                             checked={
-                              allPermissions.length > 0 &&
-                              allPermissions.every((p) =>
+                              permissionGrid.crudPermissions.length > 0 &&
+                              permissionGrid.crudPermissions.every((p) =>
                                 selectedPermissionIds.has(p.id),
                               )
                             }
-                            onChange={toggleAll}
+                            onChange={() => {
+                              const crudPerms = permissionGrid.crudPermissions;
+                              const allSelected = crudPerms.every((p) =>
+                                selectedPermissionIds.has(p.id),
+                              );
+                              setSelectedPermissionIds((prev) => {
+                                const next = new Set(prev);
+                                crudPerms.forEach((p) => {
+                                  if (allSelected) next.delete(p.id);
+                                  else next.add(p.id);
+                                });
+                                return next;
+                              });
+                            }}
                           />
                           Resource
                         </label>

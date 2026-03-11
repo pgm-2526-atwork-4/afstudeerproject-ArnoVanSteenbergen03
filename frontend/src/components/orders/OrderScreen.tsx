@@ -7,6 +7,14 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { getProviderOrders } from "@/lib/api-client";
 
+// TODO: order templates for recurrent orders
+// TODO: recurrence system should work via google calander -> select time boxes -> details (goods order)
+// TODO: calander tab needed for displaying orders
+// TODO: in template app we could copy old orders and edit them for the recurrent orders. copy icon, edit, delete
+
+// TODO: activity column needs a weekly / monthly boolean for recurrent orders
+// TODO: extra goods cetegory table?
+
 export default function OrdersScreen({ user }: { user: User }) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [activeTab, setActiveTab] = useState("active");

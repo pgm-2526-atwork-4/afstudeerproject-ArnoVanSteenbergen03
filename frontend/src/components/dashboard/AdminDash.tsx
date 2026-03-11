@@ -2,41 +2,19 @@
 
 import { User } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Building2, Truck, Users, Package, ArrowRight } from "lucide-react";
+import { Building2, Users, Package, ArrowRight } from "lucide-react";
 import Link from "next/link";
+
+// TODO: order dashboard with distro and open/in progress filters
+// TODO: manage orders
+// TODO: manual user upload
+// TODO: edit user need better permission display for the pages 
 
 interface AdminDashProps {
   user: User;
 }
-//temp stats
-export default function AdminDash({ user }: AdminDashProps) {
-  const stats = [
-    {
-      label: "Total Orders",
-      value: "127",
-      icon: Package,
-      color: "text-orange-600",
-    },
-    {
-      label: "Active Orders",
-      value: "43",
-      icon: Truck,
-      color: "text-slate-600",
-    },
-    {
-      label: "Active Volunteers",
-      value: "24",
-      icon: Users,
-      color: "text-orange-600",
-    },
-    {
-      label: "Distribution Centers",
-      value: "2",
-      icon: Building2,
-      color: "text-slate-600",
-    },
-  ];
 
+export default function AdminDash({ user }: AdminDashProps) {
   return (
     <div className="flex flex-col min-h-[calc(100vh-100px)] bg-amber-50 p-4 pb-24">
       <div className="flex justify-center mb-8">
@@ -47,32 +25,6 @@ export default function AdminDash({ user }: AdminDashProps) {
       </div>
 
       <div className="max-w-2xl mx-auto w-full">
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-slate-800 mb-4">
-            System Overview
-          </h2>
-
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            {stats.map((stat) => {
-              const IconComponent = stat.icon;
-              return (
-                <div
-                  key={stat.label}
-                  className="bg-white border-2 border-slate-800 rounded-lg p-4 flex flex-col items-center justify-center"
-                >
-                  <IconComponent className={`w-8 h-8 mb-2 ${stat.color}`} />
-                  <div className="text-2xl font-bold text-slate-800">
-                    {stat.value}
-                  </div>
-                  <div className="text-xs text-slate-600 text-center mt-1">
-                    {stat.label}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
         <div className="mb-8 space-y-4">
           <div>
             <Link href="/suppliers">

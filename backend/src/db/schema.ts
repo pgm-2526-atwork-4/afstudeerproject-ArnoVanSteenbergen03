@@ -127,7 +127,11 @@ export const goods = pgTable(
     goodType: text("good_type").notNull(), // 'food', 'clothing', 'household', 'equipment', etc.
     category: text("category").notNull(), // specific category within type (e.g., 'produce', 'dairy' for food)
     name: text("name").notNull(),
-    
+
+    //goods state: example filler string fresh, old, dry, ...
+    //boolean past best before
+    //boolean needs cooling
+    //boolean damaged packaging
     quantity: decimal("quantity", { precision: 10, scale: 2 }).notNull(),
     unit: text("unit").notNull(), // 'kg', 'items', 'boxes', 'pallets', 'liters', etc.
     
@@ -138,8 +142,10 @@ export const goods = pgTable(
     
     sourceActivityId: serial("source_activity_id").references(() => collectionActivities.id),
     distributionActivityId: uuid("distribution_activity_id").references(() => activities.id, { onDelete: "set null" }),
+
+
    
-    metadata: jsonb("metadata"),
+    metadata: jsonb("metadata"),// Extra comment 
     
     image: text("image"),
     createdBy: uuid("created_by").references(() => users.id),
@@ -154,7 +160,7 @@ export const goods = pgTable(
   ]
 );
 
-//These are the different type of vihicles used for pickups
+//These are the different type of vehicles used for pickups
 export const vehicles = pgTable("vehicles", {
   id: uuid("id").primaryKey().defaultRandom(),
   vehicleType: text("vehicle_type").notNull(), // Bikebags, bikecarts, ...?

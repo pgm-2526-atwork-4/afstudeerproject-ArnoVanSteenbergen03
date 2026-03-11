@@ -8,6 +8,14 @@ import { useState, useRef } from "react";
 import { uploadGoodsImage } from "@/lib/api-client";
 import type { GoodsData, GoodsFormItem } from "@/types";
 
+// TODO: clear categories from db
+// TODO: categories: meat, dairy, vegies, fruits, bakery, prepared food { hot / warm}, prepared food { cold }, Packaged goods, best before date
+// TODO: damaged goods column boolean needed in db
+// TODO: good_state needed in db: fresh old dry, ...
+// TODO: over due date boolean needed in db
+// TODO: notes on food items not being saved. one ttextbox per item?
+
+
 interface GoodsStepProps {
   onNext: (goods: GoodsData[], notes: string) => void;
   onCancel: () => void;
@@ -50,7 +58,7 @@ export default function GoodsStep({
           packageIncluded: item.packageIncluded,
           image: item.image,
         }))
-      : [createEmptyItem("1")]
+      : [createEmptyItem("1")],
   );
 
   const [notes, setNotes] = useState(initialNotes || "");
@@ -82,11 +90,15 @@ export default function GoodsStep({
     }
   };
 
-  const updateGoodsItem = (id: string, field: keyof GoodsFormItem, value: string | boolean) => {
+  const updateGoodsItem = (
+    id: string,
+    field: keyof GoodsFormItem,
+    value: string | boolean,
+  ) => {
     setGoodsItems(
       goodsItems.map((item) =>
-        item.id === id ? { ...item, [field]: value } : item
-      )
+        item.id === id ? { ...item, [field]: value } : item,
+      ),
     );
   };
 
@@ -216,7 +228,8 @@ export default function GoodsStep({
                 <>
                   <div>
                     <Label className="block text-sm font-semibold text-slate-800 mb-2">
-                      Allergies <span className="text-slate-500">(optional)</span>
+                      Allergies{" "}
+                      <span className="text-slate-500">(optional)</span>
                     </Label>
                     <Input
                       type="text"
@@ -231,13 +244,18 @@ export default function GoodsStep({
 
                   <div>
                     <Label className="block text-sm font-semibold text-slate-800 mb-2">
-                      Expiration Date <span className="text-slate-500">(optional)</span>
+                      Expiration Date{" "}
+                      <span className="text-slate-500">(optional)</span>
                     </Label>
                     <Input
                       type="date"
                       value={item.expirationDate}
                       onChange={(e) =>
-                        updateGoodsItem(item.id, "expirationDate", e.target.value)
+                        updateGoodsItem(
+                          item.id,
+                          "expirationDate",
+                          e.target.value,
+                        )
                       }
                       className="w-full px-3 py-2 border-2 border-slate-800 rounded"
                     />
@@ -254,7 +272,7 @@ export default function GoodsStep({
                       updateGoodsItem(
                         item.id,
                         "packageIncluded",
-                        e.target.checked
+                        e.target.checked,
                       )
                     }
                     className="w-4 h-4 border-2 border-slate-800 rounded"
@@ -267,10 +285,13 @@ export default function GoodsStep({
 
               <div>
                 <Label className="block text-sm font-semibold text-slate-800 mb-2">
-                  Upload Image <span className="text-slate-500">(optional)</span>
+                  Upload Image{" "}
+                  <span className="text-slate-500">(optional)</span>
                 </Label>
                 <input
-                  ref={(el) => { fileInputRefs.current[item.id] = el; }}
+                  ref={(el) => {
+                    fileInputRefs.current[item.id] = el;
+                  }}
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   className="hidden"
@@ -282,7 +303,7 @@ export default function GoodsStep({
                 {item.image ? (
                   <div className="relative">
                     <img
-                      src={`${process.env.NEXT_PUBLIC_API_BASE_URL?.replace('/api', '')}${item.image}`}
+                      src={`${process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "")}${item.image}`}
                       alt="Goods"
                       className="w-full h-32 object-cover rounded border-2 border-slate-800"
                     />
@@ -303,9 +324,14 @@ export default function GoodsStep({
                     className="w-full border-2 border-slate-800 text-slate-800 py-2 rounded"
                   >
                     {uploadingItemId === item.id ? (
-                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading...</>
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />{" "}
+                        Uploading...
+                      </>
                     ) : (
-                      <><ImageIcon className="w-4 h-4 mr-2" /> Choose Image</>
+                      <>
+                        <ImageIcon className="w-4 h-4 mr-2" /> Choose Image
+                      </>
                     )}
                   </Button>
                 )}
@@ -336,20 +362,19 @@ export default function GoodsStep({
       </div>
 
       <div className="flex gap-3">
-        <Button
-          onClick={onCancel}
-          variant="outline"
-          className="px-4 py-3"
-        >
+        <Button onClick={onCancel} variant="outline" className="px-4 py-3">
           Cancel Order
         </Button>
         <Button
           onClick={() => {
             const hasEmptyItems = goodsItems.some(
-              (item) => !item.name.trim() || !item.quantity || !item.category.trim()
+              (item) =>
+                !item.name.trim() || !item.quantity || !item.category.trim(),
             );
             if (hasEmptyItems) {
-              setValidationError("Please fill in name, category, and quantity for all items.");
+              setValidationError(
+                "Please fill in name, category, and quantity for all items.",
+              );
               return;
             }
             setValidationError(null);

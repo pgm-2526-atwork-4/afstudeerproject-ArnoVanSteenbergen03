@@ -27,6 +27,9 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const sessionSecret = process.env.SESSION_SECRET;
+if (!sessionSecret) throw new Error("SESSION_SECRET environment variable is required");
+
 // Session & Auth configuration
 app.use(
   //doesnt log me out during development
@@ -36,7 +39,7 @@ app.use(
       createTableIfMissing: true,
     }),
     //
-    secret: process.env.SESSION_SECRET || "dev-secret",
+    secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
     cookie: {

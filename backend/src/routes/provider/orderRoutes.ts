@@ -81,7 +81,8 @@ router.post(
         .insert(goods)
         .values(
           goodsData.map((item: any) => ({
-            goodType: item.goodType || "food",
+            goodState: item.goodState || "fresh",
+            overDueDate: item.overDueDate || false,
             category: item.category,
             name: item.name,
             quantity: String(item.quantity),
@@ -157,7 +158,6 @@ router.get(
             ...activity,
             goodsCount: goodsList.length,
             centerName,
-            firstGoodType: firstGood?.goodType ?? null,
             firstGoodCategory: firstGood?.category ?? null,
           };
         })
@@ -290,7 +290,8 @@ router.put(
         .insert(goods)
         .values(
           goodsData.map((item: any) => ({
-            goodType: item.goodType || "food",
+            goodState: item.goodState || "fresh",
+            overDueDate: item.overDueDate || false,
             category: item.category,
             name: item.name,
             quantity: String(item.quantity),

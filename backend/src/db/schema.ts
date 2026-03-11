@@ -98,6 +98,7 @@ export const activities = pgTable("activities", {
   notes: text("notes"),
   details: jsonb("details"),
   freezerItemIncluded: boolean("freezer_item").notNull().default(false),
+  damagedGoods: boolean("damaged_goods").notNull().default(false),
   vehicleId: uuid("vehicle_id").references(() => vehicles.id, {
     onDelete: "cascade",
   }),
@@ -124,14 +125,10 @@ export const goods = pgTable(
   "goods",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    goodType: text("good_type").notNull(), // 'food', 'clothing', 'household', 'equipment', etc.
     category: text("category").notNull(), // specific category within type (e.g., 'produce', 'dairy' for food)
     name: text("name").notNull(),
-
-    //goods state: example filler string fresh, old, dry, ...
-    //boolean past best before
-    //boolean needs cooling
-    //boolean damaged packaging
+    goodState: text("good_state").notNull().default("fresh"), // 'fresh', 'old', 'dry'
+    overDueDate: boolean("over_due_date").notNull().default(false),
     quantity: decimal("quantity", { precision: 10, scale: 2 }).notNull(),
     unit: text("unit").notNull(), // 'kg', 'items', 'boxes', 'pallets', 'liters', etc.
     
@@ -153,7 +150,7 @@ export const goods = pgTable(
     updatedAt: timestamp("updated_at").defaultNow(),
   },
   (table) => [
-    index("goods_type_status_idx").on(table.goodType, table.status),
+    index("goods_state_status_idx").on(table.goodState, table.status),
     index("goods_source_place_idx").on(table.sourcePlaceId),
     index("goods_current_place_idx").on(table.currentPlaceId),
     index("goods_source_activity_idx").on(table.sourceActivityId),

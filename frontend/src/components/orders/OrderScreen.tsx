@@ -166,8 +166,6 @@ export default function OrdersScreen({ user }: { user: User }) {
                       ? order.activityType.charAt(0).toUpperCase() +
                         order.activityType.slice(1)
                       : "Delivery"}
-                    {order.firstGoodType &&
-                      ` - ${order.firstGoodType.charAt(0).toUpperCase() + order.firstGoodType.slice(1)}`}
                     {order.firstGoodCategory &&
                       ` · ${order.firstGoodCategory.charAt(0).toUpperCase() + order.firstGoodCategory.slice(1)}`}
                   </p>

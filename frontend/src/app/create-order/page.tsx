@@ -18,7 +18,6 @@ export default function CreateOrderPage() {
   const [formData, setFormData] = useState<OrderFormData>({
     orderType: "single",
     goods: [],
-    goodsNotes: "",
     location: "",
     vehicleId: "",
     deliveryNotes: "",
@@ -35,8 +34,8 @@ export default function CreateOrderPage() {
     setCurrentStep(1);
   };
 
-  const handleGoodsNext = (goods: GoodsData[], notes: string) => {
-    setFormData((prev) => ({ ...prev, goods, goodsNotes: notes }));
+  const handleGoodsNext = (goods: GoodsData[]) => {
+    setFormData((prev) => ({ ...prev, goods }));
     setCurrentStep(2);
   };
 
@@ -63,10 +62,11 @@ export default function CreateOrderPage() {
         location,
         vehicleId,
         orderTime,
-        notes: deliveryNotes || formData.goodsNotes || undefined,
+        notes: deliveryNotes || undefined,
         orderType: formData.orderType,
         goods: formData.goods.map((item) => ({
-          goodType: item.goodType,
+          goodState: item.goodState,
+          overDueDate: item.overDueDate,
           category: item.category,
           name: item.name,
           quantity: item.quantity,
@@ -75,7 +75,6 @@ export default function CreateOrderPage() {
           expirationDate: item.expirationDate || undefined,
           packageIncluded: item.packageIncluded,
           image: item.image || undefined,
-          notes: item.notes || undefined,
         })),
       });
 
@@ -146,7 +145,6 @@ export default function CreateOrderPage() {
               onNext={handleGoodsNext}
               onCancel={handleCancel}
               initialGoods={formData.goods}
-              initialNotes={formData.goodsNotes}
             />
           )}
           {currentStep === 2 && (

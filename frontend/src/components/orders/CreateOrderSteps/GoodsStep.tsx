@@ -5,29 +5,32 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X, Plus, ImageIcon, Loader2 } from "lucide-react";
 import { useState, useRef } from "react";
+import Image from "next/image";
 import { uploadGoodsImage } from "@/lib/api-client";
 import type { GoodsData, GoodsFormItem } from "@/types";
 
-// TODO: clear categories from db
-// TODO: categories: meat, dairy, vegies, fruits, bakery, prepared food { hot / warm}, prepared food { cold }, Packaged goods, best before date
-// TODO: damaged goods column boolean needed in db
-// TODO: good_state needed in db: fresh old dry, ...
-// TODO: over due date boolean needed in db
-// TODO: notes on food items not being saved. one ttextbox per item?
-
 
 interface GoodsStepProps {
-  onNext: (goods: GoodsData[], notes: string) => void;
+  onNext: (goods: GoodsData[]) => void;
   onCancel: () => void;
   initialGoods?: GoodsData[];
-  initialNotes?: string;
 }
 
-const GOOD_TYPES = [
-  { value: "food", label: "Food" },
-  { value: "clothing", label: "Clothing" },
-  { value: "household", label: "Household" },
-  { value: "equipment", label: "Equipment" },
+const GOOD_STATES = [
+  { value: "fresh", label: "Fresh" },
+  { value: "old", label: "Old" },
+  { value: "dry", label: "Dry" },
+] as const;
+
+const CATEGORIES = [
+  { value: "meat", label: "Meat" },
+  { value: "dairy", label: "Dairy" },
+  { value: "vegies", label: "Vegies" },
+  { value: "fruits", label: "Fruits" },
+  { value: "bakery", label: "Bakery" },
+  { value: "prepared food (hot/warm)", label: "Prepared Food (Hot/Warm)" },
+  { value: "prepared food (cold)", label: "Prepared Food (Cold)" },
+  { value: "packaged goods", label: "Packaged Goods" },
 ] as const;
 
 const UNITS = [
@@ -42,13 +45,14 @@ export default function GoodsStep({
   onNext,
   onCancel,
   initialGoods,
-  initialNotes,
 }: GoodsStepProps) {
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "") || "";
   const [goodsItems, setGoodsItems] = useState<GoodsFormItem[]>(
     initialGoods && initialGoods.length > 0
       ? initialGoods.map((item, i) => ({
           id: String(i + 1),
-          goodType: item.goodType ?? "food",
+          goodState: item.goodState ?? "fresh",
+          overDueDate: item.overDueDate ?? false,
           category: item.category,
           name: item.name,
           quantity: String(item.quantity),
@@ -61,7 +65,6 @@ export default function GoodsStep({
       : [createEmptyItem("1")],
   );
 
-  const [notes, setNotes] = useState(initialNotes || "");
   const [validationError, setValidationError] = useState<string | null>(null);
   const [uploadingItemId, setUploadingItemId] = useState<string | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
@@ -69,7 +72,8 @@ export default function GoodsStep({
   function createEmptyItem(id: string): GoodsFormItem {
     return {
       id,
-      goodType: "food",
+      goodState: "fresh",
+      overDueDate: false,
       category: "",
       name: "",
       quantity: "",
@@ -140,16 +144,16 @@ export default function GoodsStep({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="block text-sm font-semibold text-slate-800 mb-2">
-                    Type
+                    State
                   </Label>
                   <select
-                    value={item.goodType}
+                    value={item.goodState}
                     onChange={(e) =>
-                      updateGoodsItem(item.id, "goodType", e.target.value)
+                      updateGoodsItem(item.id, "goodState", e.target.value)
                     }
                     className="w-full px-3 py-2 border-2 border-slate-800 rounded bg-white"
                   >
-                    {GOOD_TYPES.map((t) => (
+                    {GOOD_STATES.map((t) => (
                       <option key={t.value} value={t.value}>
                         {t.label}
                       </option>
@@ -161,15 +165,20 @@ export default function GoodsStep({
                   <Label className="block text-sm font-semibold text-slate-800 mb-2">
                     Category
                   </Label>
-                  <Input
-                    type="text"
-                    placeholder="e.g., Canned Goods, Winter Coats"
+                  <select
                     value={item.category}
                     onChange={(e) =>
                       updateGoodsItem(item.id, "category", e.target.value)
                     }
-                    className="w-full px-3 py-2 border-2 border-slate-800 rounded"
-                  />
+                    className="w-full px-3 py-2 border-2 border-slate-800 rounded bg-white"
+                  >
+                    <option value="">Select a category</option>
+                    {CATEGORIES.map((c) => (
+                      <option key={c.value} value={c.value}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -224,44 +233,60 @@ export default function GoodsStep({
                 </div>
               </div>
 
-              {item.goodType === "food" && (
-                <>
-                  <div>
-                    <Label className="block text-sm font-semibold text-slate-800 mb-2">
-                      Allergies{" "}
-                      <span className="text-slate-500">(optional)</span>
-                    </Label>
-                    <Input
-                      type="text"
-                      placeholder="e.g., Peanuts, Dairy"
-                      value={item.allergies}
-                      onChange={(e) =>
-                        updateGoodsItem(item.id, "allergies", e.target.value)
-                      }
-                      className="w-full px-3 py-2 border-2 border-slate-800 rounded"
-                    />
-                  </div>
+              <div>
+                <Label className="block text-sm font-semibold text-slate-800 mb-2">
+                  Allergies{" "}
+                  <span className="text-slate-500">(optional)</span>
+                </Label>
+                <Input
+                  type="text"
+                  placeholder="e.g., Peanuts, Dairy"
+                  value={item.allergies}
+                  onChange={(e) =>
+                    updateGoodsItem(item.id, "allergies", e.target.value)
+                  }
+                  className="w-full px-3 py-2 border-2 border-slate-800 rounded"
+                />
+              </div>
 
-                  <div>
-                    <Label className="block text-sm font-semibold text-slate-800 mb-2">
-                      Expiration Date{" "}
-                      <span className="text-slate-500">(optional)</span>
-                    </Label>
-                    <Input
-                      type="date"
-                      value={item.expirationDate}
-                      onChange={(e) =>
-                        updateGoodsItem(
-                          item.id,
-                          "expirationDate",
-                          e.target.value,
-                        )
-                      }
-                      className="w-full px-3 py-2 border-2 border-slate-800 rounded"
-                    />
-                  </div>
-                </>
-              )}
+              <div>
+                <Label className="block text-sm font-semibold text-slate-800 mb-2">
+                  Expiration Date{" "}
+                  <span className="text-slate-500">(optional)</span>
+                </Label>
+                <Input
+                  type="date"
+                  value={item.expirationDate}
+                  onChange={(e) =>
+                    updateGoodsItem(
+                      item.id,
+                      "expirationDate",
+                      e.target.value,
+                    )
+                  }
+                  className="w-full px-3 py-2 border-2 border-slate-800 rounded"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={item.overDueDate}
+                    onChange={(e) =>
+                      updateGoodsItem(
+                        item.id,
+                        "overDueDate",
+                        e.target.checked,
+                      )
+                    }
+                    className="w-4 h-4 border-2 border-slate-800 rounded"
+                  />
+                  <span className="text-sm font-semibold text-slate-800">
+                    Over due date
+                  </span>
+                </label>
+              </div>
 
               <div className="space-y-2">
                 <label className="flex items-center gap-3 cursor-pointer">
@@ -301,11 +326,12 @@ export default function GoodsStep({
                   }}
                 />
                 {item.image ? (
-                  <div className="relative">
-                    <img
-                      src={`${process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "")}${item.image}`}
+                  <div className="relative w-full h-32">
+                    <Image
+                      src={`${apiBaseUrl}${item.image}`}
                       alt="Goods"
-                      className="w-full h-32 object-cover rounded border-2 border-slate-800"
+                      fill
+                      className="object-cover rounded border-2 border-slate-800"
                     />
                     <button
                       type="button"
@@ -349,18 +375,6 @@ export default function GoodsStep({
         Add Another Item
       </button>
 
-      <div className="bg-white border-2 border-slate-800 rounded-lg p-6">
-        <Label className="block text-sm font-semibold text-slate-800 mb-4">
-          Extra notes about the goods
-        </Label>
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Add any additional information..."
-          className="w-full px-3 py-2 border-2 border-slate-800 rounded resize-none min-h-[120px]"
-        />
-      </div>
-
       <div className="flex gap-3">
         <Button onClick={onCancel} variant="outline" className="px-4 py-3">
           Cancel Order
@@ -380,7 +394,8 @@ export default function GoodsStep({
             setValidationError(null);
 
             const itemsData: GoodsData[] = goodsItems.map((item) => ({
-              goodType: item.goodType,
+              goodState: item.goodState,
+              overDueDate: item.overDueDate,
               category: item.category,
               name: item.name,
               quantity: parseFloat(item.quantity),
@@ -391,7 +406,7 @@ export default function GoodsStep({
               image: item.image || undefined,
             }));
 
-            onNext(itemsData, notes);
+            onNext(itemsData);
           }}
           className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3"
         >

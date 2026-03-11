@@ -317,6 +317,7 @@ async function main() {
         notes: faker.lorem.sentence(),
         details: { fragile: faker.datatype.boolean() },
         freezerItemIncluded: faker.datatype.boolean(),
+        damagedGoods: faker.datatype.boolean(),
         vehicleId: pickOne(insertedVehicles).id,
       })),
     )
@@ -335,9 +336,10 @@ async function main() {
     const count = faker.number.int({ min: 1, max: 4 });
     await db.insert(goods).values(
       Array.from({ length: count }).map(() => ({
-        goodType: pickOne(["food", "clothing", "household"]),
-        category: faker.commerce.department(),
+        category: pickOne(["meat", "dairy", "vegies", "fruits", "bakery", "prepared food (hot/warm)", "prepared food (cold)", "packaged goods"]),
         name: faker.commerce.productName(),
+        goodState: pickOne(["fresh", "old", "dry"]),
+        overDueDate: faker.datatype.boolean(),
         quantity: String(faker.number.int({ min: 1, max: 100 })),
         unit: pickOne(["kg", "items", "boxes", "pallets", "liters"]),
         status: "available",

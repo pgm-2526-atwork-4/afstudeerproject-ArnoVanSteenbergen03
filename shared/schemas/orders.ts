@@ -2,7 +2,8 @@ import { z } from "zod";
 
 // Validation schemas for goods items
 export const GoodsSchema = z.object({
-  goodType: z.enum(["food", "clothing", "household", "equipment"]).default("food"),
+  goodState: z.enum(["fresh", "old", "dry"]).default("fresh"),
+  overDueDate: z.boolean().default(false),
   category: z.string().min(1, "Category is required"),
   name: z.string().min(1, "Item name is required"),
   quantity: z.number().positive("Quantity must be a positive number"),
@@ -41,7 +42,6 @@ export const orderSchema = z.object({
   goodsCount: z.number(),
   activityType: z.string().optional(),
   centerName: z.string().nullable().optional(),
-  firstGoodType: z.string().nullable().optional(),
   firstGoodCategory: z.string().nullable().optional(),
 });
 
@@ -49,7 +49,8 @@ export type Order = z.infer<typeof orderSchema>;
 
 // Goods item form data 
 export const goodsDataSchema = z.object({
-  goodType: z.enum(["food", "clothing", "household", "equipment"]).default("food"),
+  goodState: z.enum(["fresh", "old", "dry"]).default("fresh"),
+  overDueDate: z.boolean().default(false),
   category: z.string(),
   name: z.string(),
   quantity: z.number(),
@@ -74,7 +75,8 @@ export type GoodsFormItem = z.infer<typeof goodsFormItemSchema>;
 // API goods item
 export const apiGoodsItemSchema = z.object({
   id: z.string(),
-  goodType: z.string(),
+  goodState: z.string(),
+  overDueDate: z.boolean().nullable().optional(),
   category: z.string(),
   name: z.string(),
   quantity: z.union([z.string(), z.number()]),
@@ -100,7 +102,6 @@ export type ApiGoodsItem = z.infer<typeof apiGoodsItemSchema>;
 export const orderFormDataSchema = z.object({
   orderType: z.enum(["single", "repeated"]),
   goods: z.array(goodsDataSchema),
-  goodsNotes: z.string(),
   location: z.string(),
   vehicleId: z.string(),
   deliveryNotes: z.string(),

@@ -22,7 +22,6 @@ export default function EditOrderPage() {
   const [formData, setFormData] = useState<OrderFormData>({
     orderType: "single",
     goods: [],
-    goodsNotes: "",
     location: "",
     vehicleId: "",
     deliveryNotes: "",
@@ -56,7 +55,8 @@ export default function EditOrderPage() {
           const apiGoods = response.goods || [];
 
           const goods: GoodsData[] = apiGoods.map((item: ApiGoodsItem) => ({
-            goodType: item.goodType || "food",
+            goodState: item.goodState || "fresh",
+            overDueDate: item.overDueDate ?? false,
             category: item.category || "",
             name: item.name,
             quantity: item.quantity,
@@ -67,16 +67,13 @@ export default function EditOrderPage() {
               : "",
             packageIncluded: item.packageIncluded,
             image: item.image,
-            notes: item.notes,
           }));
 
           const orderType = order.details?.orderType || "single";
-          const goodsNotes = order.details?.goodsNotes || order.details?.foodNotes || "";
 
           setFormData({
             orderType,
             goods,
-            goodsNotes,
             location: order.location || "",
             vehicleId: order.vehicleId || "",
             deliveryNotes: order.notes || "",
@@ -101,8 +98,8 @@ export default function EditOrderPage() {
     setCurrentStep(1);
   };
 
-  const handleGoodsNext = (goods: GoodsData[], notes: string) => {
-    setFormData((prev) => ({ ...prev, goods, goodsNotes: notes }));
+  const handleGoodsNext = (goods: GoodsData[]) => {
+    setFormData((prev) => ({ ...prev, goods }));
     setCurrentStep(2);
   };
 
@@ -129,10 +126,11 @@ export default function EditOrderPage() {
         location,
         vehicleId,
         orderTime,
-        notes: deliveryNotes || formData.goodsNotes || undefined,
+        notes: deliveryNotes || undefined,
         orderType: formData.orderType,
         goods: formData.goods.map((item) => ({
-          goodType: item.goodType,
+          goodState: item.goodState,
+          overDueDate: item.overDueDate,
           category: item.category,
           name: item.name,
           quantity: item.quantity,
@@ -141,7 +139,6 @@ export default function EditOrderPage() {
           expirationDate: item.expirationDate || undefined,
           packageIncluded: item.packageIncluded,
           image: item.image || undefined,
-          notes: item.notes || undefined,
         })),
       });
 
@@ -222,7 +219,6 @@ export default function EditOrderPage() {
               onNext={handleGoodsNext}
               onCancel={handleCancel}
               initialGoods={formData.goods}
-              initialNotes={formData.goodsNotes}
             />
           )}
           {currentStep === 2 && (

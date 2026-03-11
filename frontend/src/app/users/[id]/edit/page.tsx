@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LoadingScreen } from "@/components/ui/loading";
 import Link from "next/link";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
 
@@ -130,8 +131,8 @@ export default function EditUserPage() {
   if (authLoading || loading) {
     return (
       <ProtectedPage requiredPermission="update_users">
-        <div className="flex items-center justify-center min-h-screen bg-amber-50">
-          <Loader2 className="w-8 h-8 animate-spin text-slate-600" />
+        <div className="min-h-screen bg-amber-50">
+          <LoadingScreen />
         </div>
       </ProtectedPage>
     );

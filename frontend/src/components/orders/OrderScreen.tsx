@@ -2,6 +2,7 @@
 
 import { User, Order } from "@shared/index";
 import { Button } from "@/components/ui/button";
+import { CardSkeleton } from "@/components/ui/loading";
 import { FileText, ChevronDown, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -62,8 +63,14 @@ export default function OrdersScreen({ user }: { user: User }) {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-[calc(100vh-120px)] bg-amber-50 p-4 items-center justify-center">
-        <p className="text-slate-600">Loading orders...</p>
+      <div className="flex flex-col min-h-[calc(100vh-120px)] bg-amber-50 p-4">
+        <div className="flex justify-center mb-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-slate-800 mb-4">Orders</h1>
+            <div className="h-1 bg-slate-800 w-32 mx-auto"></div>
+          </div>
+        </div>
+        <CardSkeleton count={5} />
       </div>
     );
   }

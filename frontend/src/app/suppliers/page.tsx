@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { CardSkeleton } from "@/components/ui/loading";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Edit2, Trash2, Loader2 } from "lucide-react";
@@ -97,11 +98,7 @@ export default function SuppliersPage() {
             </div>
           </PermissionGate>
 
-          {loading && (
-            <div className="flex justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-slate-600" />
-            </div>
-          )}
+          {loading && <CardSkeleton />}
 
           {error && (
             <div className="bg-red-100 border border-red-300 text-red-700 rounded-lg p-4 mb-4">

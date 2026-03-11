@@ -2,11 +2,8 @@
 
 import { User } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Building2, Users, Package, ArrowRight } from "lucide-react";
+import { Building2, Users, Package, ClipboardList, ArrowRight } from "lucide-react";
 import Link from "next/link";
-
-// TODO: order dashboard with distro and open/in progress filters
-// TODO: manage orders
 
 interface AdminDashProps {
   user: User;
@@ -24,6 +21,18 @@ export default function AdminDash({ user }: AdminDashProps) {
 
       <div className="max-w-2xl mx-auto w-full">
         <div className="mb-8 space-y-4">
+          <div>
+            <Link href="/manage-orders">
+              <Button className="w-full bg-white border-2 border-slate-800 text-slate-800 hover:bg-slate-50 font-semibold py-3 rounded-lg flex items-center justify-between px-4">
+                <div className="flex items-center gap-3">
+                  <ClipboardList className="w-5 h-5" />
+                  <span>Manage Orders</span>
+                </div>
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
+
           <div>
             <Link href="/suppliers">
               <Button className="w-full bg-white border-2 border-slate-800 text-slate-800 hover:bg-slate-50 font-semibold py-3 rounded-lg flex items-center justify-between px-4">

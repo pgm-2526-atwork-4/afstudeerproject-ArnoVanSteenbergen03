@@ -12,6 +12,7 @@ import {
   type Permission,
 } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
+import { CardSkeleton } from "@/components/ui/loading";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -276,9 +277,7 @@ export default function ApplicationsPage() {
           </div>
 
           {loading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
-            </div>
+            <CardSkeleton />
           ) : filteredApplications.length === 0 ? (
             <div className="text-center py-12 text-slate-500">
               No {filter !== "all" ? filter : ""} applications found.

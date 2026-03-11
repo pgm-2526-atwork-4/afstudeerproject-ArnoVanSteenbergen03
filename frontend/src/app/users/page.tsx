@@ -17,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { CardSkeleton } from "@/components/ui/loading";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Plus, Edit2, Trash2, FileText, Loader2, CheckCircle, X } from "lucide-react";
 
@@ -259,11 +260,7 @@ export default function UsersPage() {
             </select>
           </div>
 
-          {loading && (
-            <div className="flex justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-slate-600" />
-            </div>
-          )}
+          {loading && <CardSkeleton />}
 
           {error && (
             <div className="bg-red-100 border border-red-300 text-red-700 rounded-lg p-4 mb-4">

@@ -2,6 +2,105 @@ import { CreateOrderInput } from "@shared/index";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
+// Admin: get paginated orders with filters
+export interface AdminOrderRow {
+  id: string;
+  status: string;
+  orderTime: string;
+  location: string;
+  activityType: string;
+  notes: string | null;
+  assignedCenterId: string | null;
+  createdAt: string;
+  providerFirstname: string | null;
+  providerLastname: string | null;
+  centerName: string | null;
+}
+
+export interface AdminOrdersResponse {
+  orders: AdminOrderRow[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export async function getAdminOrders(params: {
+  page?: number;
+  limit?: number;
+  status?: string;
+  centerId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+} = {}): Promise<AdminOrdersResponse> {
+  const query = new URLSearchParams();
+  if (params.page) query.set("page", String(params.page));
+  if (params.limit) query.set("limit", String(params.limit));
+  if (params.status) query.set("status", params.status);
+  if (params.centerId) query.set("centerId", params.centerId);
+  if (params.dateFrom) query.set("dateFrom", params.dateFrom);
+  if (params.dateTo) query.set("dateTo", params.dateTo);
+
+  const response = await fetch(`${API_BASE_URL}/admin/orders?${query.toString()}`, {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || "Failed to fetch orders");
+  }
+
+  return response.json();
+}
+
+// Admin: get single order by id (full details)
+export async function getAdminOrderById(orderId: string) {
+  const response = await fetch(`${API_BASE_URL}/admin/orders/${orderId}`, {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || "Failed to fetch order");
+  }
+
+  return response.json();
+}
+
+// Admin: update order activity data
+export async function updateAdminOrder(
+  orderId: string,
+  data: {
+    status?: string;
+    assignedDriver?: string | null;
+    assignedCenterId?: string | null;
+    location?: string;
+    activityType?: string;
+    orderTime?: string;
+    notes?: string | null;
+  },
+) {
+  const response = await fetch(`${API_BASE_URL}/admin/orders/${orderId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || "Failed to update order");
+  }
+
+  return response.json();
+}
+
 // Get orders
 export async function getProviderOrders() {
   const response = await fetch(`${API_BASE_URL}/provider/orders`, {

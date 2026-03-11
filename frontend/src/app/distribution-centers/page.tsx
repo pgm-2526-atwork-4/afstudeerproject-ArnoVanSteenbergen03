@@ -17,6 +17,7 @@ import {
   deleteDistributionCenter,
 } from "@/lib/api-client";
 import { DistributionCenter } from "@/types";
+import { CardSkeleton } from "@/components/ui/loading";
 import Link from "next/link";
 import { ArrowLeft, Plus, Edit2, Trash2, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -114,9 +115,7 @@ export default function DistributionCentersPage() {
           )}
 
           {isLoading ? (
-            <div className="text-center text-slate-600 py-8">
-              Loading distribution centers...
-            </div>
+            <CardSkeleton />
           ) : centers.length === 0 ? (
             <div className="text-center text-slate-600 py-8">
               No distribution centers found. Create one to get started!

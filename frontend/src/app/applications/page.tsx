@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import {
   ArrowLeft,
+  ArrowRight,
   CheckCircle,
   XCircle,
   Clock,
@@ -49,6 +50,7 @@ export default function ApplicationsPage() {
   >("pending");
 
   const [approvingApp, setApprovingApp] = useState<Application | null>(null);
+  const [permStep, setPermStep] = useState<1 | 2>(1);
   const [selectedPermissionIds, setSelectedPermissionIds] = useState<
     Set<number>
   >(new Set());
@@ -102,17 +104,8 @@ export default function ApplicationsPage() {
 
   const openApproveModal = (app: Application) => {
     setApprovingApp(app);
-    // Auto-suggest page permissions based on user type
-    const suggestedPageKeys: string[] = [];
-    if (app.userType === "provider") {
-      suggestedPageKeys.push("view_orders", "view_chatroom", "view_profile");
-    } else if (app.userType === "volunteer") {
-      suggestedPageKeys.push("view_deliveries", "view_chatroom", "view_profile");
-    }
-    const suggestedIds = allPermissions
-      .filter((p) => suggestedPageKeys.includes(p.key))
-      .map((p) => p.id);
-    setSelectedPermissionIds(new Set(suggestedIds));
+    setPermStep(1);
+    setSelectedPermissionIds(new Set());
   };
 
   const togglePermission = (permId: number) => {
@@ -418,7 +411,7 @@ export default function ApplicationsPage() {
             <div className="flex items-center justify-between p-6 border-b border-slate-200">
               <div>
                 <h2 className="text-xl font-bold text-slate-800">
-                  Assign Permissions
+                  {permStep === 1 ? "Step 1: Page Access" : "Step 2: Data Permissions"}
                 </h2>
                 <p className="text-sm text-slate-500 mt-1">
                   {approvingApp.firstname} {approvingApp.lastname} &middot;{" "}
@@ -431,135 +424,142 @@ export default function ApplicationsPage() {
                 onClick={() => {
                   setApprovingApp(null);
                   setSelectedPermissionIds(new Set());
+                  setPermStep(1);
                 }}
               >
                 <X className="w-5 h-5" />
               </Button>
             </div>
 
-            <div className="flex-1 overflow-auto p-6">
-              <h3 className="text-sm font-semibold text-slate-700 mb-3">Page Access</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
-                {permissionGrid.pagePermissions.map((perm) => (
-                  <label
-                    key={perm.id}
-                    className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors ${
-                      selectedPermissionIds.has(perm.id)
-                        ? "bg-green-50 border-green-400"
-                        : "bg-white border-slate-200 hover:bg-slate-50"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 rounded accent-green-600"
-                      checked={selectedPermissionIds.has(perm.id)}
-                      onChange={() => togglePermission(perm.id)}
-                    />
-                    <span className="text-sm font-medium text-slate-800">
-                      {formatPageKey(perm.key)}
-                    </span>
-                  </label>
-                ))}
-              </div>
-
-              <h3 className="text-sm font-semibold text-slate-700 mb-3">Data Permissions</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-sm">
-                  <thead>
-                    <tr className="bg-slate-100">
-                      <th className="text-left p-3 font-semibold text-slate-700 border border-slate-300 min-w-[140px]">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            className="w-4 h-4 rounded accent-slate-800"
-                            checked={
-                              permissionGrid.crudPermissions.length > 0 &&
-                              permissionGrid.crudPermissions.every((p) =>
-                                selectedPermissionIds.has(p.id),
-                              )
-                            }
-                            onChange={() => {
-                              const crudPerms = permissionGrid.crudPermissions;
-                              const allSelected = crudPerms.every((p) =>
-                                selectedPermissionIds.has(p.id),
-                              );
-                              setSelectedPermissionIds((prev) => {
-                                const next = new Set(prev);
-                                crudPerms.forEach((p) => {
-                                  if (allSelected) next.delete(p.id);
-                                  else next.add(p.id);
-                                });
-                                return next;
-                              });
-                            }}
-                          />
-                          Resource
-                        </label>
-                      </th>
-                      {permissionGrid.actions.map((action) => (
-                        <th
-                          key={action}
-                          className="text-center p-3 font-semibold text-slate-700 border border-slate-300 capitalize w-24"
-                        >
-                          {action}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {permissionGrid.resources.map((resource) => {
-                      const resourcePerms = allPermissions.filter(
-                        (p) => p.resource === resource,
-                      );
-                      const allRowSelected = resourcePerms.every((p) =>
-                        selectedPermissionIds.has(p.id),
-                      );
-
-                      return (
-                        <tr
-                          key={resource}
-                          className="hover:bg-amber-50 transition-colors"
-                        >
-                          <td className="p-3 border border-slate-300 font-medium text-slate-800">
+            <div className="flex-1 min-h-0 overflow-auto p-6">
+              {permStep === 1 ? (
+                <>
+                  <p className="text-sm text-slate-500 mb-4">Select which pages this user can access.</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {permissionGrid.pagePermissions.map((perm) => (
+                      <label
+                        key={perm.id}
+                        className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors ${
+                          selectedPermissionIds.has(perm.id)
+                            ? "bg-green-50 border-green-400"
+                            : "bg-white border-slate-200 hover:bg-slate-50"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 rounded accent-green-600"
+                          checked={selectedPermissionIds.has(perm.id)}
+                          onChange={() => togglePermission(perm.id)}
+                        />
+                        <span className="text-sm font-medium text-slate-800">
+                          {formatPageKey(perm.key)}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-slate-500 mb-4">Select which data operations this user can perform.</p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse text-sm">
+                      <thead>
+                        <tr className="bg-slate-100">
+                          <th className="text-left p-3 font-semibold text-slate-700 border border-slate-300 min-w-[140px]">
                             <label className="flex items-center gap-2 cursor-pointer">
                               <input
                                 type="checkbox"
                                 className="w-4 h-4 rounded accent-slate-800"
-                                checked={allRowSelected}
-                                onChange={() => toggleResourceRow(resource)}
+                                checked={
+                                  permissionGrid.crudPermissions.length > 0 &&
+                                  permissionGrid.crudPermissions.every((p) =>
+                                    selectedPermissionIds.has(p.id),
+                                  )
+                                }
+                                onChange={() => {
+                                  const crudPerms = permissionGrid.crudPermissions;
+                                  const allSelected = crudPerms.every((p) =>
+                                    selectedPermissionIds.has(p.id),
+                                  );
+                                  setSelectedPermissionIds((prev) => {
+                                    const next = new Set(prev);
+                                    crudPerms.forEach((p) => {
+                                      if (allSelected) next.delete(p.id);
+                                      else next.add(p.id);
+                                    });
+                                    return next;
+                                  });
+                                }}
                               />
-                              {formatResource(resource)}
+                              Resource
                             </label>
-                          </td>
-                          {permissionGrid.actions.map((action) => {
-                            const perm = getPermissionByResourceAction(
-                              resource,
-                              action,
-                            );
-                            return (
-                              <td
-                                key={action}
-                                className="text-center p-3 border border-slate-300"
-                              >
-                                {perm ? (
+                          </th>
+                          {permissionGrid.actions.map((action) => (
+                            <th
+                              key={action}
+                              className="text-center p-3 font-semibold text-slate-700 border border-slate-300 capitalize w-24"
+                            >
+                              {action}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {permissionGrid.resources.map((resource) => {
+                          const resourcePerms = allPermissions.filter(
+                            (p) => p.resource === resource,
+                          );
+                          const allRowSelected = resourcePerms.every((p) =>
+                            selectedPermissionIds.has(p.id),
+                          );
+
+                          return (
+                            <tr
+                              key={resource}
+                              className="hover:bg-amber-50 transition-colors"
+                            >
+                              <td className="p-3 border border-slate-300 font-medium text-slate-800">
+                                <label className="flex items-center gap-2 cursor-pointer">
                                   <input
                                     type="checkbox"
-                                    className="w-4 h-4 rounded accent-green-600 cursor-pointer"
-                                    checked={selectedPermissionIds.has(perm.id)}
-                                    onChange={() => togglePermission(perm.id)}
+                                    className="w-4 h-4 rounded accent-slate-800"
+                                    checked={allRowSelected}
+                                    onChange={() => toggleResourceRow(resource)}
                                   />
-                                ) : (
-                                  <span className="text-slate-300">—</span>
-                                )}
+                                  {formatResource(resource)}
+                                </label>
                               </td>
-                            );
-                          })}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                              {permissionGrid.actions.map((action) => {
+                                const perm = getPermissionByResourceAction(
+                                  resource,
+                                  action,
+                                );
+                                return (
+                                  <td
+                                    key={action}
+                                    className="text-center p-3 border border-slate-300"
+                                  >
+                                    {perm ? (
+                                      <input
+                                        type="checkbox"
+                                        className="w-4 h-4 rounded accent-green-600 cursor-pointer"
+                                        checked={selectedPermissionIds.has(perm.id)}
+                                        onChange={() => togglePermission(perm.id)}
+                                      />
+                                    ) : (
+                                      <span className="text-slate-300">—</span>
+                                    )}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
 
               <p className="text-xs text-slate-400 mt-3">
                 {selectedPermissionIds.size} of {allPermissions.length}{" "}
@@ -568,29 +568,41 @@ export default function ApplicationsPage() {
             </div>
 
             <div className="border-t border-slate-200 p-6 flex gap-3">
-              <Button
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold"
-                disabled={actionLoading === approvingApp.id}
-                onClick={handleConfirmApprove}
-              >
-                {actionLoading === approvingApp.id ? (
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                ) : (
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                )}
-                Approve with {selectedPermissionIds.size} permission
-                {selectedPermissionIds.size !== 1 ? "s" : ""}
-              </Button>
-              <Button
-                variant="outline"
-                className="border-slate-300"
-                onClick={() => {
-                  setApprovingApp(null);
-                  setSelectedPermissionIds(new Set());
-                }}
-              >
-                Cancel
-              </Button>
+              {permStep === 1 ? (
+                <>
+                  <Button
+                    className="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-semibold"
+                    onClick={() => setPermStep(2)}
+                  >
+                    Next: Data Permissions
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    className="border-slate-300"
+                    onClick={() => setPermStep(1)}
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Back
+                  </Button>
+                  <Button
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold"
+                    disabled={actionLoading === approvingApp.id}
+                    onClick={handleConfirmApprove}
+                  >
+                    {actionLoading === approvingApp.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    ) : (
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                    )}
+                    Approve with {selectedPermissionIds.size} permission
+                    {selectedPermissionIds.size !== 1 ? "s" : ""}
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -7,8 +7,6 @@ import Link from "next/link";
 
 // TODO: order dashboard with distro and open/in progress filters
 // TODO: manage orders
-// TODO: manual user upload
-// TODO: edit user need better permission display for the pages 
 
 interface AdminDashProps {
   user: User;

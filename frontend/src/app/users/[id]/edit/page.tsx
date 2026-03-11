@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import ProtectedPage from "@/components/ProtectedPage";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -20,6 +20,7 @@ import { ArrowLeft, Loader2, Save } from "lucide-react";
 export default function EditUserPage() {
   const { user: authUser, loading: authLoading } = useAuth();
   const params = useParams();
+  const router = useRouter();
   const userId = params.id as string;
 
   const [userData, setUserData] = useState<AdminUserDetail | null>(null);
@@ -118,7 +119,7 @@ export default function EditUserPage() {
         userType,
         permissionIds: selectedPermissionIds,
       });
-      setSuccess("User updated successfully");
+      router.push("/users");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update user");
     } finally {
@@ -300,7 +301,9 @@ export default function EditUserPage() {
                                 className="w-3.5 h-3.5 rounded accent-slate-800"
                               />
                               <span className="capitalize">
-                                {perm.action}
+                                {resource === "page"
+                                  ? perm.key.replace(/^view_/, "").replace(/_/g, " ")
+                                  : perm.action}
                               </span>
                             </label>
                           ))}

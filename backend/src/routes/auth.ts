@@ -7,6 +7,7 @@ import { eq, and } from "drizzle-orm";
 import { requireAuth } from "@/middleware/auth";
 import { registerApiSchema, loginSchema } from "@shared/schemas/auth";
 import { z } from "zod/v4";
+import { generateUsername } from "@/services/generateUsername";
 
 const router = Router();
 
@@ -28,17 +29,7 @@ router.post("/register", async (req: Request, res: Response) => {
       return res.status(409).json({ error: "Email already registered" });
     }
 
-    let username = `${firstname}${lastname}`.toLowerCase();
-    let counter = 1;
-
-    while (
-      await db.query.users.findFirst({
-        where: eq(users.username, username),
-      })
-    ) {
-      username = `${firstname}${lastname}${counter}`.toLowerCase();
-      counter++;
-    }
+    const username = await generateUsername(firstname, lastname);
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const [newUser] = await db

@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import ProtectedPage from "@/components/ProtectedPage";
 import PermissionGate from "@/components/PermissionGate";
 import { useAuth } from "@/lib/auth-context";
-import { getApplicationCount, getUsers, deleteUser, AdminUser } from "@/lib/api-client";
+import { getApplicationCount, getUsers, deleteUser, createUser, getAllPermissions, checkEmailAvailable, AdminUser, type Permission } from "@/lib/api-client";
+import { createUserSchema } from "@shared/schemas/users";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import Link from "next/link";
-import { ArrowLeft, Plus, Edit2, Trash2, FileText, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Plus, Edit2, Trash2, FileText, Loader2, CheckCircle, X } from "lucide-react";
 
 export default function UsersPage() {
   const { user } = useAuth();
@@ -27,6 +30,19 @@ export default function UsersPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [confirmDeleteName, setConfirmDeleteName] = useState<string>("");
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [createStep, setCreateStep] = useState<1 | 2 | 3>(1);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [allPermissions, setAllPermissions] = useState<Permission[]>([]);
+  const [selectedPermissionIds, setSelectedPermissionIds] = useState<Set<number>>(new Set());
+  const [newUser, setNewUser] = useState({
+    firstname: "",
+    lastname: "",
+    email: "",
+    password: "",
+    userType: "volunteer",
+  });
 
   useEffect(() => {
     getApplicationCount()
@@ -53,6 +69,14 @@ export default function UsersPage() {
     fetchUsers();
     return () => { cancelled = true; };
   }, [roleFilter]);
+
+  const permissionGrid = useMemo(() => {
+    const crudPermissions = allPermissions.filter((p) => p.resource !== "page");
+    const pagePermissions = allPermissions.filter((p) => p.resource === "page");
+    const resources = [...new Set(crudPermissions.map((p) => p.resource))];
+    const actions = ["create", "read", "update", "delete"];
+    return { resources, actions, crudPermissions, pagePermissions };
+  }, [allPermissions]);
 
   if (!user) return null;
 
@@ -82,6 +106,80 @@ export default function UsersPage() {
       setDeleteLoading(false);
     }
   };
+
+  const validateStep1 = (): string | null => {
+    const result = createUserSchema.safeParse({ ...newUser, permissionIds: [] });
+    if (result.success) return null;
+    const issue = result.error.issues[0];
+    return issue?.message || "Validation failed";
+  };
+
+  const handleCreateUser = async () => {
+    setCreateLoading(true);
+    setCreateError(null);
+    try {
+      await createUser({ ...newUser, permissionIds: Array.from(selectedPermissionIds) });
+      closeCreateDialog();
+      const data = await getUsers(roleFilter || undefined);
+      setUsers(data);
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : "Failed to create user");
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
+  const openCreateDialog = async () => {
+    setShowCreateDialog(true);
+    setCreateStep(1);
+    setCreateError(null);
+    setSelectedPermissionIds(new Set());
+    setNewUser({ firstname: "", lastname: "", email: "", password: "", userType: "volunteer" });
+    if (allPermissions.length === 0) {
+      try {
+        const perms = await getAllPermissions();
+        setAllPermissions(perms);
+      } catch (err) {
+        console.error("Failed to load permissions:", err);
+      }
+    }
+  };
+
+  const closeCreateDialog = () => {
+    setShowCreateDialog(false);
+    setCreateStep(1);
+    setCreateError(null);
+    setSelectedPermissionIds(new Set());
+    setNewUser({ firstname: "", lastname: "", email: "", password: "", userType: "volunteer" });
+  };
+
+  const togglePermission = (permId: number) => {
+    setSelectedPermissionIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(permId)) next.delete(permId);
+      else next.add(permId);
+      return next;
+    });
+  };
+
+  const toggleResourceRow = (resource: string) => {
+    const resourcePerms = allPermissions.filter((p) => p.resource === resource && resource !== "page");
+    const allSelected = resourcePerms.every((p) => selectedPermissionIds.has(p.id));
+    setSelectedPermissionIds((prev) => {
+      const next = new Set(prev);
+      resourcePerms.forEach((p) => { if (allSelected) next.delete(p.id); else next.add(p.id); });
+      return next;
+    });
+  };
+
+  const getPermissionByResourceAction = (resource: string, action: string) =>
+    allPermissions.find((p) => p.resource === resource && p.action === action);
+
+  const formatResource = (r: string) =>
+    r.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+  const formatPageKey = (key: string) =>
+    key.replace("view_", "").replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
@@ -122,7 +220,10 @@ export default function UsersPage() {
         <div className="max-w-4xl mx-auto w-full">
           <PermissionGate permission="create_users">
             <div className="mb-6">
-              <Button className="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2">
+              <Button
+                className="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2"
+                onClick={() => openCreateDialog()}
+              >
                 <Plus className="w-5 h-5" />
                 Add New User
               </Button>
@@ -261,6 +362,276 @@ export default function UsersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Create user modal - 3 step wizard */}
+      {showCreateDialog && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl border-2 border-slate-800 w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-slate-200">
+              <div>
+                <h2 className="text-xl font-bold text-slate-800">
+                  {createStep === 1 && "Step 1: User Details"}
+                  {createStep === 2 && "Step 2: Page Access"}
+                  {createStep === 3 && "Step 3: Data Permissions"}
+                </h2>
+                <p className="text-sm text-slate-500 mt-1">Create a new user account</p>
+              </div>
+              <Button variant="ghost" className="p-1 h-auto" onClick={closeCreateDialog}>
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+
+            <div className="flex-1 min-h-0 overflow-auto p-6">
+              {createError && (
+                <div className="bg-red-100 border border-red-300 text-red-700 rounded-lg p-3 mb-4 text-sm">
+                  {createError}
+                </div>
+              )}
+              {createStep === 1 && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label htmlFor="create-firstname" className="text-slate-700 font-semibold">First Name</Label>
+                      <Input
+                        id="create-firstname"
+                        value={newUser.firstname}
+                        onChange={(e) => setNewUser((p) => ({ ...p, firstname: e.target.value }))}
+                        className="mt-1"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="create-lastname" className="text-slate-700 font-semibold">Last Name</Label>
+                      <Input
+                        id="create-lastname"
+                        value={newUser.lastname}
+                        onChange={(e) => setNewUser((p) => ({ ...p, lastname: e.target.value }))}
+                        className="mt-1"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="create-email" className="text-slate-700 font-semibold">Email</Label>
+                    <Input
+                      id="create-email"
+                      type="email"
+                      value={newUser.email}
+                      onChange={(e) => setNewUser((p) => ({ ...p, email: e.target.value }))}
+                      className="mt-1"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="create-password" className="text-slate-700 font-semibold">Password</Label>
+                    <Input
+                      id="create-password"
+                      type="password"
+                      value={newUser.password}
+                      onChange={(e) => setNewUser((p) => ({ ...p, password: e.target.value }))}
+                      className="mt-1"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="create-role" className="text-slate-700 font-semibold">Role</Label>
+                    <select
+                      id="create-role"
+                      value={newUser.userType}
+                      onChange={(e) => setNewUser((p) => ({ ...p, userType: e.target.value }))}
+                      className="mt-1 w-full border-2 border-slate-300 rounded-lg px-3 py-2 bg-white text-slate-800"
+                    >
+                      <option value="admin">Admin</option>
+                      <option value="provider">Provider</option>
+                      <option value="volunteer">Volunteer</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {createStep === 2 && (
+                <>
+                  <p className="text-sm text-slate-500 mb-4">Select which pages this user can access.</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {permissionGrid.pagePermissions.map((perm) => (
+                      <label
+                        key={perm.id}
+                        className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors ${
+                          selectedPermissionIds.has(perm.id)
+                            ? "bg-green-50 border-green-400"
+                            : "bg-white border-slate-200 hover:bg-slate-50"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 rounded accent-green-600"
+                          checked={selectedPermissionIds.has(perm.id)}
+                          onChange={() => togglePermission(perm.id)}
+                        />
+                        <span className="text-sm font-medium text-slate-800">
+                          {formatPageKey(perm.key)}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {createStep === 3 && (
+                <>
+                  <p className="text-sm text-slate-500 mb-4">Select which data operations this user can perform.</p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse text-sm">
+                      <thead>
+                        <tr className="bg-slate-100">
+                          <th className="text-left p-3 font-semibold text-slate-700 border border-slate-300 min-w-[140px]">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                className="w-4 h-4 rounded accent-slate-800"
+                                checked={
+                                  permissionGrid.crudPermissions.length > 0 &&
+                                  permissionGrid.crudPermissions.every((p) => selectedPermissionIds.has(p.id))
+                                }
+                                onChange={() => {
+                                  const crudPerms = permissionGrid.crudPermissions;
+                                  const allSelected = crudPerms.every((p) => selectedPermissionIds.has(p.id));
+                                  setSelectedPermissionIds((prev) => {
+                                    const next = new Set(prev);
+                                    crudPerms.forEach((p) => { if (allSelected) next.delete(p.id); else next.add(p.id); });
+                                    return next;
+                                  });
+                                }}
+                              />
+                              Resource
+                            </label>
+                          </th>
+                          {permissionGrid.actions.map((action) => (
+                            <th key={action} className="text-center p-3 font-semibold text-slate-700 border border-slate-300 capitalize w-24">
+                              {action}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {permissionGrid.resources.map((resource) => {
+                          const resourcePerms = allPermissions.filter((p) => p.resource === resource);
+                          const allRowSelected = resourcePerms.every((p) => selectedPermissionIds.has(p.id));
+                          return (
+                            <tr key={resource} className="hover:bg-amber-50 transition-colors">
+                              <td className="p-3 border border-slate-300 font-medium text-slate-800">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    className="w-4 h-4 rounded accent-slate-800"
+                                    checked={allRowSelected}
+                                    onChange={() => toggleResourceRow(resource)}
+                                  />
+                                  {formatResource(resource)}
+                                </label>
+                              </td>
+                              {permissionGrid.actions.map((action) => {
+                                const perm = getPermissionByResourceAction(resource, action);
+                                return (
+                                  <td key={action} className="text-center p-3 border border-slate-300">
+                                    {perm ? (
+                                      <input
+                                        type="checkbox"
+                                        className="w-4 h-4 rounded accent-green-600 cursor-pointer"
+                                        checked={selectedPermissionIds.has(perm.id)}
+                                        onChange={() => togglePermission(perm.id)}
+                                      />
+                                    ) : (
+                                      <span className="text-slate-300">—</span>
+                                    )}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+
+              {(createStep === 2 || createStep === 3) && (
+                <p className="text-xs text-slate-400 mt-3">
+                  {selectedPermissionIds.size} of {allPermissions.length} permissions selected
+                </p>
+              )}
+            </div>
+
+            <div className="border-t border-slate-200 p-6 flex gap-3">
+              {createStep === 1 && (
+                <>
+                  <Button
+                    className="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-semibold"
+                    disabled={!newUser.firstname || !newUser.lastname || !newUser.email || !newUser.password || createLoading}
+                    onClick={async () => {
+                      const err = validateStep1();
+                      if (err) { setCreateError(err); return; }
+                      setCreateError(null);
+                      setCreateLoading(true);
+                      try {
+                        const available = await checkEmailAvailable(newUser.email);
+                        if (!available) {
+                          setCreateError("Email is already in use");
+                          return;
+                        }
+                        setCreateStep(2);
+                      } catch {
+                        setCreateError("Failed to verify email");
+                      } finally {
+                        setCreateLoading(false);
+                      }
+                    }}
+                  >
+                    Next: Page Access
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </>
+              )}
+              {createStep === 2 && (
+                <>
+                  <Button variant="outline" className="border-slate-300" onClick={() => setCreateStep(1)}>
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Back
+                  </Button>
+                  <Button
+                    className="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-semibold"
+                    onClick={() => setCreateStep(3)}
+                  >
+                    Next: Data Permissions
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </>
+              )}
+              {createStep === 3 && (
+                <>
+                  <Button variant="outline" className="border-slate-300" onClick={() => setCreateStep(2)}>
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Back
+                  </Button>
+                  <Button
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold"
+                    disabled={createLoading}
+                    onClick={handleCreateUser}
+                  >
+                    {createLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    ) : (
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                    )}
+                    Create with {selectedPermissionIds.size} permission{selectedPermissionIds.size !== 1 ? "s" : ""}
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </ProtectedPage>
   );
 }

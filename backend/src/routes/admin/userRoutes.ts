@@ -3,8 +3,115 @@ import { db } from "@/config/database";
 import { users, applications, userPermissions, permissions } from "@/db/schema";
 import { eq, and, sql, inArray } from "drizzle-orm";
 import { requirePermission } from "@/middleware/auth";
+import bcrypt from "bcrypt";
+import { createUserSchema } from "@shared/schemas/users";
+import { z } from "zod";
+import { generateUsername } from "@/services/generateUsername";
 
 const router = Router();
+
+// Check if email is already taken
+router.post(
+  "/check-email",
+  requirePermission("create_users"),
+  async (req: Request, res: Response) => {
+    try {
+      const { email } = req.body;
+      if (!email) return res.status(400).json({ error: "Email is required" });
+
+      const [existing] = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.email, email));
+
+      res.json({ available: !existing });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to check email" });
+    }
+  },
+);
+
+// Create a new user (admin manual upload)
+router.post(
+  "/",
+  requirePermission("create_users"),
+  async (req: Request, res: Response) => {
+    try {
+      const validated = createUserSchema.parse(req.body);
+      const { firstname, lastname, email, password, userType, permissionIds } = validated;
+
+      const [existingEmail] = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.email, email));
+
+      if (existingEmail) {
+        return res.status(409).json({ error: "Email already in use" });
+      }
+
+      const username = await generateUsername(firstname, lastname);
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const [newUser] = await db
+        .insert(users)
+        .values({
+          email,
+          firstname,
+          lastname,
+          username,
+          password: hashedPassword,
+          userType,
+        })
+        .returning();
+
+      await db.insert(applications).values({
+        userId: newUser.id,
+        userType,
+        status: "approved",
+        reviewedBy: (req.user as any).id,
+        reviewedAt: new Date(),
+      });
+
+      if (Array.isArray(permissionIds) && permissionIds.length > 0) {
+        const adminId = (req.user as any).id;
+        const validPermissions = await db
+          .select({ id: permissions.id })
+          .from(permissions)
+          .where(inArray(permissions.id, permissionIds));
+
+        if (validPermissions.length > 0) {
+          await db
+            .insert(userPermissions)
+            .values(
+              validPermissions.map((p) => ({
+                userId: newUser.id,
+                permissionId: p.id,
+                grantedBy: adminId,
+              })),
+            )
+            .onConflictDoNothing();
+        }
+      }
+
+      res.status(201).json({
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email,
+        firstname: newUser.firstname,
+        lastname: newUser.lastname,
+        userType: newUser.userType,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const firstIssue = error.issues[0];
+        return res.status(400).json({ error: firstIssue?.message || "Validation failed" });
+      }
+      console.error("Failed to create user:", error);
+      res.status(500).json({ error: "Failed to create user" });
+    }
+  },
+);
 
 // List approved users, optionally filtered by role
 router.get(

@@ -6,6 +6,7 @@ import {
   vehicles,
   collectionActivities,
   places,
+  lookupValues,
 } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { requireAuth, requirePermission } from "@/middleware/auth";
@@ -13,6 +14,35 @@ import { CreateOrderSchema } from "@shared/index";
 import { findOpenCenter } from "@/services/autoAssign";
 
 const router = Router();
+
+// Get lookup values for goods form dropdowns
+router.get(
+  "/lookups",
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const { type } = req.query;
+
+      if (type && typeof type === "string") {
+        const values = await db
+          .select()
+          .from(lookupValues)
+          .where(eq(lookupValues.type, type))
+          .orderBy(lookupValues.sortOrder);
+        return res.json(values);
+      }
+
+      const allValues = await db
+        .select()
+        .from(lookupValues)
+        .orderBy(lookupValues.type, lookupValues.sortOrder);
+      return res.json(allValues);
+    } catch (error) {
+      console.error("Error fetching lookup values:", error);
+      res.status(500).json({ error: "Failed to fetch lookup values" });
+    }
+  },
+);
 
 // Create new order
 router.post(

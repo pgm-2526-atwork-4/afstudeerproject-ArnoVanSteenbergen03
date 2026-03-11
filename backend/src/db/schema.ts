@@ -167,6 +167,20 @@ export const vehicles = pgTable("vehicles", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Lookup values for dropdowns (good_state, category, unit, etc.)
+export const lookupValues = pgTable(
+  "lookup_values",
+  {
+    id: serial("id").primaryKey(),
+    type: text("type").notNull(), // 'good_state', 'category', 'unit'
+    value: text("value").notNull(),
+    label: text("label").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [index("lookup_type_idx").on(table.type)]
+);
+
 ////Relations
 
 export const usersRelations = relations(users, ({ many }) => ({

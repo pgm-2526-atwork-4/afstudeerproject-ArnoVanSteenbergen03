@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X, Plus, ImageIcon, Loader2 } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { uploadGoodsImage } from "@/lib/api-client";
+import { uploadGoodsImage, getLookupValues } from "@/lib/api-client";
 import type { GoodsData, GoodsFormItem } from "@/types";
+import type { LookupValue } from "@/lib/api-lookups";
 
 
 interface GoodsStepProps {
@@ -16,37 +17,28 @@ interface GoodsStepProps {
   initialGoods?: GoodsData[];
 }
 
-const GOOD_STATES = [
-  { value: "fresh", label: "Fresh" },
-  { value: "old", label: "Old" },
-  { value: "dry", label: "Dry" },
-] as const;
-
-const CATEGORIES = [
-  { value: "meat", label: "Meat" },
-  { value: "dairy", label: "Dairy" },
-  { value: "vegies", label: "Vegies" },
-  { value: "fruits", label: "Fruits" },
-  { value: "bakery", label: "Bakery" },
-  { value: "prepared food (hot/warm)", label: "Prepared Food (Hot/Warm)" },
-  { value: "prepared food (cold)", label: "Prepared Food (Cold)" },
-  { value: "packaged goods", label: "Packaged Goods" },
-] as const;
-
-const UNITS = [
-  { value: "items", label: "Items" },
-  { value: "kg", label: "Kg" },
-  { value: "boxes", label: "Boxes" },
-  { value: "pallets", label: "Pallets" },
-  { value: "liters", label: "Liters" },
-] as const;
-
 export default function GoodsStep({
   onNext,
   onCancel,
   initialGoods,
 }: GoodsStepProps) {
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "") || "";
+
+  const [goodStates, setGoodStates] = useState<LookupValue[]>([]);
+  const [categories, setCategories] = useState<LookupValue[]>([]);
+  const [units, setUnits] = useState<LookupValue[]>([]);
+
+  useEffect(() => {
+    Promise.all([
+      getLookupValues("good_state"),
+      getLookupValues("category"),
+      getLookupValues("unit"),
+    ]).then(([states, cats, uns]) => {
+      setGoodStates(states);
+      setCategories(cats);
+      setUnits(uns);
+    });
+  }, []);
   const [goodsItems, setGoodsItems] = useState<GoodsFormItem[]>(
     initialGoods && initialGoods.length > 0
       ? initialGoods.map((item, i) => ({
@@ -153,7 +145,7 @@ export default function GoodsStep({
                     }
                     className="w-full px-3 py-2 border-2 border-slate-800 rounded bg-white"
                   >
-                    {GOOD_STATES.map((t) => (
+                    {goodStates.map((t) => (
                       <option key={t.value} value={t.value}>
                         {t.label}
                       </option>
@@ -173,7 +165,7 @@ export default function GoodsStep({
                     className="w-full px-3 py-2 border-2 border-slate-800 rounded bg-white"
                   >
                     <option value="">Select a category</option>
-                    {CATEGORIES.map((c) => (
+                    {categories.map((c) => (
                       <option key={c.value} value={c.value}>
                         {c.label}
                       </option>
@@ -224,7 +216,7 @@ export default function GoodsStep({
                     }
                     className="w-full px-3 py-2 border-2 border-slate-800 rounded bg-white"
                   >
-                    {UNITS.map((u) => (
+                    {units.map((u) => (
                       <option key={u.value} value={u.value}>
                         {u.label}
                       </option>

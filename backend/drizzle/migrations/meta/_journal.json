@@ -78,6 +78,13 @@
       "when": 1773247127049,
       "tag": "0010_strong_mockingbird",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1773249408396,
+      "tag": "0011_fearless_dracula",
+      "breakpoints": true
     }
   ]
 }

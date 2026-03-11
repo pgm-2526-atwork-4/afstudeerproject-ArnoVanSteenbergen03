@@ -13,6 +13,7 @@ import {
   activities,
   goods,
   collectionActivities,
+  lookupValues,
 } from "./schema";
 
 // TODO: clear seed data. dubble look at permissions and goods / activity
@@ -88,6 +89,34 @@ async function main() {
     : await db.select().from(permissions);
 
   console.log(`Seeded ${allPermissions.length} permissions`);
+
+  // Seed lookup values (good_state, category, unit)
+  await db
+    .insert(lookupValues)
+    .values([
+      // Good states
+      { type: "good_state", value: "fresh", label: "Fresh", sortOrder: 1 },
+      { type: "good_state", value: "old", label: "Old", sortOrder: 2 },
+      { type: "good_state", value: "dry", label: "Dry", sortOrder: 3 },
+      // Categories
+      { type: "category", value: "meat", label: "Meat", sortOrder: 1 },
+      { type: "category", value: "dairy", label: "Dairy", sortOrder: 2 },
+      { type: "category", value: "vegies", label: "Vegies", sortOrder: 3 },
+      { type: "category", value: "fruits", label: "Fruits", sortOrder: 4 },
+      { type: "category", value: "bakery", label: "Bakery", sortOrder: 5 },
+      { type: "category", value: "prepared food (hot/warm)", label: "Prepared Food (Hot/Warm)", sortOrder: 6 },
+      { type: "category", value: "prepared food (cold)", label: "Prepared Food (Cold)", sortOrder: 7 },
+      { type: "category", value: "packaged goods", label: "Packaged Goods", sortOrder: 8 },
+      // Units
+      { type: "unit", value: "items", label: "Items", sortOrder: 1 },
+      { type: "unit", value: "kg", label: "Kg", sortOrder: 2 },
+      { type: "unit", value: "boxes", label: "Boxes", sortOrder: 3 },
+      { type: "unit", value: "pallets", label: "Pallets", sortOrder: 4 },
+      { type: "unit", value: "liters", label: "Liters", sortOrder: 5 },
+    ])
+    .onConflictDoNothing();
+
+  console.log("Seeded lookup values");
 
   const passwordHash = await hash("Test1234!", 10);
 

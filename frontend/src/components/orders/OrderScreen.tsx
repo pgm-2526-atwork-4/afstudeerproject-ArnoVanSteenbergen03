@@ -237,7 +237,7 @@ export default function OrdersScreen(_props: { user: User }) {
                       </>
                     ) : (
                       <>
-                        <Link href="/chatroom">
+                        <Link href={`/chatroom?thread=${order.id}`}>
                           <MessageCircle className="w-5 h-5 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer" />
                         </Link>
                         <div className="flex-1" />

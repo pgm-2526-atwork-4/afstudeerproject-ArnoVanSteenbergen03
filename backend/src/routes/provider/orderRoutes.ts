@@ -7,6 +7,7 @@ import {
   collectionActivities,
   places,
   lookupValues,
+  channels,
 } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { requireAuth, requirePermission } from "@/middleware/auth";
@@ -158,6 +159,13 @@ router.post(
           activity: newActivity,
           collectionActivity,
           goods: createdGoods,
+        });
+
+        // Auto-create a task channel for this order
+        await db.insert(channels).values({
+          name: location,
+          type: "task",
+          activityId: newActivity.id,
         });
       }
 

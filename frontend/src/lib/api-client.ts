@@ -8,3 +8,4 @@ export * from "./api-applications";
 export * from "./api-users";
 export * from "./api-suppliers";
 export * from "./api-lookups";
+export * from "./api-chat";

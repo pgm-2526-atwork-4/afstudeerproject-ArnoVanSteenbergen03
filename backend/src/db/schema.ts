@@ -185,6 +185,35 @@ export const lookupValues = pgTable(
   (table) => [index("lookup_type_idx").on(table.type)]
 );
 
+
+// Channels
+export const channels = pgTable("channels", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  type: varchar("type", { length: 20 }).notNull(), // "community" | "task"
+  activityId: uuid("activity_id").references(() => activities.id, {
+    onDelete: "cascade",
+  }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Messages within a channel
+export const messages = pgTable(
+  "messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    channelId: uuid("channel_id")
+      .notNull()
+      .references(() => channels.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [index("messages_channel_idx").on(table.channelId)],
+);
+
 ////Relations
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -289,3 +318,39 @@ export const goodsRelations = relations(goods, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+export const channelsRelations = relations(channels, ({ one, many }) => ({
+  activity: one(activities, {
+    fields: [channels.activityId],
+    references: [activities.id],
+  }),
+  messages: many(messages),
+}));
+
+export const messagesRelations = relations(messages, ({ one }) => ({
+  channel: one(channels, {
+    fields: [messages.channelId],
+    references: [channels.id],
+  }),
+  user: one(users, {
+    fields: [messages.userId],
+    references: [users.id],
+  }),
+}));
+
+// Tracks when a user last read a channel
+export const channelReads = pgTable(
+  "channel_reads",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    channelId: uuid("channel_id")
+      .notNull()
+      .references(() => channels.id, { onDelete: "cascade" }),
+    lastReadAt: timestamp("last_read_at").notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.channelId] }),
+  ],
+);

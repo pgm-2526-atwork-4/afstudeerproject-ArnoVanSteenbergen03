@@ -38,11 +38,7 @@ import {
 import DeliveryCard from "./DeliveryCard";
 import SortableDeliveryCard from "./SortableDeliveryCard";
 
-// TODO: sort open deliveries by date and hour
-// TODO: volunteers can see all deliveries
 // TODO: General dashboard (open / in progress orders) (admin, managers and drivers) dashboard drivers and map.
-// TODO: extra buttons needed to complete order // accept order -> start delivery -> in progress -> complete delivery
-// TODO: give the driver 3 options when completing an order: complete, incomplete (reason for incomplete) or need assitance (options: order too large, vehicle issue + checkboxes and text inputs. also creates a post in the chatroom of said order)
 
 export default function DeliveriesScreen() {
   const [activeTab, setActiveTab] = useState<"open" | "mine">("open");

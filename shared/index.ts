@@ -6,3 +6,4 @@ export * from "./schemas/orders";
 export * from "./schemas/vehicles";
 export * from "./schemas/applications";
 export * from "./schemas/users";
+export * from "./schemas/chat";

@@ -26,6 +26,7 @@ interface DeliveryStepProps {
   initialNotes?: string;
   initialOrderTime?: string;
   isEditing?: boolean;
+  hideDateTime?: boolean;
 }
 
 export default function DeliveryStep({
@@ -39,9 +40,11 @@ export default function DeliveryStep({
   initialNotes = "",
   initialOrderTime = "",
   isEditing = false,
+  hideDateTime = false,
 }: DeliveryStepProps) {
   const [location, setLocation] = useState(initialLocation);
-  const [selectedVehicle, setSelectedVehicle] = useState<string>(initialVehicleId);
+  const [selectedVehicle, setSelectedVehicle] =
+    useState<string>(initialVehicleId);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState(initialNotes);
@@ -64,7 +67,10 @@ export default function DeliveryStep({
   };
 
   const getIconComponent = (iconName: string): LucideIcon => {
-    const icons: Record<string, LucideIcon> = LucideIcons as unknown as Record<string, LucideIcon>;
+    const icons: Record<string, LucideIcon> = LucideIcons as unknown as Record<
+      string,
+      LucideIcon
+    >;
     return icons[iconName] || LucideIcons.Package;
   };
 
@@ -77,13 +83,15 @@ export default function DeliveryStep({
       setValidationError("Please select a vehicle type.");
       return;
     }
-    if (!orderTime) {
+    if (!hideDateTime && !orderTime) {
       setValidationError("Please select an order time.");
       return;
     }
     setValidationError(null);
 
-    const orderDateTime = new Date(orderTime).toISOString();
+    const orderDateTime = hideDateTime
+      ? new Date().toISOString()
+      : new Date(orderTime).toISOString();
     onSubmit(location, selectedVehicle, notes, orderDateTime);
   };
 
@@ -110,17 +118,19 @@ export default function DeliveryStep({
         />
       </div>
 
-      <div className="bg-white border-2 border-slate-800 rounded-lg p-6">
-        <Label className="block text-sm font-semibold text-slate-800 mb-4">
-          Order Date & Time
-        </Label>
-        <Input
-          type="datetime-local"
-          value={orderTime}
-          onChange={(e) => setOrderTime(e.target.value)}
-          className="w-full px-3 py-2 border-2 border-slate-800 rounded"
-        />
-      </div>
+      {!hideDateTime && (
+        <div className="bg-white border-2 border-slate-800 rounded-lg p-6">
+          <Label className="block text-sm font-semibold text-slate-800 mb-4">
+            Order Date & Time
+          </Label>
+          <Input
+            type="datetime-local"
+            value={orderTime}
+            onChange={(e) => setOrderTime(e.target.value)}
+            className="w-full px-3 py-2 border-2 border-slate-800 rounded"
+          />
+        </div>
+      )}
 
       <div className="bg-white border-2 border-slate-800 rounded-lg p-6">
         <Label className="block text-sm font-semibold text-slate-800 mb-4">
@@ -191,10 +201,13 @@ export default function DeliveryStep({
           disabled={submitting}
           className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3"
         >
-          {submitting 
-            ? (isEditing ? "Updating Order..." : "Creating Order...")
-            : (isEditing ? "Update Order" : "Finish Order")
-          }
+          {submitting
+            ? isEditing
+              ? "Updating Order..."
+              : "Creating Order..."
+            : isEditing
+              ? "Update Order"
+              : "Finish Order"}
         </Button>
       </div>
     </div>

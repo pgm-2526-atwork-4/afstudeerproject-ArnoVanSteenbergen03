@@ -22,10 +22,8 @@ export const CreateOrderSchema = z.object({
   notes: z.string().optional(),
   goods: z.array(GoodsSchema).min(1, "At least one good item is required"),
   orderType: z.enum(["single", "repeated"]).default("single"),
-  repeatDetails: z.object({
-    frequency: z.enum(["daily", "weekly", "biweekly", "monthly"]).optional(),
-    endDate: z.string().optional(),
-  }).optional(),
+  selectedDates: z.array(z.string()).optional(),
+  recurrenceTime: z.string().optional(),
 });
 
 export type CreateOrderInput = z.infer<typeof CreateOrderSchema>;
@@ -43,11 +41,13 @@ export const orderSchema = z.object({
   activityType: z.string().optional(),
   centerName: z.string().nullable().optional(),
   firstGoodCategory: z.string().nullable().optional(),
+  weekly: z.boolean().optional(),
+  monthly: z.boolean().optional(),
 });
 
 export type Order = z.infer<typeof orderSchema>;
 
-// Goods item form data 
+// Goods item form data
 export const goodsDataSchema = z.object({
   goodState: z.enum(["fresh", "old", "dry"]).default("fresh"),
   overDueDate: z.boolean().default(false),
@@ -106,11 +106,13 @@ export const orderFormDataSchema = z.object({
   vehicleId: z.string(),
   deliveryNotes: z.string(),
   orderTime: z.string(),
+  selectedDates: z.array(z.string()).optional(),
+  recurrenceTime: z.string().optional(),
 });
 
 export type OrderFormData = z.infer<typeof orderFormDataSchema>;
 
-// Delivery order 
+// Delivery order
 export const deliveryOrderSchema = z.object({
   activity: z.object({
     id: z.string(),

@@ -12,6 +12,7 @@ export default function DeliveryCard({
   acceptingId,
   handleAccept,
   formatTime,
+  formatDate,
   getVehicleIcon,
 }: OpenCardProps) {
   return (
@@ -21,6 +22,7 @@ export default function DeliveryCard({
         expandedOrderId={expandedOrderId}
         setExpandedOrderId={setExpandedOrderId}
         formatTime={formatTime}
+        formatDate={formatDate}
         getVehicleIcon={getVehicleIcon}
         acceptingId={acceptingId}
         handleAccept={handleAccept}

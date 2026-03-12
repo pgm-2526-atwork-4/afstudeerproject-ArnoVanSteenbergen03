@@ -66,15 +66,49 @@ export async function acceptDelivery(activityId: string) {
   return response.json();
 }
 
-// Complete a delivery
-export async function completeDelivery(activityId: string) {
+// Start a delivery (accepted -> in_progress)
+export async function startDelivery(activityId: string) {
   const response = await fetch(
     `${API_BASE_URL}/volunteer/activities/${activityId}/status`,
     {
       method: "PATCH",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "completed" }),
+      body: JSON.stringify({ status: "in_progress" }),
+    },
+  );
+
+  if (!response.ok) {
+    try {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to start delivery");
+    } catch {
+      throw new Error(`Failed to start delivery: ${response.statusText}`);
+    }
+  }
+
+  return response.json();
+}
+
+// Complete a delivery with completion data
+export async function completeDelivery(
+  activityId: string,
+  completionStatus:
+    | "completed"
+    | "incomplete"
+    | "need_assistance" = "completed",
+  completionData?: Record<string, unknown>,
+) {
+  const response = await fetch(
+    `${API_BASE_URL}/volunteer/activities/${activityId}/status`,
+    {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        status: completionStatus,
+        completionData,
+      }),
     },
   );
 

@@ -78,65 +78,92 @@ router.post(
         return res.status(404).json({ error: "Vehicle not found" });
       }
 
-      const parsedOrderTime = new Date(orderTime);
-      const assignedCenterId =
-        orderData.assignedCenterId || (await findOpenCenter(parsedOrderTime));
+      // Build the list of order times with filter
+      const orderTimes: Date[] = [];
 
-      const [newActivity] = await db
-        .insert(activities)
-        .values({
-          providerId: userId,
-          location,
-          activityType: "collection",
-          assignedCenterId: assignedCenterId || null,
-          vehicleId,
-          orderTime: parsedOrderTime,
-          notes: orderData.notes,
-          status: "requested",
-          details: {
-            orderType: orderData.orderType,
-            repeatDetails: orderData.repeatDetails,
-          },
-        })
-        .returning();
+      if (
+        orderData.orderType === "repeated" &&
+        orderData.selectedDates &&
+        orderData.selectedDates.length > 0
+      ) {
+        const time = orderData.recurrenceTime || "09:00";
+        for (const dateStr of orderData.selectedDates) {
+          orderTimes.push(new Date(`${dateStr}T${time}:00`));
+        }
+      } else {
+        orderTimes.push(new Date(orderTime));
+      }
 
-      const [collectionActivity] = await db
-        .insert(collectionActivities)
-        .values({
-          activityId: newActivity.id,
-        })
-        .returning();
+      const isRepeated = orderData.orderType === "repeated";
+      const allCreated: any[] = [];
 
-      const createdGoods = await db
-        .insert(goods)
-        .values(
-          goodsData.map((item: any) => ({
-            goodState: item.goodState || "fresh",
-            overDueDate: item.overDueDate || false,
-            category: item.category,
-            name: item.name,
-            quantity: String(item.quantity),
-            unit: item.unit || "items",
-            status: "available",
-            sourcePlaceId: assignedCenterId || null,
-            sourceActivityId: collectionActivity.id,
-            image: item.image || null,
-            metadata: {
-              allergies: item.allergies || null,
-              expirationDate: item.expirationDate
-                ? new Date(item.expirationDate)
-                : null,
-              packageIncluded: item.packageIncluded || false,
+      for (const time of orderTimes) {
+        const assignedCenterId =
+          orderData.assignedCenterId || (await findOpenCenter(time));
+
+        const [newActivity] = await db
+          .insert(activities)
+          .values({
+            providerId: userId,
+            location,
+            activityType: "collection",
+            assignedCenterId: assignedCenterId || null,
+            vehicleId,
+            orderTime: time,
+            notes: orderData.notes,
+            status: "requested",
+            weekly: isRepeated,
+            monthly: false,
+            recurrenceDays: isRepeated ? orderData.selectedDates ?? null : null,
+            recurrenceTime: isRepeated ? orderData.recurrenceTime ?? null : null,
+            details: {
+              orderType: orderData.orderType,
             },
-          })),
-        )
-        .returning();
+          })
+          .returning();
+
+        const [collectionActivity] = await db
+          .insert(collectionActivities)
+          .values({
+            activityId: newActivity.id,
+          })
+          .returning();
+
+        const createdGoods = await db
+          .insert(goods)
+          .values(
+            goodsData.map((item: any) => ({
+              goodState: item.goodState || "fresh",
+              overDueDate: item.overDueDate || false,
+              category: item.category,
+              name: item.name,
+              quantity: String(item.quantity),
+              unit: item.unit || "items",
+              status: "available",
+              sourcePlaceId: assignedCenterId || null,
+              sourceActivityId: collectionActivity.id,
+              image: item.image || null,
+              metadata: {
+                allergies: item.allergies || null,
+                expirationDate: item.expirationDate
+                  ? new Date(item.expirationDate)
+                  : null,
+                packageIncluded: item.packageIncluded || false,
+              },
+            })),
+          )
+          .returning();
+
+        allCreated.push({
+          activity: newActivity,
+          collectionActivity,
+          goods: createdGoods,
+        });
+      }
 
       return res.status(201).json({
-        message: "Order created successfully",
-        activity: newActivity,
-        collectionActivity,
-        goods: createdGoods,
+        message: `${allCreated.length} order(s) created successfully`,
+        orders: allCreated,
       });
     } catch (error) {
       console.error("Error creating order:", error);
@@ -293,7 +320,6 @@ router.put(
           notes: orderData.notes,
           details: {
             orderType: orderData.orderType,
-            repeatDetails: orderData.repeatDetails,
           },
           updatedAt: new Date(),
         })

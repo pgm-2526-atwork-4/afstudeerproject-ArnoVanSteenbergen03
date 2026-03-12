@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { db } from "@/config/database";
 import { activities, goods, collectionActivities, places, users, vehicles } from "@/db/schema";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and, isNull, asc, notInArray } from "drizzle-orm";
 import { requireAuth, requirePermission } from "@/middleware/auth";
 
 const router = Router();
@@ -25,7 +25,8 @@ router.get("/open", requireAuth, requirePermission("read_activities"), async (_r
           eq(activities.status, "requested"),
           isNull(activities.assignedDriver)
         )
-      );
+      )
+      .orderBy(asc(activities.orderTime));
 
     return res.json(openOrders);
   } catch (error) {
@@ -50,7 +51,12 @@ router.get("/mine", requireAuth, requirePermission("read_activities"), async (re
       .leftJoin(users, eq(activities.providerId, users.id))
       .leftJoin(vehicles, eq(activities.vehicleId, vehicles.id))
       .leftJoin(places, eq(activities.assignedCenterId, places.id))
-      .where(eq(activities.assignedDriver, userId));
+      .where(
+        and(
+          eq(activities.assignedDriver, userId),
+          notInArray(activities.status, ["completed", "incomplete", "need_assistance"])
+        )
+      );
 
     return res.json(myDeliveries);
   } catch (error) {
@@ -150,6 +156,12 @@ router.get("/:id", requireAuth, requirePermission("read_activities"), async (req
   }
 });
 
+// Valid status transitions
+const STATUS_TRANSITIONS: Record<string, string[]> = {
+  accepted: ["in_progress"],
+  in_progress: ["completed", "incomplete", "need_assistance"],
+};
+
 //Update activity status
 router.patch(
   "/:id/status",
@@ -158,12 +170,12 @@ router.patch(
   async (req: Request, res: Response) => {
     try {
       const id = req.params.id as string;
-      const { status } = req.body;
+      const { status, completionData } = req.body;
 
-      const validStatuses = ["in_progress", "completed"];
+      const validStatuses = ["in_progress", "completed", "incomplete", "need_assistance"];
       if (!validStatuses.includes(status)) {
         return res.status(400).json({
-          error: `Volunteers can only set status to: ${validStatuses.join(", ")}`,
+          error: `Invalid status. Allowed: ${validStatuses.join(", ")}`,
         });
       }
 
@@ -176,10 +188,22 @@ router.patch(
         return res.status(404).json({ error: "Activity not found" });
       }
 
+      const allowed = STATUS_TRANSITIONS[activity.status];
+      if (!allowed || !allowed.includes(status)) {
+        return res.status(400).json({
+          error: `Cannot transition from "${activity.status}" to "${status}"`,
+        });
+      }
+
+      const details = completionData
+        ? { ...(activity.details as Record<string, unknown> | null), ...completionData }
+        : activity.details;
+
       const [updatedActivity] = await db
         .update(activities)
         .set({
           status,
+          details,
           updatedAt: new Date(),
         })
         .where(eq(activities.id, id))

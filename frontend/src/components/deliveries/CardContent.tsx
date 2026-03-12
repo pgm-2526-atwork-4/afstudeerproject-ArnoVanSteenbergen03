@@ -1,24 +1,24 @@
 import { useState } from "react";
 import { DeliveryOrder } from "@shared/index";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, MapPin, Clock } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ChevronDown, MapPin, Clock, Calendar } from "lucide-react";
+import CompletionModal from "./CompletionModal";
 
 export interface CardProps {
   delivery: DeliveryOrder;
   expandedOrderId: string | null;
   setExpandedOrderId: (id: string | null) => void;
   formatTime: (d: string) => string;
+  formatDate: (d: string) => string;
   getVehicleIcon: (icon?: string | null) => React.ReactNode;
   completingId?: string | null;
-  handleComplete?: (id: string) => void;
+  handleComplete?: (
+    id: string,
+    status: "completed" | "incomplete" | "need_assistance",
+    data?: Record<string, unknown>,
+  ) => void;
+  startingId?: string | null;
+  handleStart?: (id: string) => void;
 }
 
 export default function CardContent({
@@ -26,28 +26,70 @@ export default function CardContent({
   expandedOrderId,
   setExpandedOrderId,
   formatTime,
+  formatDate,
   getVehicleIcon,
   acceptingId,
   handleAccept,
   isOpen,
   completingId,
   handleComplete,
+  startingId,
+  handleStart,
 }: CardProps & {
   acceptingId?: string | null;
   handleAccept?: (id: string) => void;
   isOpen?: boolean;
 }) {
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [completionOpen, setCompletionOpen] = useState(false);
   const isCompleting = completingId === delivery.activity.id;
+  const isStarting = startingId === delivery.activity.id;
+  const status = delivery.activity.status;
+
+  const getStatusBadge = () => {
+    const map: Record<string, { label: string; color: string }> = {
+      accepted: { label: "Accepted", color: "bg-blue-100 text-blue-800" },
+      in_progress: {
+        label: "In Progress",
+        color: "bg-yellow-100 text-yellow-800",
+      },
+      completed: { label: "Completed", color: "bg-green-100 text-green-800" },
+      incomplete: {
+        label: "Incomplete",
+        color: "bg-orange-100 text-orange-800",
+      },
+      need_assistance: {
+        label: "Needs Assistance",
+        color: "bg-red-100 text-red-800",
+      },
+    };
+    const info = map[status];
+    if (!info) return null;
+    return (
+      <span
+        className={`text-xs font-semibold px-2 py-0.5 rounded-full ${info.color}`}
+      >
+        {info.label}
+      </span>
+    );
+  };
+
   return (
     <>
-      <div className="flex items-start gap-2 mb-2">
-        <MapPin className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
-        <div>
-          <p className="text-xs text-slate-500">Pickup</p>
-          <p className="text-sm font-semibold text-slate-800">
-            {delivery.activity.location}
-          </p>
+      <div className="flex justify-between items-start mb-2">
+        <div className="flex items-start gap-2">
+          <MapPin className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
+          <div>
+            <p className="text-xs text-slate-500">Pickup</p>
+            <p className="text-sm font-semibold text-slate-800">
+              {delivery.activity.location}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1 text-slate-500 shrink-0">
+          <Calendar className="w-3.5 h-3.5" />
+          <span className="text-xs font-medium">
+            {formatDate(delivery.activity.orderTime)}
+          </span>
         </div>
       </div>
 
@@ -103,10 +145,10 @@ export default function CardContent({
       </div>
 
       {expandedOrderId === delivery.activity.id && !isOpen && (
-        <div className="mt-4 pt-4 border-t border-slate-200 space-y-2">
-          <div className="text-sm text-slate-600">
-            <span className="font-medium">Status:</span>{" "}
-            {delivery.activity.status.replace("_", " ")}
+        <div className="mt-4 pt-4 border-t border-slate-200 space-y-3">
+          <div className="flex items-center gap-2 text-sm text-slate-600">
+            <span className="font-medium">Status:</span>
+            {getStatusBadge()}
           </div>
 
           {delivery.activity.notes && (
@@ -116,43 +158,39 @@ export default function CardContent({
             </div>
           )}
 
-          {handleComplete && delivery.activity.status !== "completed" && (
+          {handleStart && status === "accepted" && (
             <Button
-              onClick={() => setConfirmOpen(true)}
-              disabled={isCompleting}
-              className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg text-sm"
+              onClick={() => handleStart(delivery.activity.id)}
+              disabled={isStarting}
+              className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-sm"
             >
-              {isCompleting ? "Completing..." : "Complete Order"}
+              {isStarting ? "Starting..." : "Start Delivery"}
+            </Button>
+          )}
+
+          {handleComplete && status === "in_progress" && (
+            <Button
+              onClick={() => setCompletionOpen(true)}
+              disabled={isCompleting}
+              className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg text-sm"
+            >
+              {isCompleting ? "Processing..." : "Complete Delivery"}
             </Button>
           )}
         </div>
       )}
 
-      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Complete this delivery?</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to mark this delivery as completed? This
-              action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              className="bg-green-600 hover:bg-green-700 text-white"
-              onClick={() => {
-                setConfirmOpen(false);
-                handleComplete?.(delivery.activity.id);
-              }}
-            >
-              Confirm
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {handleComplete && (
+        <CompletionModal
+          open={completionOpen}
+          onOpenChange={setCompletionOpen}
+          submitting={isCompleting}
+          onSubmit={(completionStatus, data) => {
+            handleComplete(delivery.activity.id, completionStatus, data);
+            setCompletionOpen(false);
+          }}
+        />
+      )}
     </>
   );
 }

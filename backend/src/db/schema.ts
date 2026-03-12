@@ -99,6 +99,10 @@ export const activities = pgTable("activities", {
   details: jsonb("details"),
   freezerItemIncluded: boolean("freezer_item").notNull().default(false),
   damagedGoods: boolean("damaged_goods").notNull().default(false),
+  weekly: boolean("weekly").notNull().default(false),
+  monthly: boolean("monthly").notNull().default(false),
+  recurrenceDays: jsonb("recurrence_days"),
+  recurrenceTime: text("recurrence_time"),
   vehicleId: uuid("vehicle_id").references(() => vehicles.id, {
     onDelete: "cascade",
   }),

@@ -1,16 +1,26 @@
 "use client";
 
 import { DeliveryOrder } from "@shared/index";
+import { DistributionCenter } from "@shared/index";
 import { Button } from "@/components/ui/button";
 import { CardSkeleton } from "@/components/ui/loading";
-import { FileText, Truck, icons } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import {
+  FileText,
+  Truck,
+  icons,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   getOpenDeliveries,
   getMyDeliveries,
   acceptDelivery,
+  startDelivery,
   completeDelivery,
 } from "@/lib/api-client";
+import { getDistributionCenters } from "@/lib/api-distro";
 import {
   DndContext,
   closestCenter,
@@ -30,7 +40,7 @@ import SortableDeliveryCard from "./SortableDeliveryCard";
 
 // TODO: sort open deliveries by date and hour
 // TODO: volunteers can see all deliveries
-// TODO: General dashboard (open / in progress orders) (admin, managers and drivers) dashboard drivers and map. 
+// TODO: General dashboard (open / in progress orders) (admin, managers and drivers) dashboard drivers and map.
 // TODO: extra buttons needed to complete order // accept order -> start delivery -> in progress -> complete delivery
 // TODO: give the driver 3 options when completing an order: complete, incomplete (reason for incomplete) or need assitance (options: order too large, vehicle issue + checkboxes and text inputs. also creates a post in the chatroom of said order)
 
@@ -40,9 +50,20 @@ export default function DeliveriesScreen() {
   const [myOrders, setMyOrders] = useState<DeliveryOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  const [startingId, setStartingId] = useState<string | null>(null);
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Filters
+  const [centers, setCenters] = useState<DistributionCenter[]>([]);
+  const [filterCenter, setFilterCenter] = useState<string>("all");
+  const [filterDay, setFilterDay] = useState<string>("all");
+  const [showFilters, setShowFilters] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
 
   const STORAGE_KEY = "delivery-order";
 
@@ -73,12 +94,14 @@ export default function DeliveriesScreen() {
     try {
       setLoading(true);
       setError(null);
-      const [open, mine] = await Promise.all([
+      const [open, mine, distros] = await Promise.all([
         getOpenDeliveries(),
         getMyDeliveries(),
+        getDistributionCenters().catch(() => []),
       ]);
       setOpenOrders(open);
       setMyOrders(applySavedOrder(mine));
+      setCenters(distros);
     } catch (err) {
       console.error(err);
       setError("Failed to load deliveries");
@@ -106,10 +129,14 @@ export default function DeliveriesScreen() {
     }
   };
 
-  const handleComplete = async (activityId: string) => {
+  const handleComplete = async (
+    activityId: string,
+    completionStatus: "completed" | "incomplete" | "need_assistance",
+    completionData?: Record<string, unknown>,
+  ) => {
     try {
       setCompletingId(activityId);
-      await completeDelivery(activityId);
+      await completeDelivery(activityId, completionStatus, completionData);
       await fetchData();
     } catch (err: unknown) {
       setError(
@@ -117,6 +144,18 @@ export default function DeliveriesScreen() {
       );
     } finally {
       setCompletingId(null);
+    }
+  };
+
+  const handleStart = async (activityId: string) => {
+    try {
+      setStartingId(activityId);
+      await startDelivery(activityId);
+      await fetchData();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to start delivery");
+    } finally {
+      setStartingId(null);
     }
   };
 
@@ -161,14 +200,60 @@ export default function DeliveriesScreen() {
     });
   };
 
-  const displayedOrders = activeTab === "open" ? openOrders : myOrders;
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const deliveryDays = useMemo(() => {
+    const source = activeTab === "open" ? openOrders : myOrders;
+    const counts = new Map<string, number>();
+    source.forEach((d) => {
+      const day = new Date(d.activity.orderTime).toISOString().split("T")[0];
+      counts.set(day, (counts.get(day) || 0) + 1);
+    });
+    return counts;
+  }, [openOrders, myOrders, activeTab]);
+
+  const calendarDays = useMemo(() => {
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const cells: (number | null)[] = [];
+    for (let i = 0; i < firstDay; i++) cells.push(null);
+    for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+    return cells;
+  }, [calendarMonth]);
+
+  // Filter logic
+  const filteredOrders = useMemo(() => {
+    const source = activeTab === "open" ? openOrders : myOrders;
+    return source.filter((d) => {
+      if (filterCenter !== "all" && d.center?.id !== filterCenter) return false;
+      if (filterDay !== "all") {
+        const orderDay = new Date(d.activity.orderTime)
+          .toISOString()
+          .split("T")[0];
+        if (orderDay !== filterDay) return false;
+      }
+      return true;
+    });
+  }, [activeTab, openOrders, myOrders, filterCenter, filterDay]);
+
+  const displayedOrders = filteredOrders;
 
   if (loading) {
     return (
       <div className="flex flex-col min-h-[calc(100vh-120px)] bg-amber-50 p-4">
         <div className="flex justify-center mb-8">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-slate-800 mb-4">Deliveries</h1>
+            <h1 className="text-3xl font-bold text-slate-800 mb-4">
+              Deliveries
+            </h1>
             <div className="h-1 bg-slate-800 w-32 mx-auto"></div>
           </div>
         </div>
@@ -225,6 +310,126 @@ export default function DeliveriesScreen() {
         </button>
       </div>
 
+      <div className="max-w-2xl mx-auto w-full mb-4">
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-800 font-medium mb-2"
+        >
+          <Filter className="w-4 h-4" />
+          Filters
+          {(filterCenter !== "all" || filterDay !== "all") && (
+            <span className="bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+              {(filterCenter !== "all" ? 1 : 0) + (filterDay !== "all" ? 1 : 0)}
+            </span>
+          )}
+        </button>
+        {showFilters && (
+          <div className="flex flex-wrap gap-3 bg-white border-2 border-slate-200 rounded-lg p-4">
+            <div className="flex-1 min-w-[140px]">
+              <label className="block text-xs font-medium text-slate-500 mb-1">
+                Distribution Center
+              </label>
+              <select
+                value={filterCenter}
+                onChange={(e) => setFilterCenter(e.target.value)}
+                className="w-full p-2 border border-slate-200 rounded-lg text-sm"
+              >
+                <option value="all">All Centers</option>
+                {centers.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {(filterCenter !== "all" || filterDay !== "all") && (
+              <button
+                onClick={() => {
+                  setFilterCenter("all");
+                  setFilterDay("all");
+                }}
+                className="text-xs text-orange-600 hover:text-orange-800 font-medium"
+              >
+                Clear filters
+              </button>
+            )}
+
+            <div className="w-full mt-1">
+              <div className="flex items-center justify-between mb-2">
+                <button
+                  onClick={() =>
+                    setCalendarMonth(
+                      new Date(
+                        calendarMonth.getFullYear(),
+                        calendarMonth.getMonth() - 1,
+                        1,
+                      ),
+                    )
+                  }
+                  className="p-1 hover:bg-slate-100 rounded"
+                >
+                  <ChevronLeft className="w-4 h-4 text-slate-600" />
+                </button>
+                <span className="text-sm font-semibold text-slate-700">
+                  {calendarMonth.toLocaleDateString("en-US", {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </span>
+                <button
+                  onClick={() =>
+                    setCalendarMonth(
+                      new Date(
+                        calendarMonth.getFullYear(),
+                        calendarMonth.getMonth() + 1,
+                        1,
+                      ),
+                    )
+                  }
+                  className="p-1 hover:bg-slate-100 rounded"
+                >
+                  <ChevronRight className="w-4 h-4 text-slate-600" />
+                </button>
+              </div>
+              <div className="grid grid-cols-7 gap-0.5 text-center">
+                {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
+                  <div
+                    key={d}
+                    className="text-[10px] font-medium text-slate-400 py-1"
+                  >
+                    {d}
+                  </div>
+                ))}
+                {calendarDays.map((day, i) => {
+                  if (day === null) return <div key={`e-${i}`} />;
+                  const dateStr = `${calendarMonth.getFullYear()}-${String(calendarMonth.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                  const count = deliveryDays.get(dateStr) || 0;
+                  const isSelected = filterDay === dateStr;
+                  return (
+                    <button
+                      key={dateStr}
+                      onClick={() => setFilterDay(isSelected ? "all" : dateStr)}
+                      className={`relative text-xs py-1.5 rounded transition-colors ${
+                        isSelected
+                          ? "bg-orange-500 text-white font-bold"
+                          : count > 0
+                            ? "text-slate-800 font-medium hover:bg-orange-50"
+                            : "text-slate-300"
+                      }`}
+                    >
+                      {day}
+                      {count > 0 && !isSelected && (
+                        <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-orange-500" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="flex flex-col items-center justify-start flex-1">
         {displayedOrders.length === 0 ? (
           <div className="w-full max-w-sm text-center py-12">
@@ -267,19 +472,22 @@ export default function DeliveriesScreen() {
                 onDragEnd={handleDragEnd}
               >
                 <SortableContext
-                  items={myOrders.map((d) => d.activity.id)}
+                  items={displayedOrders.map((d) => d.activity.id)}
                   strategy={verticalListSortingStrategy}
                 >
-                  {myOrders.map((delivery) => (
+                  {displayedOrders.map((delivery) => (
                     <SortableDeliveryCard
                       key={delivery.activity.id}
                       delivery={delivery}
                       expandedOrderId={expandedOrderId}
                       setExpandedOrderId={setExpandedOrderId}
                       formatTime={formatTime}
+                      formatDate={formatDate}
                       getVehicleIcon={getVehicleIcon}
                       completingId={completingId}
                       handleComplete={handleComplete}
+                      startingId={startingId}
+                      handleStart={handleStart}
                     />
                   ))}
                 </SortableContext>
@@ -294,6 +502,7 @@ export default function DeliveriesScreen() {
                   acceptingId={acceptingId}
                   handleAccept={handleAccept}
                   formatTime={formatTime}
+                  formatDate={formatDate}
                   getVehicleIcon={getVehicleIcon}
                 />
               ))

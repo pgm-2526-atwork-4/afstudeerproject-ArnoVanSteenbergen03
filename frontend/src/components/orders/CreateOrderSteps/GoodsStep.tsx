@@ -3,26 +3,28 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { X, Plus, ImageIcon, Loader2 } from "lucide-react";
+import { X, Plus, ImageIcon, Loader2, ArrowLeft } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { uploadGoodsImage, getLookupValues } from "@/lib/api-client";
 import type { GoodsData, GoodsFormItem } from "@/types";
 import type { LookupValue } from "@/lib/api-lookups";
 
-
 interface GoodsStepProps {
   onNext: (goods: GoodsData[]) => void;
   onCancel: () => void;
+  onBack?: () => void;
   initialGoods?: GoodsData[];
 }
 
 export default function GoodsStep({
   onNext,
   onCancel,
+  onBack,
   initialGoods,
 }: GoodsStepProps) {
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "") || "";
+  const apiBaseUrl =
+    process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "") || "";
 
   const [goodStates, setGoodStates] = useState<LookupValue[]>([]);
   const [categories, setCategories] = useState<LookupValue[]>([]);
@@ -112,6 +114,15 @@ export default function GoodsStep({
 
   return (
     <div className="space-y-6">
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-slate-800 hover:text-slate-600 font-semibold"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          Back
+        </button>
+      )}
       <div className="space-y-4">
         {goodsItems.map((item, index) => (
           <div
@@ -227,8 +238,7 @@ export default function GoodsStep({
 
               <div>
                 <Label className="block text-sm font-semibold text-slate-800 mb-2">
-                  Allergies{" "}
-                  <span className="text-slate-500">(optional)</span>
+                  Allergies <span className="text-slate-500">(optional)</span>
                 </Label>
                 <Input
                   type="text"
@@ -250,11 +260,7 @@ export default function GoodsStep({
                   type="date"
                   value={item.expirationDate}
                   onChange={(e) =>
-                    updateGoodsItem(
-                      item.id,
-                      "expirationDate",
-                      e.target.value,
-                    )
+                    updateGoodsItem(item.id, "expirationDate", e.target.value)
                   }
                   className="w-full px-3 py-2 border-2 border-slate-800 rounded"
                 />
@@ -266,11 +272,7 @@ export default function GoodsStep({
                     type="checkbox"
                     checked={item.overDueDate}
                     onChange={(e) =>
-                      updateGoodsItem(
-                        item.id,
-                        "overDueDate",
-                        e.target.checked,
-                      )
+                      updateGoodsItem(item.id, "overDueDate", e.target.checked)
                     }
                     className="w-4 h-4 border-2 border-slate-800 rounded"
                   />

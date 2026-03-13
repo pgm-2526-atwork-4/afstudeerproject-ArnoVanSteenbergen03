@@ -33,7 +33,7 @@ import {
 import {
   arrayMove,
   SortableContext,
-  verticalListSortingStrategy,
+  rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import DeliveryCard from "./DeliveryCard";
 import SortableDeliveryCard from "./SortableDeliveryCard";
@@ -244,7 +244,7 @@ export default function DeliveriesScreen() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-[calc(100vh-120px)] bg-amber-50 p-4">
+      <div className="flex flex-col min-h-[calc(100vh-120px)] lg:min-h-screen bg-amber-50 p-4">
         <div className="flex justify-center mb-8">
           <div className="text-center">
             <h1 className="text-3xl font-bold text-slate-800 mb-4">
@@ -259,7 +259,7 @@ export default function DeliveriesScreen() {
   }
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-120px)] bg-amber-50 p-4">
+    <div className="flex flex-col min-h-[calc(100vh-120px)] lg:min-h-screen bg-amber-50 p-4">
       <div className="flex justify-center mb-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-slate-800 mb-4">Deliveries</h1>
@@ -273,7 +273,7 @@ export default function DeliveriesScreen() {
         </div>
       )}
 
-      <div className="flex gap-4 mb-6 justify-center">
+      <div className="flex gap-4 mb-6 justify-center flex-wrap">
         <button
           onClick={() => setActiveTab("open")}
           className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
@@ -460,7 +460,7 @@ export default function DeliveriesScreen() {
             )}
           </div>
         ) : (
-          <div className="w-full max-w-2xl space-y-4">
+          <div className="w-full max-w-5xl">
             {activeTab === "mine" ? (
               <DndContext
                 sensors={sensors}
@@ -469,39 +469,43 @@ export default function DeliveriesScreen() {
               >
                 <SortableContext
                   items={displayedOrders.map((d) => d.activity.id)}
-                  strategy={verticalListSortingStrategy}
+                  strategy={rectSortingStrategy}
                 >
-                  {displayedOrders.map((delivery) => (
-                    <SortableDeliveryCard
-                      key={delivery.activity.id}
-                      delivery={delivery}
-                      expandedOrderId={expandedOrderId}
-                      setExpandedOrderId={setExpandedOrderId}
-                      formatTime={formatTime}
-                      formatDate={formatDate}
-                      getVehicleIcon={getVehicleIcon}
-                      completingId={completingId}
-                      handleComplete={handleComplete}
-                      startingId={startingId}
-                      handleStart={handleStart}
-                    />
-                  ))}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {displayedOrders.map((delivery) => (
+                      <SortableDeliveryCard
+                        key={delivery.activity.id}
+                        delivery={delivery}
+                        expandedOrderId={expandedOrderId}
+                        setExpandedOrderId={setExpandedOrderId}
+                        formatTime={formatTime}
+                        formatDate={formatDate}
+                        getVehicleIcon={getVehicleIcon}
+                        completingId={completingId}
+                        handleComplete={handleComplete}
+                        startingId={startingId}
+                        handleStart={handleStart}
+                      />
+                    ))}
+                  </div>
                 </SortableContext>
               </DndContext>
             ) : (
-              displayedOrders.map((delivery) => (
-                <DeliveryCard
-                  key={delivery.activity.id}
-                  delivery={delivery}
-                  expandedOrderId={expandedOrderId}
-                  setExpandedOrderId={setExpandedOrderId}
-                  acceptingId={acceptingId}
-                  handleAccept={handleAccept}
-                  formatTime={formatTime}
-                  formatDate={formatDate}
-                  getVehicleIcon={getVehicleIcon}
-                />
-              ))
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {displayedOrders.map((delivery) => (
+                  <DeliveryCard
+                    key={delivery.activity.id}
+                    delivery={delivery}
+                    expandedOrderId={expandedOrderId}
+                    setExpandedOrderId={setExpandedOrderId}
+                    acceptingId={acceptingId}
+                    handleAccept={handleAccept}
+                    formatTime={formatTime}
+                    formatDate={formatDate}
+                    getVehicleIcon={getVehicleIcon}
+                  />
+                ))}
+              </div>
             )}
           </div>
         )}

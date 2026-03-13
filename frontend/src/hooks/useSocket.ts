@@ -41,5 +41,15 @@ export function useSocket(onMessage: (msg: ChatMessage) => void) {
     socketRef.current?.emit("message", { channelId, body });
   }, []);
 
-  return { joinChannel, sendMessage };
+  const leaveChannel = useCallback((channelId?: string) => {
+    const targetChannel = channelId ?? channelRef.current;
+    if (!targetChannel) return;
+
+    socketRef.current?.emit("leave", targetChannel);
+    if (channelRef.current === targetChannel) {
+      channelRef.current = null;
+    }
+  }, []);
+
+  return { joinChannel, sendMessage, leaveChannel };
 }

@@ -109,6 +109,68 @@ router.get(
   },
 );
 
+// Get participants for a channel
+router.get(
+  "/channels/:channelId/participants",
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const channelId = req.params.channelId as string;
+      const currentUserId = (req.user as any)?.id as string | undefined;
+
+      const rows = await db
+        .select({
+          id: users.id,
+          firstname: users.firstname,
+          lastname: users.lastname,
+          profileImage: users.profileImage,
+        })
+        .from(messages)
+        .innerJoin(users, eq(messages.userId, users.id))
+        .where(eq(messages.channelId, channelId))
+        .orderBy(desc(messages.createdAt));
+
+      const uniqueParticipants = new Map<
+        string,
+        {
+          id: string;
+          firstname: string;
+          lastname: string;
+          profileImage: string | null;
+        }
+      >();
+
+      for (const row of rows) {
+        if (!uniqueParticipants.has(row.id)) {
+          uniqueParticipants.set(row.id, row);
+        }
+      }
+
+      // Ensure the signed-in user appears in overview even before posting.
+      if (currentUserId && !uniqueParticipants.has(currentUserId)) {
+        const [currentUser] = await db
+          .select({
+            id: users.id,
+            firstname: users.firstname,
+            lastname: users.lastname,
+            profileImage: users.profileImage,
+          })
+          .from(users)
+          .where(eq(users.id, currentUserId));
+
+        if (currentUser) {
+          uniqueParticipants.set(currentUser.id, currentUser);
+        }
+      }
+
+      return res.json(Array.from(uniqueParticipants.values()));
+    } catch (error) {
+      console.error("Error fetching channel participants:", error);
+      res.status(500).json({ error: "Failed to fetch channel participants" });
+    }
+  },
+);
+
 // Get latest message timestamp + count per channel (for unread badges)
 router.get(
   "/channels/latest",

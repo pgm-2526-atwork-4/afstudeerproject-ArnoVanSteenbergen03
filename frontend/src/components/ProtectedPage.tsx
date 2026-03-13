@@ -5,12 +5,11 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { usePermissions } from "@/hooks/usePermissions";
 import AppNavigation from "@/components/AppNavigation";
+import { usePathname } from "next/navigation";
 
 interface ProtectedPageProps {
   children: React.ReactNode;
-  /** If set, user must have this permission to view the page */
   requiredPermission?: string;
-  /** If set, user must have at least one of these permissions */
   requiredAnyPermission?: string[];
 }
 
@@ -22,6 +21,8 @@ export default function ProtectedPage({
   const { user, loading } = useAuth();
   const { hasPermission, hasAnyPermission } = usePermissions();
   const router = useRouter();
+  const pathname = usePathname();
+  const isChatroom = pathname?.startsWith("/chatroom");
 
   const hasAccess =
     !requiredPermission && !requiredAnyPermission
@@ -55,7 +56,15 @@ export default function ProtectedPage({
 
   return (
     <div className="min-h-screen flex flex-col bg-amber-50">
-      <div className="flex-1 overflow-y-auto pb-24">{children}</div>
+      <div
+        className={`flex-1 ${
+          isChatroom
+            ? "min-h-0 overflow-hidden"
+            : "overflow-y-auto pb-24 lg:pb-0"
+        }`}
+      >
+        {children}
+      </div>
       <AppNavigation />
     </div>
   );

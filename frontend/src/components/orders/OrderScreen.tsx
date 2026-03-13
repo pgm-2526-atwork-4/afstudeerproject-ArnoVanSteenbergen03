@@ -14,7 +14,8 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { getProviderOrders } from "@/lib/api-client";
 
-export default function OrdersScreen(_props: { user: User }) {
+export default function OrdersScreen({ user }: { user: User }) {
+  void user;
   const [orders, setOrders] = useState<Order[]>([]);
   const [activeTab, setActiveTab] = useState("active");
   const [loading, setLoading] = useState(true);
@@ -68,7 +69,7 @@ export default function OrdersScreen(_props: { user: User }) {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-[calc(100vh-120px)] bg-amber-50 p-4">
+      <div className="flex flex-col min-h-[calc(100vh-120px)] lg:min-h-screen bg-amber-50 p-4">
         <div className="flex justify-center mb-8">
           <div className="text-center">
             <h1 className="text-3xl font-bold text-slate-800 mb-4">Orders</h1>
@@ -81,7 +82,7 @@ export default function OrdersScreen(_props: { user: User }) {
   }
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-120px)] bg-amber-50 p-4">
+    <div className="flex flex-col min-h-[calc(100vh-120px)] lg:min-h-screen bg-amber-50 p-4">
       <div className="flex justify-center mb-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-slate-800 mb-4">Orders</h1>
@@ -166,7 +167,7 @@ export default function OrdersScreen(_props: { user: User }) {
             )}
           </div>
         ) : (
-          <div className="w-full max-w-2xl">
+          <div className="w-full max-w-5xl">
             {activeTab !== "templates" && (
               <div className="flex justify-center mb-6">
                 <Link href="/create-order" className="inline-block">
@@ -185,11 +186,11 @@ export default function OrdersScreen(_props: { user: User }) {
               </p>
             )}
 
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {displayedOrders.map((order, index) => (
                 <div
                   key={order.id}
-                  className="bg-white border-2 border-slate-800 rounded-lg p-6 hover:shadow-md transition-shadow"
+                  className="bg-white border-2 border-slate-800 rounded-lg p-6 hover:shadow-md transition-shadow h-full"
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-2">

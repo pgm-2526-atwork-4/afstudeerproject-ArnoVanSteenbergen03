@@ -4,6 +4,13 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export type { ChatChannel, ChatMessage };
 
+export type ChatParticipant = {
+  id: string;
+  firstname: string;
+  lastname: string;
+  profileImage: string | null;
+};
+
 // Get all channels
 export async function getChannels(): Promise<ChatChannel[]> {
   const response = await fetch(`${API_BASE_URL}/chat/channels`, {
@@ -72,6 +79,27 @@ export async function getChannelMessages(
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
     throw new Error(error.error || "Failed to fetch messages");
+  }
+
+  return response.json();
+}
+
+// Get participants for a channel
+export async function getChannelParticipants(
+  channelId: string,
+): Promise<ChatParticipant[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/chat/channels/${channelId}/participants`,
+    {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || "Failed to fetch participants");
   }
 
   return response.json();

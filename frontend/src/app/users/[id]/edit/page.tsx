@@ -243,6 +243,7 @@ export default function EditUserPage() {
                   className="mt-1 w-full border-2 border-slate-300 rounded-lg px-3 py-2 bg-white text-slate-800"
                 >
                   <option value="admin">Admin</option>
+                  <option value="manager">Manager</option>
                   <option value="provider">Provider</option>
                   <option value="volunteer">Volunteer</option>
                 </select>

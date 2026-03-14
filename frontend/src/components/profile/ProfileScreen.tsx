@@ -68,8 +68,7 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
         username: formData.username,
         email: formData.email,
       });
-      const rolePrefix = user.userType || "volunteer";
-      await updateProfile(validated, rolePrefix);
+      await updateProfile(validated);
       setIsEditing(false);
     } catch (error) {
       if (error instanceof z.ZodError) {

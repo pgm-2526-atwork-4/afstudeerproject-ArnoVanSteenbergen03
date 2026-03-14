@@ -186,6 +186,8 @@ export default function UsersPage() {
     switch (role) {
       case "admin":
         return "bg-orange-100 text-orange-800 border-orange-300";
+      case "manager":
+        return "bg-violet-100 text-violet-800 border-violet-300";
       case "provider":
         return "bg-blue-100 text-blue-800 border-blue-300";
       case "volunteer":
@@ -198,9 +200,9 @@ export default function UsersPage() {
 
 
   return (
-    <ProtectedPage requiredPermission="read_users">
+    <ProtectedPage requiredPermission="view_users">
       <div className="flex flex-col min-h-[calc(100vh-100px)] bg-amber-50 p-4 pb-24">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-8 lg:ml-20 relative z-10">
           <Link href="/dashboard">
             <Button
               variant="ghost"
@@ -255,6 +257,7 @@ export default function UsersPage() {
             >
               <option value="">All Roles</option>
               <option value="admin">Admin</option>
+              <option value="manager">Manager</option>
               <option value="provider">Provider</option>
               <option value="volunteer">Volunteer</option>
             </select>
@@ -439,6 +442,7 @@ export default function UsersPage() {
                       className="mt-1 w-full border-2 border-slate-300 rounded-lg px-3 py-2 bg-white text-slate-800"
                     >
                       <option value="admin">Admin</option>
+                      <option value="manager">Manager</option>
                       <option value="provider">Provider</option>
                       <option value="volunteer">Volunteer</option>
                     </select>

@@ -9,6 +9,7 @@ import path from "path";
 import { Server as SocketIOServer } from "socket.io";
 import authRouter from "@/routes/auth";
 import uploadRouter from "@/routes/uploadRoutes";
+import profileRouter from "./routes/profileRoutes";
 import chatRouter from "@/routes/chatRoutes";
 import "@/config/passport";
 import providerRouter from "@/routes/provider/index";
@@ -78,6 +79,7 @@ app.use("/api/upload", uploadRouter);
 app.use("/api/chat", chatRouter);
 
 // user routes
+app.use("/api/profile", profileRouter);
 app.use("/api/provider", providerRouter);
 app.use("/api/volunteer", volunteerRouter);
 app.use("/api/admin", adminRouter);

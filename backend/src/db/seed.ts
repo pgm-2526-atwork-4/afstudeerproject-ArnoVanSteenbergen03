@@ -133,6 +133,19 @@ async function main() {
     })
     .returning();
 
+  // Manager user (approved, dashboard + order management + read-only admin pages)
+  const [managerUser]: User[] = await db
+    .insert(users)
+    .values({
+      email: "manager@test.com",
+      firstname: "Manager",
+      lastname: "User",
+      username: "manager",
+      password: passwordHash,
+      userType: "manager",
+    })
+    .returning();
+
   // Provider users (approved)
   const providerUsers: User[] = await db
     .insert(users)
@@ -190,7 +203,7 @@ async function main() {
     )
     .returning();
 
-  const allApprovedUsers = [adminUser, ...providerUsers, ...volunteerUsers];
+  const allApprovedUsers = [adminUser, managerUser, ...providerUsers, ...volunteerUsers];
 
   console.log(
     `Seeded ${allApprovedUsers.length} approved + ${pendingUsers.length} pending users`,
@@ -202,6 +215,37 @@ async function main() {
     .values(
       allPermissions.map((p) => ({
         userId: adminUser.id,
+        permissionId: p.id,
+        grantedBy: adminUser.id,
+      })),
+    )
+    .onConflictDoNothing();
+
+  const managerPermKeys = [
+    "read_activities",
+    "update_activities",
+    "read_food_items",
+    "update_food_items",
+    "read_places",
+    "read_vehicles",
+    "read_users",
+    "view_dashboard",
+    "view_orders",
+    "view_chatroom",
+    "view_profile",
+    "view_users",
+    "view_suppliers",
+    "view_distribution_centers",
+  ];
+  const managerPerms = allPermissions.filter((p) =>
+    managerPermKeys.includes(p.key),
+  );
+
+  await db
+    .insert(userPermissions)
+    .values(
+      managerPerms.map((p) => ({
+        userId: managerUser.id,
         permissionId: p.id,
         grantedBy: adminUser.id,
       })),

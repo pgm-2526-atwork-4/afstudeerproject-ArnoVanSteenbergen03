@@ -6,8 +6,8 @@ export const createUserSchema = z.object({
   firstname: z.string().min(1, "First name is required"),
   lastname: z.string().min(1, "Last name is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  userType: z.enum(["admin", "provider", "volunteer"], {
-    message: "Role must be admin, provider, or volunteer",
+  userType: z.enum(["admin", "manager", "provider", "volunteer"], {
+    message: "Role must be admin, manager, provider, or volunteer",
   }),
   permissionIds: z.array(z.number()).optional(),
 });

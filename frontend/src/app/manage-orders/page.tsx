@@ -114,9 +114,9 @@ export default function ManageOrdersPage() {
     s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
   return (
-    <ProtectedPage requiredPermission="read_activities">
+    <ProtectedPage requiredPermission="view_orders">
       <div className="flex flex-col min-h-[calc(100vh-100px)] bg-amber-50 p-4 pb-24">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6 lg:ml-20 relative z-10">
           <Link href="/dashboard">
             <Button variant="ghost" className="p-0 h-auto hover:bg-transparent">
               <ArrowLeft className="w-6 h-6 text-slate-800" />

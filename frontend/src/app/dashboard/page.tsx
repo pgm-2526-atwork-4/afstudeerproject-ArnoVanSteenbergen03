@@ -6,11 +6,21 @@ import { useEffect } from "react";
 import ProtectedPage from "@/components/ProtectedPage";
 import AdminDash from "@/components/dashboard/AdminDash";
 
+function getFallbackRoute(permissions: string[]): string {
+  if (permissions.includes("view_orders")) return "/orders";
+  if (permissions.includes("view_deliveries")) return "/deliveries";
+  if (permissions.includes("view_chatroom")) return "/chatroom";
+  if (permissions.includes("view_profile")) return "/profile";
+  return "/login";
+}
+
 export default function DashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  const isAdmin = user?.userType === "admin";
+  const permissions = user?.permissions ?? [];
+  const canViewDashboard = permissions.includes("view_dashboard");
+  const fallbackRoute = getFallbackRoute(permissions);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -25,15 +35,10 @@ export default function DashboardPage() {
       return;
     }
 
-    // Non-admin users get redirected to their main page
-    if (!isAdmin) {
-      if (user.userType === "provider") {
-        router.push("/orders");
-      } else {
-        router.push("/deliveries");
-      }
+    if (!canViewDashboard) {
+      router.push(fallbackRoute);
     }
-  }, [user, loading, router, isAdmin]);
+  }, [user, loading, router, canViewDashboard, fallbackRoute]);
 
   if (loading) {
     return (
@@ -44,15 +49,11 @@ export default function DashboardPage() {
   }
 
   if (!user || !user.isApproved) return null;
+  if (!canViewDashboard) return null;
 
-  // Admin users see the dashboard
-  if (isAdmin) {
-    return (
-      <ProtectedPage>
-        <AdminDash user={user} />
-      </ProtectedPage>
-    );
-  }
-
-  return null;
+  return (
+    <ProtectedPage requiredPermission="view_dashboard">
+      <AdminDash user={user} />
+    </ProtectedPage>
+  );
 }

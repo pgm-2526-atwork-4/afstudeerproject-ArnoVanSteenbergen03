@@ -3,9 +3,12 @@ import { db } from "@/config/database";
 import { users } from "@/db/schema";
 import { eq, and, ne } from "drizzle-orm";
 import { updateProfileSchema } from "@shared/schemas/profile";
+import { requireAuth, requireApproved } from "@/middleware/auth";
 import { z } from "zod/v4";
 
 const router = Router();
+
+router.use(requireAuth, requireApproved);
 
 // Get profile info
 router.get("/", async (req: Request, res: Response) => {

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { db } from "@/config/database";
-import { channels, messages, users } from "@/db/schema";
+import { channels, messages, users, activities } from "@/db/schema";
 import { eq, desc, and, max, sql } from "drizzle-orm";
 import { requireAuth } from "@/middleware/auth";
 
@@ -36,13 +36,13 @@ router.post(
 
       const [created] = await db
         .insert(channels)
-        .values({ name: "Community", type: "community" })
+        .values({ name: "Community", type: "community", activityId: null, placeId: null })
         .returning();
 
       return res.status(201).json(created);
     } catch (error) {
       console.error("Error creating community channel:", error);
-      res.status(500).json({ error: "Failed to create community channel" });
+      res.status(500).json({ error: "Failed to create community channel", details: String(error) });
     }
   },
 );
@@ -74,13 +74,73 @@ router.get(
   },
 );
 
+// Validate user has access to a channel (task or distro)
+async function canAccessChannel(
+  userId: string,
+  channelId: string,
+): Promise<boolean> {
+  const [channel] = await db
+    .select({
+      id: channels.id,
+      type: channels.type,
+      activityId: channels.activityId,
+      placeId: channels.placeId,
+    })
+    .from(channels)
+    .where(eq(channels.id, channelId));
+
+  if (!channel) return false;
+
+  // Community channels are accessible to all
+  if (channel.type === "community") return true;
+
+  // Check if user is admin or manager - they can access all chats
+  const [user] = await db
+    .select({ userType: users.userType })
+    .from(users)
+    .where(eq(users.id, userId));
+
+  if (user?.userType === "admin" || user?.userType === "manager") {
+    return true;
+  }
+
+  // For task (order) channels, only creator + driver can access
+  if (channel.type === "task" && channel.activityId) {
+    const [activity] = await db
+      .select({
+        providerId: activities.providerId,
+        assignedDriver: activities.assignedDriver,
+      })
+      .from(activities)
+      .where(eq(activities.id, channel.activityId));
+
+    if (activity?.providerId === userId || activity?.assignedDriver === userId) {
+      return true;
+    }
+  }
+
+  // For distro channels, all users who have accessed that distro can view
+  if (channel.type === "distribution_center") {
+    // For now, allow all approved users. In future, track membership.
+    return true;
+  }
+
+  return false;
+}
+
 // Get messages for a channel
 router.get(
   "/channels/:channelId/messages",
   requireAuth,
   async (req: Request, res: Response) => {
     try {
+      const userId = (req.user as any)?.id as string;
       const channelId = req.params.channelId as string;
+
+      // Check access
+      if (!(await canAccessChannel(userId, channelId))) {
+        return res.status(403).json({ error: "Access denied to this channel" });
+      }
 
       const result = await db
         .select({
@@ -115,8 +175,15 @@ router.get(
   requireAuth,
   async (req: Request, res: Response) => {
     try {
+      const userId = (req.user as any)?.id as string;
       const channelId = req.params.channelId as string;
-      const currentUserId = (req.user as any)?.id as string | undefined;
+
+      // Check access
+      if (!(await canAccessChannel(userId, channelId))) {
+        return res.status(403).json({ error: "Access denied to this channel" });
+      }
+
+      const currentUserId = userId;
 
       const rows = await db
         .select({

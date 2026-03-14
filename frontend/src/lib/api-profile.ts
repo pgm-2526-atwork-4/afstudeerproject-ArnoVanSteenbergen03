@@ -23,27 +23,25 @@ export async function getProfile(): Promise<User> {
 }
 
 // Update profile info
-export async function updateProfile(
-  data: { firstname: string; lastname: string; username: string; email: string },
-  rolePrefix: string,
-) {
-  const response = await fetch(
-    `${API_BASE_URL}/${rolePrefix}/profile`,
-    {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(data),
-    }
-  );
+export async function updateProfile(data: {
+  firstname: string;
+  lastname: string;
+  username: string;
+  email: string;
+}) {
+  const response = await fetch(`${API_BASE_URL}/profile`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
 
   if (!response.ok) {
     let errorMessage = "Failed to update profile";
     try {
       const error = await response.json();
       errorMessage = error.error || errorMessage;
-    } catch {
-    }
+    } catch {}
     throw new Error(errorMessage);
   }
 
@@ -51,7 +49,9 @@ export async function updateProfile(
 }
 
 // Upload profile image
-export async function uploadProfileImage(file: File): Promise<{ imageUrl: string }> {
+export async function uploadProfileImage(
+  file: File,
+): Promise<{ imageUrl: string }> {
   const formData = new FormData();
   formData.append("image", file);
 
@@ -74,7 +74,9 @@ export async function uploadProfileImage(file: File): Promise<{ imageUrl: string
 }
 
 // Upload goods image
-export async function uploadGoodsImage(file: File): Promise<{ imageUrl: string }> {
+export async function uploadGoodsImage(
+  file: File,
+): Promise<{ imageUrl: string }> {
   const formData = new FormData();
   formData.append("image", file);
 

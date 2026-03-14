@@ -5,6 +5,10 @@ import { useAuth } from "@/lib/auth-context";
 import { Suspense } from "react";
 import ChatScreen from "@/components/chatroom/ChatScreen";
 
+// TODO: add proper user managment for chats. 
+// TODO: add distro chats
+// TODO: chat approval. dubble chat whos allowed in what chats
+
 export default function ChatroomPage() {
   const { user } = useAuth();
 

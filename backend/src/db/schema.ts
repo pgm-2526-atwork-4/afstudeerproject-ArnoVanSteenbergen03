@@ -190,8 +190,11 @@ export const lookupValues = pgTable(
 export const channels = pgTable("channels", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
-  type: varchar("type", { length: 20 }).notNull(), // "community" | "task"
+  type: varchar("type", { length: 20 }).notNull(), // "community" | "task" | "distribution_center"
   activityId: uuid("activity_id").references(() => activities.id, {
+    onDelete: "cascade",
+  }),
+  placeId: uuid("place_id").references(() => places.id, {
     onDelete: "cascade",
   }),
   createdAt: timestamp("created_at").defaultNow(),
@@ -338,19 +341,4 @@ export const messagesRelations = relations(messages, ({ one }) => ({
   }),
 }));
 
-// Tracks when a user last read a channel
-export const channelReads = pgTable(
-  "channel_reads",
-  {
-    userId: uuid("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    channelId: uuid("channel_id")
-      .notNull()
-      .references(() => channels.id, { onDelete: "cascade" }),
-    lastReadAt: timestamp("last_read_at").notNull().defaultNow(),
-  },
-  (table) => [
-    primaryKey({ columns: [table.userId, table.channelId] }),
-  ],
-);
+

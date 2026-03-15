@@ -7,7 +7,7 @@ import { requireAuth, requirePermission } from "@/middleware/auth";
 
 const router = Router();
 
-// Get orders with pagination, filters
+// Get orders with pagination and filters (admin dashboard view)
 router.get("/", requireAuth, requirePermission("read_activities"), async (req: Request, res: Response) => {
   try {
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
@@ -72,12 +72,12 @@ router.get("/", requireAuth, requirePermission("read_activities"), async (req: R
       },
     });
   } catch (error) {
-    console.error("Error fetching orders:", error);
+    console.error("Error fetching dashboard orders:", error);
     res.status(500).json({ error: "Failed to fetch orders" });
   }
 });
 
-//Get order details with all info
+// Get order details with all info
 router.get("/:id", requireAuth, requirePermission("read_activities"), async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
@@ -132,12 +132,12 @@ router.get("/:id", requireAuth, requirePermission("read_activities"), async (req
       vehicle,
     });
   } catch (error) {
-    console.error("Error fetching order:", error);
+    console.error("Error fetching order details:", error);
     res.status(500).json({ error: "Failed to fetch order" });
   }
 });
 
-//Assign order to distribution center
+// Assign order to distribution center
 router.patch(
   "/:id/assign-center",
   requireAuth,
@@ -189,7 +189,7 @@ router.patch(
   }
 );
 
-// Update order activity data (not goods)
+// Update order data
 router.put(
   "/:id",
   requireAuth,
@@ -247,7 +247,7 @@ router.put(
   }
 );
 
-//Update order status
+// Update order status
 router.patch(
   "/:id/status",
   requireAuth,

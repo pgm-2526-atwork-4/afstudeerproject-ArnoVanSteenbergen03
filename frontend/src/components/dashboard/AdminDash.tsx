@@ -51,7 +51,7 @@ export default function AdminDash({ user }: AdminDashProps) {
     <div className="flex flex-col min-h-[calc(100vh-100px)] bg-amber-50 p-4 pb-24">
       <div className="flex justify-center mb-8">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-slate-800 mb-2">Admin</h1>
+          <h1 className="text-4xl font-bold text-slate-800 mb-2">Dashboard</h1>
           <div className="h-1 bg-slate-800 w-40 mx-auto"></div>
         </div>
       </div>

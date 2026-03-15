@@ -11,10 +11,15 @@ import authRouter from "@/routes/auth";
 import uploadRouter from "@/routes/uploadRoutes";
 import profileRouter from "./routes/profileRoutes";
 import chatRouter from "@/routes/chatRoutes";
+import orderRouter from "@/routes/orderRoutes";
+import dashboardRouter from "@/routes/dashboardRoutes";
+import deliveryRouter from "@/routes/deliveryRoutes";
+import applicationRouter from "@/routes/applicationRoutes";
+import userRouter from "@/routes/userRoutes";
+import distributionRouter from "@/routes/distributionRoutes";
+import supplierRouter from "@/routes/supplierRoutes";
+import vehicleRouter from "@/routes/vehicleRoutes";
 import "@/config/passport";
-import providerRouter from "@/routes/provider/index";
-import volunteerRouter from "@/routes/volunteer/index";
-import adminRouter from "@/routes/admin/index";
 import { setupSocketIO } from "@/socket";
 
 dotenv.config();
@@ -78,11 +83,16 @@ app.use("/api/upload", uploadRouter);
 // Chat routes
 app.use("/api/chat", chatRouter);
 
-// user routes
+// Feature-based routes
 app.use("/api/profile", profileRouter);
-app.use("/api/provider", providerRouter);
-app.use("/api/volunteer", volunteerRouter);
-app.use("/api/admin", adminRouter);
+app.use("/api/orders", orderRouter);
+app.use("/api/dashboard", dashboardRouter);
+app.use("/api/deliveries", deliveryRouter);
+app.use("/api/applications", applicationRouter);
+app.use("/api/users", userRouter);
+app.use("/api/distribution-centers", distributionRouter);
+app.use("/api/suppliers", supplierRouter);
+app.use("/api/vehicles", vehicleRouter);
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {

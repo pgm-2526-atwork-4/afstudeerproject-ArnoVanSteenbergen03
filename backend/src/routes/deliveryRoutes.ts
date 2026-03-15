@@ -6,10 +6,10 @@ import { requireAuth, requirePermission } from "@/middleware/auth";
 
 const router = Router();
 
-// Get open (unassigned) orders
+// Get open (unassigned) deliveries
 router.get("/open", requireAuth, requirePermission("read_activities"), async (_req: Request, res: Response) => {
   try {
-    const openOrders = await db
+    const openDeliveries = await db
       .select({
         activity: activities,
         provider: users,
@@ -28,10 +28,10 @@ router.get("/open", requireAuth, requirePermission("read_activities"), async (_r
       )
       .orderBy(asc(activities.orderTime));
 
-    return res.json(openOrders);
+    return res.json(openDeliveries);
   } catch (error) {
-    console.error("Error fetching open orders:", error);
-    res.status(500).json({ error: "Failed to fetch open orders" });
+    console.error("Error fetching open deliveries:", error);
+    res.status(500).json({ error: "Failed to fetch open deliveries" });
   }
 });
 
@@ -65,7 +65,7 @@ router.get("/mine", requireAuth, requirePermission("read_activities"), async (re
   }
 });
 
-// Accept an order
+// Accept a delivery
 router.patch("/:id/accept", requireAuth, requirePermission("update_activities"), async (req: Request, res: Response) => {
   try {
     const userId = (req.user as any).id as string;
@@ -77,11 +77,11 @@ router.patch("/:id/accept", requireAuth, requirePermission("update_activities"),
       .where(eq(activities.id, id));
 
     if (!activity) {
-      return res.status(404).json({ error: "Order not found" });
+      return res.status(404).json({ error: "Delivery not found" });
     }
 
     if (activity.assignedDriver) {
-      return res.status(400).json({ error: "Order has already been accepted by another driver" });
+      return res.status(400).json({ error: "Delivery has already been accepted" });
     }
 
     const [updatedActivity] = await db
@@ -95,16 +95,16 @@ router.patch("/:id/accept", requireAuth, requirePermission("update_activities"),
       .returning();
 
     return res.json({
-      message: "Order accepted",
+      message: "Delivery accepted",
       activity: updatedActivity,
     });
   } catch (error) {
-    console.error("Error accepting order:", error);
-    res.status(500).json({ error: "Failed to accept order" });
+    console.error("Error accepting delivery:", error);
+    res.status(500).json({ error: "Failed to accept delivery" });
   }
 });
 
-//Get activity details with food items
+// Get delivery details with items
 router.get("/:id", requireAuth, requirePermission("read_activities"), async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
@@ -115,7 +115,7 @@ router.get("/:id", requireAuth, requirePermission("read_activities"), async (req
       .where(eq(activities.id, id));
 
     if (!activity) {
-      return res.status(404).json({ error: "Activity not found" });
+      return res.status(404).json({ error: "Delivery not found" });
     }
 
     const collectionActivityRows = await db
@@ -151,18 +151,18 @@ router.get("/:id", requireAuth, requirePermission("read_activities"), async (req
       provider,
     });
   } catch (error) {
-    console.error("Error fetching activity:", error);
-    res.status(500).json({ error: "Failed to fetch activity" });
+    console.error("Error fetching delivery:", error);
+    res.status(500).json({ error: "Failed to fetch delivery" });
   }
 });
 
-// Valid status transitions
+// Valid status transitions for deliveries
 const STATUS_TRANSITIONS: Record<string, string[]> = {
   accepted: ["in_progress"],
   in_progress: ["completed", "incomplete", "need_assistance"],
 };
 
-//Update activity status
+// Update delivery status
 router.patch(
   "/:id/status",
   requireAuth,
@@ -185,7 +185,7 @@ router.patch(
         .where(eq(activities.id, id));
 
       if (!activity) {
-        return res.status(404).json({ error: "Activity not found" });
+        return res.status(404).json({ error: "Delivery not found" });
       }
 
       const allowed = STATUS_TRANSITIONS[activity.status];
@@ -210,12 +210,12 @@ router.patch(
         .returning();
 
       return res.json({
-        message: "Activity status updated",
+        message: "Delivery status updated",
         activity: updatedActivity,
       });
     } catch (error) {
-      console.error("Error updating activity:", error);
-      res.status(500).json({ error: "Failed to update activity" });
+      console.error("Error updating delivery:", error);
+      res.status(500).json({ error: "Failed to update delivery" });
     }
   }
 );

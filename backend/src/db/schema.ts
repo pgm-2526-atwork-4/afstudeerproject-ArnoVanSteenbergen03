@@ -217,6 +217,21 @@ export const messages = pgTable(
   (table) => [index("messages_channel_idx").on(table.channelId)],
 );
 
+// Chat members 
+export const chatMembers = pgTable(
+  "chat_members",
+  {
+    channelId: uuid("channel_id")
+      .notNull()
+      .references(() => channels.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    joinedAt: timestamp("joined_at").defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.channelId, table.userId] })],
+);
+
 ////Relations
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -328,6 +343,7 @@ export const channelsRelations = relations(channels, ({ one, many }) => ({
     references: [activities.id],
   }),
   messages: many(messages),
+  members: many(chatMembers),
 }));
 
 export const messagesRelations = relations(messages, ({ one }) => ({
@@ -337,6 +353,17 @@ export const messagesRelations = relations(messages, ({ one }) => ({
   }),
   user: one(users, {
     fields: [messages.userId],
+    references: [users.id],
+  }),
+}));
+
+export const chatMembersRelations = relations(chatMembers, ({ one }) => ({
+  channel: one(channels, {
+    fields: [chatMembers.channelId],
+    references: [channels.id],
+  }),
+  user: one(users, {
+    fields: [chatMembers.userId],
     references: [users.id],
   }),
 }));

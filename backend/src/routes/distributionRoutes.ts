@@ -7,32 +7,35 @@ import { distributionCenterSchema } from "@shared/index";
 
 const router = Router();
 
-// get all distribution centers
+// Get all distribution centers
 router.get(
   "/",
   requirePermission("read_places"),
   async (req: Request, res: Response) => {
     try {
-      const allPlaces = await db.query.places.findMany({
-        where: eq(places.type, "distribution_center"),
-      });
-      res.json(allPlaces);
+      const allCenters = await db
+        .select()
+        .from(places)
+        .where(eq(places.type, "distribution_center"));
+      res.json(allCenters);
     } catch (error) {
-      console.error("Fetch places error:", error);
+      console.error("Fetch distribution centers error:", error);
       res.status(500).json({ error: "Failed to fetch distribution centers" });
     }
   },
 );
 
-// create new distribution center
+// Create distribution center
 router.post(
   "/",
   requirePermission("create_places"),
   async (req: Request, res: Response) => {
     try {
-      const validated = distributionCenterSchema.omit({ id: true, createdAt: true, updatedAt: true }).parse(req.body);
+      const validated = distributionCenterSchema
+        .omit({ id: true, createdAt: true, updatedAt: true })
+        .parse(req.body);
 
-      const newPlace = await db
+      const [newCenter] = await db
         .insert(places)
         .values({
           name: validated.name,
@@ -43,62 +46,64 @@ router.post(
         })
         .returning();
 
-      // Auto-create a distro channel for this distribution center
+      // Auto-create a channel for this distribution center
       await db.insert(channels).values({
-        name: `${newPlace[0].name} - Distro`,
+        name: `${newCenter.name} - Distro`,
         type: "distribution_center",
-        placeId: newPlace[0].id,
+        placeId: newCenter.id,
       });
 
-      res.status(201).json(newPlace[0]);
+      res.status(201).json(newCenter);
     } catch (error) {
-      console.error("Create place error:", error);
+      console.error("Create distribution center error:", error);
       res.status(500).json({ error: "Failed to create distribution center" });
     }
   },
 );
 
-// get single distribution center
+// Get distribution center by ID
 router.get(
   "/:id",
   requirePermission("read_places"),
   async (req: Request, res: Response) => {
     try {
       const id = req.params.id as string;
-      const place = await db.query.places.findFirst({
-        where: eq(places.id, id),
-      });
+      const [center] = await db
+        .select()
+        .from(places)
+        .where(eq(places.id, id));
 
-      if (!place) {
+      if (!center) {
         return res.status(404).json({ error: "Distribution center not found" });
       }
 
-      res.json(place);
+      res.json(center);
     } catch (error) {
-      console.error("Fetch place error:", error);
+      console.error("Fetch distribution center error:", error);
       res.status(500).json({ error: "Failed to fetch distribution center" });
     }
   },
 );
 
-// update distribution center
+// Update distribution center
 router.put(
   "/:id",
   requirePermission("update_places"),
   async (req: Request, res: Response) => {
     try {
       const id = req.params.id as string;
-      const validated = distributionCenterSchema.partial().parse(req.body);
+      const [center] = await db
+        .select()
+        .from(places)
+        .where(eq(places.id, id));
 
-      const place = await db.query.places.findFirst({
-        where: eq(places.id, id),
-      });
-
-      if (!place) {
+      if (!center) {
         return res.status(404).json({ error: "Distribution center not found" });
       }
 
-      const updated = await db
+      const validated = distributionCenterSchema.partial().parse(req.body);
+
+      const [updated] = await db
         .update(places)
         .set({
           ...(validated.name && { name: validated.name }),
@@ -111,35 +116,37 @@ router.put(
         .where(eq(places.id, id))
         .returning();
 
-      res.json(updated[0]);
+      res.json(updated);
     } catch (error) {
-      console.error("Update place error:", error);
-      res.status(500).json({ 
+      console.error("Update distribution center error:", error);
+      res.status(500).json({
         error: "Failed to update distribution center",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: error instanceof Error ? error.message : "Unknown error",
       });
     }
   },
 );
 
-// delete distribution center
+// Delete distribution center
 router.delete(
   "/:id",
   requirePermission("delete_places"),
-  async (req: Request<{ id: string }>, res: Response) => {
+  async (req: Request, res: Response) => {
     try {
-      const place = await db.query.places.findFirst({
-        where: eq(places.id, req.params.id),
-      });
+      const id = req.params.id as string;
+      const [center] = await db
+        .select()
+        .from(places)
+        .where(eq(places.id, id));
 
-      if (!place) {
+      if (!center) {
         return res.status(404).json({ error: "Distribution center not found" });
       }
 
-      await db.delete(places).where(eq(places.id, req.params.id));
+      await db.delete(places).where(eq(places.id, id));
       res.json({ message: "Distribution center deleted successfully" });
     } catch (error) {
-      console.error("Delete place error:", error);
+      console.error("Delete distribution center error:", error);
       res.status(500).json({ error: "Failed to delete distribution center" });
     }
   },

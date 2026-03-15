@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useSocket } from "@/hooks/useSocket";
+import { usePermissions } from "@/hooks/usePermissions";
 import {
   ChatChannel,
   ChatMessage,
@@ -16,6 +17,7 @@ import {
 } from "@/lib/api-chat";
 import { Hash, Send, ArrowLeft, MessageCircle, Building2 } from "lucide-react";
 import { useUnreadCounts, markChannelRead } from "../../hooks/useUnreadCounts";
+import ChatManagementModal from "./ChatManagementModal";
 
 function ChatScreenSkeleton() {
   return (
@@ -94,8 +96,11 @@ function MessageSkeletonList() {
 
 export default function ChatScreen() {
   const { user } = useAuth();
+  const { hasPermission } = usePermissions();
   const searchParams = useSearchParams();
   const threadParam = searchParams.get("thread");
+
+  const isAdmin = hasPermission("manage_chat_members");
 
   const [channels, setChannels] = useState<ChatChannel[]>([]);
   const [activeChannel, setActiveChannel] = useState<ChatChannel | null>(null);
@@ -103,9 +108,8 @@ export default function ChatScreen() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
-  const [showOverview, setShowOverview] = useState(false);
+  const [showManagement, setShowManagement] = useState(false);
   const [participants, setParticipants] = useState<ChatParticipant[]>([]);
-  const [participantsLoading, setParticipantsLoading] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesCountRef = useRef(0);
@@ -144,9 +148,8 @@ export default function ChatScreen() {
     [activeChannelId, refreshUnread, user?.id],
   );
 
-  const { joinChannel, sendMessage, leaveChannel } = useSocket(handleNewMessage);
+  const { joinChannel, sendMessage } = useSocket(handleNewMessage);
 
-  // Load channels
   useEffect(() => {
     async function load() {
       try {
@@ -214,14 +217,12 @@ export default function ChatScreen() {
   }, [activeChannel, joinChannel, refreshUnread, user?.id]);
 
   useEffect(() => {
-    if (!showOverview || !activeChannel) return;
+    if (!activeChannel) return;
 
     const channelId = activeChannel.id;
     let cancelled = false;
 
     async function loadParticipants() {
-      setParticipantsLoading(true);
-
       try {
         const people = await getChannelParticipants(channelId);
         if (!cancelled) {
@@ -232,10 +233,6 @@ export default function ChatScreen() {
           console.error("Failed to load participants:", error);
           setParticipants([]);
         }
-      } finally {
-        if (!cancelled) {
-          setParticipantsLoading(false);
-        }
       }
     }
 
@@ -244,7 +241,7 @@ export default function ChatScreen() {
     return () => {
       cancelled = true;
     };
-  }, [activeChannel, showOverview]);
+  }, [activeChannel]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -266,17 +263,6 @@ export default function ChatScreen() {
   function selectChannel(channel: ChatChannel) {
     setActiveChannel(channel);
     setShowSidebar(false);
-    setShowOverview(false);
-  }
-
-  function handleLeaveCurrentChat() {
-    if (!activeChannel) return;
-
-    leaveChannel(activeChannel.id);
-    setShowOverview(false);
-    setActiveChannel(null);
-    setMessages([]);
-    setShowSidebar(true);
   }
 
   if (loading) {
@@ -303,9 +289,9 @@ export default function ChatScreen() {
         {activeChannel ? (
           <button
             type="button"
-            onClick={() => setShowOverview(true)}
+            onClick={() => setShowManagement(true)}
             className="text-xl font-bold text-slate-800 text-center truncate max-w-[70%] hover:text-orange-600 transition-colors"
-            title="Open chat overview"
+            title={isAdmin ? "Manage members" : "Chat info"}
           >
             {activeChannel.name}
           </button>
@@ -483,71 +469,33 @@ export default function ChatScreen() {
         </div>
       </div>
 
-      {showOverview && activeChannel && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-900/35 p-4">
-          <div className="w-full max-w-md rounded-xl border-2 border-slate-800 bg-white shadow-xl">
-            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-              <h2 className="text-lg font-bold text-slate-800">Chat Overview</h2>
-              <button
-                type="button"
-                onClick={() => setShowOverview(false)}
-                className="text-sm font-semibold text-slate-600 hover:text-slate-900"
-              >
-                Close
-              </button>
-            </div>
-
-            <div className="px-4 py-3">
-              <p className="text-sm text-slate-500 mb-1">Channel</p>
-              <p className="font-semibold text-slate-800 mb-4">{activeChannel.name}</p>
-
-              <p className="text-sm text-slate-500 mb-2">Participants</p>
-              {participantsLoading ? (
-                <div className="space-y-2 mb-4">
-                  {Array.from({ length: 4 }).map((_, index) => (
-                    <div
-                      key={index}
-                      className="h-9 rounded-lg bg-slate-100 animate-pulse"
-                    />
-                  ))}
-                </div>
-              ) : participants.length > 0 ? (
-                <div className="space-y-2 max-h-52 overflow-y-auto mb-4">
-                  {participants.map((participant) => {
-                    const isCurrentUser = participant.id === user?.id;
-
-                    return (
-                      <div
-                        key={participant.id}
-                        className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2"
-                      >
-                        <span className="text-sm text-slate-800">
-                          {participant.firstname} {participant.lastname}
-                        </span>
-                        {isCurrentUser && (
-                          <span className="text-xs font-semibold text-orange-600">
-                            You
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="text-sm text-slate-500 mb-4">No participants found yet.</p>
-              )}
-
-              <button
-                type="button"
-                onClick={handleLeaveCurrentChat}
-                className="w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
-              >
-                Leave Chat
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ChatManagementModal
+        open={showManagement}
+        onOpenChange={setShowManagement}
+        channel={activeChannel}
+        participants={participants}
+        isAdmin={isAdmin}
+        onParticipantAdded={async () => {
+          if (activeChannel) {
+            try {
+              const updated = await getChannelParticipants(activeChannel.id);
+              setParticipants(updated);
+            } catch (error) {
+              console.error("Failed to refresh participants:", error);
+            }
+          }
+        }}
+        onParticipantRemoved={async () => {
+          if (activeChannel) {
+            try {
+              const updated = await getChannelParticipants(activeChannel.id);
+              setParticipants(updated);
+            } catch (error) {
+              console.error("Failed to refresh participants:", error);
+            }
+          }
+        }}
+      />
     </div>
   );
 }

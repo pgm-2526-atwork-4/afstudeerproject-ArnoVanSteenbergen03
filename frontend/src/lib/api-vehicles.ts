@@ -2,7 +2,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // Get all vehicles
 export async function getVehicles() {
-  const response = await fetch(`${API_BASE_URL}/provider/vehicles`, {
+  const response = await fetch(`${API_BASE_URL}/vehicles`, {
     method: "GET",
     credentials: "include",
     cache: "no-store",

@@ -2,7 +2,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // Get open (unassigned) orders
 export async function getOpenDeliveries() {
-  const response = await fetch(`${API_BASE_URL}/volunteer/activities/open`, {
+  const response = await fetch(`${API_BASE_URL}/deliveries/open`, {
     method: "GET",
     credentials: "include",
     cache: "no-store",
@@ -24,7 +24,7 @@ export async function getOpenDeliveries() {
 
 // Get deliveries
 export async function getMyDeliveries() {
-  const response = await fetch(`${API_BASE_URL}/volunteer/activities/mine`, {
+  const response = await fetch(`${API_BASE_URL}/deliveries/mine`, {
     method: "GET",
     credentials: "include",
     cache: "no-store",
@@ -47,7 +47,7 @@ export async function getMyDeliveries() {
 // Accept an open order
 export async function acceptDelivery(activityId: string) {
   const response = await fetch(
-    `${API_BASE_URL}/volunteer/activities/${activityId}/accept`,
+    `${API_BASE_URL}/deliveries/${activityId}/accept`,
     {
       method: "PATCH",
       credentials: "include",
@@ -69,7 +69,7 @@ export async function acceptDelivery(activityId: string) {
 // Start a delivery (accepted -> in_progress)
 export async function startDelivery(activityId: string) {
   const response = await fetch(
-    `${API_BASE_URL}/volunteer/activities/${activityId}/status`,
+    `${API_BASE_URL}/deliveries/${activityId}/status`,
     {
       method: "PATCH",
       credentials: "include",
@@ -100,7 +100,7 @@ export async function completeDelivery(
   completionData?: Record<string, unknown>,
 ) {
   const response = await fetch(
-    `${API_BASE_URL}/volunteer/activities/${activityId}/status`,
+    `${API_BASE_URL}/deliveries/${activityId}/status`,
     {
       method: "PATCH",
       credentials: "include",

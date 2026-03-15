@@ -4,7 +4,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // Get distribution centers
 export async function getDistributionCenters() {
-  const response = await fetch(`${API_BASE_URL}/admin/distro`, {
+  const response = await fetch(`${API_BASE_URL}/distribution-centers`, {
     method: "GET",
     credentials: "include",
     cache: "no-store",
@@ -27,7 +27,7 @@ export async function updateDistributionCenter(
   id: string,
   data: Partial<DistributionCenter>,
 ) {
-  const response = await fetch(`${API_BASE_URL}/admin/distro/${id}`, {
+  const response = await fetch(`${API_BASE_URL}/distribution-centers/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -50,7 +50,7 @@ export async function updateDistributionCenter(
 
 // Delete distribution center
 export async function deleteDistributionCenter(id: string): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/admin/distro/${id}`, {
+  const response = await fetch(`${API_BASE_URL}/distribution-centers/${id}`, {
     method: "DELETE",
     credentials: "include",
   });

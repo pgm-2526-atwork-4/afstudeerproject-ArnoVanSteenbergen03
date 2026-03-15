@@ -5,7 +5,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 export type { AdminUser, AdminUserDetail };
 
 export async function checkEmailAvailable(email: string): Promise<boolean> {
-  const response = await fetch(`${API_BASE_URL}/admin/users/check-email`, {
+  const response = await fetch(`${API_BASE_URL}/users/check-email`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
@@ -20,7 +20,7 @@ export async function getUsers(role?: string): Promise<AdminUser[]> {
   const params = new URLSearchParams();
   if (role) params.set("role", role);
 
-  const url = `${API_BASE_URL}/admin/users${params.toString() ? `?${params}` : ""}`;
+  const url = `${API_BASE_URL}/users${params.toString() ? `?${params}` : ""}`;
 
   const response = await fetch(url, {
     method: "GET",
@@ -41,7 +41,7 @@ export async function getUsers(role?: string): Promise<AdminUser[]> {
 }
 
 export async function getUserById(id: string): Promise<AdminUserDetail> {
-  const response = await fetch(`${API_BASE_URL}/admin/users/${id}`, {
+  const response = await fetch(`${API_BASE_URL}/users/${id}`, {
     method: "GET",
     credentials: "include",
     cache: "no-store",
@@ -66,7 +66,7 @@ export async function updateUser(
     permissionIds?: number[];
   },
 ) {
-  const response = await fetch(`${API_BASE_URL}/admin/users/${id}`, {
+  const response = await fetch(`${API_BASE_URL}/users/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
@@ -82,7 +82,7 @@ export async function updateUser(
 }
 
 export async function deleteUser(id: string) {
-  const response = await fetch(`${API_BASE_URL}/admin/users/${id}`, {
+  const response = await fetch(`${API_BASE_URL}/users/${id}`, {
     method: "DELETE",
     credentials: "include",
   });
@@ -103,7 +103,7 @@ export async function createUser(data: {
   userType: string;
   permissionIds?: number[];
 }) {
-  const response = await fetch(`${API_BASE_URL}/admin/users`, {
+  const response = await fetch(`${API_BASE_URL}/users`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",

@@ -7,7 +7,7 @@ export type Supplier = DistributionCenter;
 
 // Get all suppliers
 export async function getSuppliers(): Promise<Supplier[]> {
-  const response = await fetch(`${API_BASE_URL}/admin/suppliers`, {
+  const response = await fetch(`${API_BASE_URL}/suppliers`, {
     method: "GET",
     credentials: "include",
     cache: "no-store",
@@ -27,7 +27,7 @@ export async function getSuppliers(): Promise<Supplier[]> {
 
 // Get single supplier by ID
 export async function getSupplierById(id: string): Promise<Supplier> {
-  const response = await fetch(`${API_BASE_URL}/admin/suppliers/${id}`, {
+  const response = await fetch(`${API_BASE_URL}/suppliers/${id}`, {
     method: "GET",
     credentials: "include",
     cache: "no-store",
@@ -49,7 +49,7 @@ export async function getSupplierById(id: string): Promise<Supplier> {
 export async function createSupplier(
   data: Partial<Supplier>,
 ): Promise<Supplier> {
-  const response = await fetch(`${API_BASE_URL}/admin/suppliers`, {
+  const response = await fetch(`${API_BASE_URL}/suppliers`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
@@ -73,7 +73,7 @@ export async function updateSupplier(
   id: string,
   data: Partial<Supplier>,
 ): Promise<Supplier> {
-  const response = await fetch(`${API_BASE_URL}/admin/suppliers/${id}`, {
+  const response = await fetch(`${API_BASE_URL}/suppliers/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
@@ -94,7 +94,7 @@ export async function updateSupplier(
 
 // Delete supplier
 export async function deleteSupplier(id: string): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/admin/suppliers/${id}`, {
+  const response = await fetch(`${API_BASE_URL}/suppliers/${id}`, {
     method: "DELETE",
     credentials: "include",
   });

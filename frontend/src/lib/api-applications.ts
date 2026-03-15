@@ -5,7 +5,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 export type { Permission };
 
 export async function getAllPermissions(): Promise<Permission[]> {
-  const response = await fetch(`${API_BASE_URL}/admin/applications/permissions`, {
+  const response = await fetch(`${API_BASE_URL}/applications/permissions`, {
     credentials: "include",
   });
 
@@ -17,7 +17,7 @@ export async function getAllPermissions(): Promise<Permission[]> {
 }
 
 export async function getApplications() {
-  const response = await fetch(`${API_BASE_URL}/admin/applications`, {
+  const response = await fetch(`${API_BASE_URL}/applications`, {
     credentials: "include",
   });
 
@@ -29,7 +29,7 @@ export async function getApplications() {
 }
 
 export async function getApplicationCount(): Promise<{ count: number }> {
-  const response = await fetch(`${API_BASE_URL}/admin/applications/count`, {
+  const response = await fetch(`${API_BASE_URL}/applications/count`, {
     credentials: "include",
   });
 
@@ -42,7 +42,7 @@ export async function getApplicationCount(): Promise<{ count: number }> {
 
 export async function approveApplication(id: string, permissionIds: number[]) {
   const response = await fetch(
-    `${API_BASE_URL}/admin/applications/${id}/approve`,
+    `${API_BASE_URL}/applications/${id}/approve`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -61,7 +61,7 @@ export async function approveApplication(id: string, permissionIds: number[]) {
 
 export async function denyApplication(id: string, reason?: string) {
   const response = await fetch(
-    `${API_BASE_URL}/admin/applications/${id}/deny`,
+    `${API_BASE_URL}/applications/${id}/deny`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },

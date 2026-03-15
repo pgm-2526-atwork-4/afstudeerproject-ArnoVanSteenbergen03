@@ -10,7 +10,7 @@ export type LookupValue = {
 
 // Get lookup values by type
 export async function getLookupValues(type: string): Promise<LookupValue[]> {
-  const response = await fetch(`${API_BASE_URL}/provider/orders/lookups?type=${encodeURIComponent(type)}`, {
+  const response = await fetch(`${API_BASE_URL}/orders/lookups?type=${encodeURIComponent(type)}`, {
     method: "GET",
     credentials: "include",
     cache: "no-store",

@@ -180,7 +180,7 @@ router.post(
   },
 );
 
-// List all orders
+// List user's orders
 router.get(
   "/",
   requireAuth,

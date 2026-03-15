@@ -14,6 +14,9 @@ import {
   goods,
   collectionActivities,
   lookupValues,
+  chatMembers,
+  channels,
+  messages,
 } from "./schema";
 
 // TODO: clear seed data. dubble look at permissions and goods / activity
@@ -32,8 +35,8 @@ function pickOne<T>(arr: readonly T[]): T {
 
 // Types for seed data
 type Permission = { id: number; resource: string; action: string; key: string };
-type User = { id: string; userType: string };
-type Place = { id: string; type: string };
+type User = { id: string; userType: string; firstname: string; lastname: string; email: string; username: string; password: string };
+type Place = { id: string; type: string; name: string };
 type Vehicle = { id: string };
 
 // All resources and CRUD actions for generating permissions
@@ -44,6 +47,7 @@ const RESOURCES = [
   "vehicles",
   "users",
   "applications",
+  "channels",
 ] as const;
 
 const ACTIONS = ["create", "read", "update", "delete"] as const;
@@ -59,6 +63,9 @@ const PAGE_KEYS = [
   "view_suppliers",
   "view_distribution_centers",
 ] as const;
+
+// Special admin permissions
+const ADMIN_PERMS = ["manage_chat_members"] as const;
 
 async function main() {
   const permissionValues = RESOURCES.flatMap((resource) =>
@@ -78,9 +85,17 @@ async function main() {
     description: `View ${key.replace("view_", "").replace(/_/g, " ")} page`,
   }));
 
+  // Add special admin permissions
+  const adminPermissionValues = ADMIN_PERMS.map((key) => ({
+    resource: "special",
+    action: "admin",
+    key,
+    description: key.replace(/_/g, " ").charAt(0).toUpperCase() + key.replace(/_/g, " ").slice(1),
+  }));
+
   const insertedPermissions = await db
     .insert(permissions)
-    .values([...permissionValues, ...pagePermissionValues])
+    .values([...permissionValues, ...pagePermissionValues, ...adminPermissionValues])
     .onConflictDoNothing()
     .returning();
 
@@ -229,6 +244,7 @@ async function main() {
     "read_places",
     "read_vehicles",
     "read_users",
+    "manage_chat_members",
     "view_dashboard",
     "view_orders",
     "view_chatroom",
@@ -434,7 +450,130 @@ async function main() {
     );
   }
 
+  console.log("Seeded activities and goods");
+
+  // Create channels
+  // 1. Community channel
+  const [communityChannel] = await db
+    .insert(channels)
+    .values({
+      name: "Community",
+      type: "community",
+      activityId: null,
+      placeId: null,
+    })
+    .returning();
+
+  // 2. Social channel (all volunteers and admins)
+  const [socialChannel] = await db
+    .insert(channels)
+    .values({
+      name: "Social",
+      type: "community",
+      activityId: null,
+      placeId: null,
+    })
+    .returning();
+
+  // 3. General Operations channel (all volunteers and admins)
+  const [operationsChannel] = await db
+    .insert(channels)
+    .values({
+      name: "General Operations",
+      type: "community",
+      activityId: null,
+      placeId: null,
+    })
+    .returning();
+
+  // 4. Channels for each distribution center
+  const distroChannels = await Promise.all(
+    centers.map((center) =>
+      db
+        .insert(channels)
+        .values({
+          name: center.name,
+          type: "distribution_center",
+          activityId: null,
+          placeId: center.id,
+        })
+        .returning()
+    )
+  );
+
+  // 5. Task channels for some activities
+  const taskChannels = await Promise.all(
+    insertedActivities.slice(0, 5).map((activity) =>
+      db
+        .insert(channels)
+        .values({
+          name: `Order #${activity.id.slice(0, 8)}`,
+          type: "task",
+          activityId: activity.id,
+          placeId: null,
+        })
+        .returning()
+    )
+  );
+
+  console.log("Seeded channels");
+
+  // Add users to chatMembers table
+  // Helper function to add user to channel
+  const addMemberToChannel = async (channelId: string, userId: string) => {
+    await db
+      .insert(chatMembers)
+      .values({
+        channelId: channelId as any,
+        userId: userId as any,
+      })
+      .onConflictDoNothing();
+  };
+
+  // Admin is in ALL channels
+  const allChannels = [
+    communityChannel,
+    socialChannel,
+    operationsChannel,
+    ...distroChannels.map((result) => result[0]),
+    ...taskChannels.map((result) => result[0]),
+  ];
+
+  for (const channel of allChannels) {
+    await addMemberToChannel(channel.id, adminUser.id);
+  }
+
+  // Volunteers and admins in social channel
+  for (const vol of volunteerUsers) {
+    await addMemberToChannel(socialChannel.id, vol.id);
+  }
+
+  // Volunteers and admins in operations channel
+  for (const vol of volunteerUsers) {
+    await addMemberToChannel(operationsChannel.id, vol.id);
+  }
+
+  // Add volunteers and providers to task channels
+  for (let i = 0; i < taskChannels.length; i++) {
+    const taskChannel = taskChannels[i][0];
+    const randomVolunteer = pickOne(volunteerUsers);
+    const randomProvider = pickOne(providerUsers);
+
+    await addMemberToChannel(taskChannel.id, randomVolunteer.id);
+    await addMemberToChannel(taskChannel.id, randomProvider.id);
+
+    // Add a welcome message in the task channel
+    const activity = insertedActivities[i];
+    await db.insert(messages).values({
+      channelId: taskChannel.id as any,
+      userId: adminUser.id as any,
+      body: `📋 Order created. Assigned volunteer: ${randomVolunteer.firstname} ${randomVolunteer.lastname} | Provider: ${randomProvider.firstname} ${randomProvider.lastname}`,
+    });
+  }
+
+  console.log("Seeded chat members and initialized channels");
   console.log("Seed completed");
+
   await sql.end();
 }
 

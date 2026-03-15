@@ -149,3 +149,70 @@ export async function sendCompletionMessage(
 
   return response.json();
 }
+
+// Get available users to add to a channel
+export async function getAvailableChannelUsers(
+  channelId: string,
+): Promise<ChatParticipant[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/chat/${channelId}/available-users`,
+    {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || "Failed to fetch available users");
+  }
+
+  return response.json();
+}
+
+// Add a user to a channel
+export async function addChannelParticipant(
+  channelId: string,
+  participantId: string,
+): Promise<ChatMessage> {
+  const response = await fetch(
+    `${API_BASE_URL}/chat/${channelId}/add-participant`,
+    {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ participantId }),
+    },
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || "Failed to add participant");
+  }
+
+  return response.json();
+}
+
+// Remove a user from a channel
+export async function removeChannelParticipant(
+  channelId: string,
+  participantId: string,
+): Promise<ChatMessage> {
+  const response = await fetch(
+    `${API_BASE_URL}/chat/${channelId}/remove-participant`,
+    {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ participantId }),
+    },
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || "Failed to remove participant");
+  }
+
+  return response.json();
+}

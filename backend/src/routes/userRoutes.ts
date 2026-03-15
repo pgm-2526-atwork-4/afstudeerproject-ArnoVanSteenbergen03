@@ -31,7 +31,7 @@ router.post(
   },
 );
 
-// Create a new user (admin manual upload)
+// Create new user
 router.post(
   "/",
   requirePermission("create_users"),
@@ -50,7 +50,6 @@ router.post(
       }
 
       const username = await generateUsername(firstname, lastname);
-
       const hashedPassword = await bcrypt.hash(password, 10);
 
       const [newUser] = await db
@@ -113,7 +112,7 @@ router.post(
   },
 );
 
-// List approved users, optionally filtered by role
+// List users
 router.get(
   "/",
   requirePermission("read_users"),
@@ -156,7 +155,7 @@ router.get(
   },
 );
 
-//get a single user with their permissions
+// Get single user with permissions
 router.get(
   "/:id",
   requirePermission("read_users"),
@@ -196,15 +195,14 @@ router.get(
   },
 );
 
-// update user details and permissions
+// Update user
 router.put(
   "/:id",
   requirePermission("update_users"),
   async (req: Request<{ id: string }>, res: Response) => {
     try {
       const id = req.params.id;
-      const { firstname, lastname, username, email, userType, permissionIds } =
-        req.body;
+      const { firstname, lastname, username, email, userType, permissionIds } = req.body;
 
       const [existing] = await db
         .select({ id: users.id })
@@ -252,7 +250,6 @@ router.put(
 
         if (permissionIds.length > 0) {
           const adminId = (req.user as any).id;
-
           const validPermissions = await db
             .select({ id: permissions.id })
             .from(permissions)
@@ -281,7 +278,7 @@ router.put(
   },
 );
 
-//delete a user
+// Delete user
 router.delete(
   "/:id",
   requirePermission("delete_users"),
@@ -290,11 +287,8 @@ router.delete(
       const id = req.params.id;
       const adminId = (req.user as any).id;
 
-      // Prevent self-deletion
       if (id === adminId) {
-        return res
-          .status(400)
-          .json({ error: "Cannot delete your own account" });
+        return res.status(400).json({ error: "Cannot delete your own account" });
       }
 
       const [existing] = await db

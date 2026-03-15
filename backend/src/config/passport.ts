@@ -1,7 +1,7 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { db } from "@/config/database";
-import { users, applications } from "@/db/schema";
+import { users, applications, userPermissions, permissions } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
@@ -47,7 +47,6 @@ passport.deserializeUser(async (id: string, done) => {
       return done(null, false);
     }
 
-    // Compute isApproved from applications table
     const approvedApp = await db.query.applications.findFirst({
       where: and(
         eq(applications.userId, user.id),
@@ -55,9 +54,21 @@ passport.deserializeUser(async (id: string, done) => {
       ),
     });
 
+    const permissionRows = await db
+      .select({ key: permissions.key })
+      .from(userPermissions)
+      .innerJoin(
+        permissions,
+        eq(userPermissions.permissionId, permissions.id),
+      )
+      .where(eq(userPermissions.userId, user.id));
+
+    const permissionKeys = permissionRows.map((r) => r.key);
+
     const userWithApproval = {
       ...user,
       isApproved: user.userType === "admin" || !!approvedApp,
+      permissions: permissionKeys,
     };
 
     done(null, userWithApproval);

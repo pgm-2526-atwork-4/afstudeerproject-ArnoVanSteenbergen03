@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { db } from "@/config/database";
-import { channels, messages, users, activities } from "@/db/schema";
-import { eq, desc, and, max, sql } from "drizzle-orm";
+import { channels, messages, users, activities, chatMembers } from "@/db/schema";
+import { eq, desc, and, max, sql, not, inArray } from "drizzle-orm";
 import { requireAuth } from "@/middleware/auth";
 
 const router = Router();
@@ -132,7 +132,6 @@ async function canAccessChannel(
 
   // For distro channels, all users who have accessed that distro can view
   if (channel.type === "distribution_center") {
-    // For now, allow all approved users. In future, track membership.
     return true;
   }
 
@@ -148,7 +147,6 @@ router.get(
       const userId = (req.user as any)?.id as string;
       const channelId = req.params.channelId as string;
 
-      // Check access
       if (!(await canAccessChannel(userId, channelId))) {
         return res.status(403).json({ error: "Access denied to this channel" });
       }
@@ -189,59 +187,37 @@ router.get(
       const userId = (req.user as any)?.id as string;
       const channelId = req.params.channelId as string;
 
-      // Check access
       if (!(await canAccessChannel(userId, channelId))) {
         return res.status(403).json({ error: "Access denied to this channel" });
       }
 
-      const currentUserId = userId;
-
-      const rows = await db
+      const members = await db
         .select({
           id: users.id,
           firstname: users.firstname,
           lastname: users.lastname,
           profileImage: users.profileImage,
         })
-        .from(messages)
-        .innerJoin(users, eq(messages.userId, users.id))
-        .where(eq(messages.channelId, channelId))
-        .orderBy(desc(messages.createdAt));
+        .from(chatMembers)
+        .innerJoin(users, eq(chatMembers.userId, users.id))
+        .where(eq(chatMembers.channelId, channelId as any));
 
-      const uniqueParticipants = new Map<
-        string,
-        {
-          id: string;
-          firstname: string;
-          lastname: string;
-          profileImage: string | null;
-        }
-      >();
-
-      for (const row of rows) {
-        if (!uniqueParticipants.has(row.id)) {
-          uniqueParticipants.set(row.id, row);
-        }
-      }
-
-      // Ensure the signed-in user appears in overview even before posting.
-      if (currentUserId && !uniqueParticipants.has(currentUserId)) {
-        const [currentUser] = await db
-          .select({
+      if (members.length === 0) {
+        const messageParticipants = await db
+          .selectDistinct({
             id: users.id,
             firstname: users.firstname,
             lastname: users.lastname,
             profileImage: users.profileImage,
           })
-          .from(users)
-          .where(eq(users.id, currentUserId));
+          .from(messages)
+          .innerJoin(users, eq(messages.userId, users.id))
+          .where(eq(messages.channelId, channelId as any));
 
-        if (currentUser) {
-          uniqueParticipants.set(currentUser.id, currentUser);
-        }
+        return res.json(messageParticipants);
       }
 
-      return res.json(Array.from(uniqueParticipants.values()));
+      return res.json(members);
     } catch (error) {
       console.error("Error fetching channel participants:", error);
       res.status(500).json({ error: "Failed to fetch channel participants" });
@@ -346,6 +322,184 @@ router.post(
     } catch (error) {
       console.error("Error sending completion message:", error);
       res.status(500).json({ error: "Failed to send completion message" });
+    }
+  },
+);
+
+// Get available users to add to a channel (admin only)
+router.get(
+  "/:channelId/available-users",
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const channelId = req.params.channelId;
+
+      const userPermissions = (req.user as any).permissions || [];
+      if (!userPermissions.includes("manage_chat_members")) {
+        return res
+          .status(403)
+          .json({ error: "Permission to manage chat members required" });
+      }
+
+      const channelParticipants = await db
+        .selectDistinct({ userId: chatMembers.userId })
+        .from(chatMembers)
+        .where(eq(chatMembers.channelId, channelId as any));
+
+      const participantIds = new Set(
+        channelParticipants.map((p) => p.userId),
+      );
+
+      const availableUsers = await db
+        .select({
+          id: users.id,
+          firstname: users.firstname,
+          lastname: users.lastname,
+          profileImage: users.profileImage,
+        })
+        .from(users)
+        .where(not(inArray(users.id, Array.from(participantIds))));
+
+      return res.json(availableUsers);
+    } catch (error) {
+      console.error("Error fetching available users:", error);
+      res.status(500).json({ error: "Failed to fetch available users" });
+    }
+  },
+);
+
+// Add a user to a channel (admin only)
+router.post(
+  "/:channelId/add-participant",
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const channelId = req.params.channelId as string;
+      const { participantId } = req.body;
+
+      if (!participantId) {
+        return res.status(400).json({ error: "Participant ID required" });
+      }
+
+      const userPermissions = (req.user as any).permissions || [];
+      if (!userPermissions.includes("manage_chat_members")) {
+        return res
+          .status(403)
+          .json({ error: "Permission to manage chat members required" });
+      }
+
+      await db
+        .insert(chatMembers)
+        .values({
+          channelId: channelId as any,
+          userId: participantId as any,
+        })
+        .onConflictDoNothing();
+
+      const [addedUser] = await db
+        .select({
+          firstname: users.firstname,
+          lastname: users.lastname,
+        })
+        .from(users)
+        .where(eq(users.id, participantId as any));
+
+      const [msg] = await db
+        .insert(messages)
+        .values({
+          channelId: channelId as any,
+          userId,
+          body: `✅ ${addedUser?.firstname} ${addedUser?.lastname} was added to the chat`,
+        })
+        .returning();
+
+      const [sender] = await db
+        .select({
+          id: users.id,
+          firstname: users.firstname,
+          lastname: users.lastname,
+          profileImage: users.profileImage,
+        })
+        .from(users)
+        .where(eq(users.id, userId));
+
+      return res.status(201).json({
+        ...msg,
+        user: sender,
+      });
+    } catch (error) {
+      console.error("Error adding participant:", error);
+      res.status(500).json({ error: "Failed to add participant" });
+    }
+  },
+);
+
+// Remove a user from a channel
+router.post(
+  "/:channelId/remove-participant",
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const channelId = req.params.channelId as string;
+      const { participantId } = req.body;
+
+      if (!participantId) {
+        return res.status(400).json({ error: "Participant ID required" });
+      }
+
+      const userPermissions = (req.user as any).permissions || [];
+      if (!userPermissions.includes("manage_chat_members")) {
+        return res
+          .status(403)
+          .json({ error: "Permission to manage chat members required" });
+      }
+
+      await db
+        .delete(chatMembers)
+        .where(
+          and(
+            eq(chatMembers.channelId, channelId as any),
+            eq(chatMembers.userId, participantId as any),
+          ),
+        );
+
+      const [removedUser] = await db
+        .select({
+          firstname: users.firstname,
+          lastname: users.lastname,
+        })
+        .from(users)
+        .where(eq(users.id, participantId as any));
+
+      const [msg] = await db
+        .insert(messages)
+        .values({
+          channelId: channelId as any,
+          userId,
+          body: `🚫 ${removedUser?.firstname} ${removedUser?.lastname} was removed from the chat`,
+        })
+        .returning();
+
+      const [sender] = await db
+        .select({
+          id: users.id,
+          firstname: users.firstname,
+          lastname: users.lastname,
+          profileImage: users.profileImage,
+        })
+        .from(users)
+        .where(eq(users.id, userId));
+
+      return res.status(201).json({
+        ...msg,
+        user: sender,
+      });
+    } catch (error) {
+      console.error("Error removing participant:", error);
+      res.status(500).json({ error: "Failed to remove participant" });
     }
   },
 );

@@ -43,7 +43,7 @@ export async function getAdminOrders(params: {
   if (params.dateFrom) query.set("dateFrom", params.dateFrom);
   if (params.dateTo) query.set("dateTo", params.dateTo);
 
-  const response = await fetch(`${API_BASE_URL}/admin/orders?${query.toString()}`, {
+  const response = await fetch(`${API_BASE_URL}/dashboard?${query.toString()}`, {
     method: "GET",
     credentials: "include",
     cache: "no-store",
@@ -59,7 +59,7 @@ export async function getAdminOrders(params: {
 
 // Admin: get single order by id (full details)
 export async function getAdminOrderById(orderId: string) {
-  const response = await fetch(`${API_BASE_URL}/admin/orders/${orderId}`, {
+  const response = await fetch(`${API_BASE_URL}/dashboard/${orderId}`, {
     method: "GET",
     credentials: "include",
     cache: "no-store",
@@ -86,7 +86,7 @@ export async function updateAdminOrder(
     notes?: string | null;
   },
 ) {
-  const response = await fetch(`${API_BASE_URL}/admin/orders/${orderId}`, {
+  const response = await fetch(`${API_BASE_URL}/dashboard/${orderId}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
@@ -103,7 +103,7 @@ export async function updateAdminOrder(
 
 // Get orders
 export async function getProviderOrders() {
-  const response = await fetch(`${API_BASE_URL}/provider/orders`, {
+  const response = await fetch(`${API_BASE_URL}/orders`, {
     method: "GET",
     credentials: "include",
     cache: "no-store",
@@ -123,7 +123,7 @@ export async function getProviderOrders() {
 
 // Create order
 export async function createOrder(data: CreateOrderInput) {
-  const response = await fetch(`${API_BASE_URL}/provider/orders`, {
+  const response = await fetch(`${API_BASE_URL}/orders`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
@@ -144,7 +144,7 @@ export async function createOrder(data: CreateOrderInput) {
 
 // Get order by id
 export async function getProviderOrderById(orderId: string) {
-  const response = await fetch(`${API_BASE_URL}/provider/orders/${orderId}`, {
+  const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
     method: "GET",
     credentials: "include",
     cache: "no-store",
@@ -164,7 +164,7 @@ export async function getProviderOrderById(orderId: string) {
 
 // Update order
 export async function updateOrder(orderId: string, data: CreateOrderInput) {
-  const response = await fetch(`${API_BASE_URL}/provider/orders/${orderId}`, {
+  const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     credentials: "include",

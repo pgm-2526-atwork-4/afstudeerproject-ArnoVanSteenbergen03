@@ -6,7 +6,7 @@ import { requirePermission } from "@/middleware/auth";
 
 const router = Router();
 
-// list all available permissions
+// List all available permissions
 router.get(
   "/permissions",
   requirePermission("read_applications"),
@@ -31,7 +31,7 @@ router.get(
   },
 );
 
-//list all applications
+// List all applications
 router.get(
   "/",
   requirePermission("read_applications"),
@@ -63,7 +63,7 @@ router.get(
   },
 );
 
-// count pending applications
+// Count pending applications
 router.get(
   "/count",
   requirePermission("read_applications"),
@@ -82,7 +82,7 @@ router.get(
   },
 );
 
-// approve an application
+// Approve application
 router.post(
   "/:id/approve",
   requirePermission("update_applications"),
@@ -102,9 +102,7 @@ router.post(
       }
 
       if (application.status !== "pending") {
-        return res
-          .status(400)
-          .json({ error: "Application already reviewed" });
+        return res.status(400).json({ error: "Application already reviewed" });
       }
 
       await db
@@ -144,7 +142,7 @@ router.post(
   },
 );
 
-//deny an application
+// Deny application
 router.post(
   "/:id/deny",
   requirePermission("update_applications"),
@@ -164,9 +162,7 @@ router.post(
       }
 
       if (application.status !== "pending") {
-        return res
-          .status(400)
-          .json({ error: "Application already reviewed" });
+        return res.status(400).json({ error: "Application already reviewed" });
       }
 
       await db

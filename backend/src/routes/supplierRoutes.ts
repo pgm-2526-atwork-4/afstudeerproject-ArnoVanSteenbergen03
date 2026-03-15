@@ -7,16 +7,17 @@ import { distributionCenterSchema } from "@shared/index";
 
 const router = Router();
 
-// get all suppliers
+// Get all suppliers
 router.get(
   "/",
   requirePermission("read_places"),
   async (req: Request, res: Response) => {
     try {
-      const allSuppliers = await db.query.places.findMany({
-        where: eq(places.type, "supplier"),
-      });
-      res.json(allSuppliers);
+      const suppliers = await db
+        .select()
+        .from(places)
+        .where(eq(places.type, "supplier"));
+      res.json(suppliers);
     } catch (error) {
       console.error("Fetch suppliers error:", error);
       res.status(500).json({ error: "Failed to fetch suppliers" });
@@ -24,15 +25,17 @@ router.get(
   },
 );
 
-// get single supplier
+// Get single supplier
 router.get(
   "/:id",
   requirePermission("read_places"),
-  async (req: Request<{ id: string }>, res: Response) => {
+  async (req: Request, res: Response) => {
     try {
-      const supplier = await db.query.places.findFirst({
-        where: and(eq(places.id, req.params.id), eq(places.type, "supplier")),
-      });
+      const id = req.params.id as string;
+      const [supplier] = await db
+        .select()
+        .from(places)
+        .where(and(eq(places.id, id), eq(places.type, "supplier")));
 
       if (!supplier) {
         return res.status(404).json({ error: "Supplier not found" });
@@ -46,7 +49,7 @@ router.get(
   },
 );
 
-// create supplier
+// Create supplier
 router.post(
   "/",
   requirePermission("create_places"),
@@ -56,7 +59,7 @@ router.post(
         .omit({ id: true, createdAt: true, updatedAt: true })
         .parse({ ...req.body, type: "supplier" });
 
-      const newSupplier = await db
+      const [newSupplier] = await db
         .insert(places)
         .values({
           name: validated.name,
@@ -67,7 +70,7 @@ router.post(
         })
         .returning();
 
-      res.status(201).json(newSupplier[0]);
+      res.status(201).json(newSupplier);
     } catch (error) {
       console.error("Create supplier error:", error);
       res.status(500).json({ error: "Failed to create supplier" });
@@ -75,15 +78,17 @@ router.post(
   },
 );
 
-// update supplier
+// Update supplier
 router.put(
   "/:id",
   requirePermission("update_places"),
-  async (req: Request<{ id: string }>, res: Response) => {
+  async (req: Request, res: Response) => {
     try {
-      const supplier = await db.query.places.findFirst({
-        where: and(eq(places.id, req.params.id), eq(places.type, "supplier")),
-      });
+      const id = req.params.id as string;
+      const [supplier] = await db
+        .select()
+        .from(places)
+        .where(and(eq(places.id, id), eq(places.type, "supplier")));
 
       if (!supplier) {
         return res.status(404).json({ error: "Supplier not found" });
@@ -91,23 +96,19 @@ router.put(
 
       const validated = distributionCenterSchema.partial().parse(req.body);
 
-      const updated = await db
+      const [updated] = await db
         .update(places)
         .set({
           ...(validated.name && { name: validated.name }),
           ...(validated.geojson && { geojson: validated.geojson }),
-          ...(validated.operatingInfo && {
-            operatingInfo: validated.operatingInfo,
-          }),
-          ...(validated.contactInfo && {
-            contactInfo: validated.contactInfo,
-          }),
+          ...(validated.operatingInfo && { operatingInfo: validated.operatingInfo }),
+          ...(validated.contactInfo && { contactInfo: validated.contactInfo }),
           updatedAt: new Date(),
         })
-        .where(eq(places.id, req.params.id))
+        .where(eq(places.id, id))
         .returning();
 
-      res.json(updated[0]);
+      res.json(updated);
     } catch (error) {
       console.error("Update supplier error:", error);
       res.status(500).json({ error: "Failed to update supplier" });
@@ -115,21 +116,23 @@ router.put(
   },
 );
 
-// delete supplier
+// Delete supplier
 router.delete(
   "/:id",
   requirePermission("delete_places"),
-  async (req: Request<{ id: string }>, res: Response) => {
+  async (req: Request, res: Response) => {
     try {
-      const supplier = await db.query.places.findFirst({
-        where: and(eq(places.id, req.params.id), eq(places.type, "supplier")),
-      });
+      const id = req.params.id as string;
+      const [supplier] = await db
+        .select()
+        .from(places)
+        .where(and(eq(places.id, id), eq(places.type, "supplier")));
 
       if (!supplier) {
         return res.status(404).json({ error: "Supplier not found" });
       }
 
-      await db.delete(places).where(eq(places.id, req.params.id));
+      await db.delete(places).where(eq(places.id, id));
       res.json({ message: "Supplier deleted successfully" });
     } catch (error) {
       console.error("Delete supplier error:", error);

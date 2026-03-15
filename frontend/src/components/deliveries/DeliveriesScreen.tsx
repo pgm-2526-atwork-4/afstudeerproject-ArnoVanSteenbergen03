@@ -21,6 +21,7 @@ import {
   completeDelivery,
 } from "@/lib/api-client";
 import { getDistributionCenters } from "@/lib/api-distro";
+import { sendCompletionMessage } from "@/lib/api-chat";
 import {
   DndContext,
   closestCenter,
@@ -133,6 +134,18 @@ export default function DeliveriesScreen() {
     try {
       setCompletingId(activityId);
       await completeDelivery(activityId, completionStatus, completionData);
+
+      // Send automated message to the task channel
+      try {
+        await sendCompletionMessage(
+          activityId,
+          completionStatus,
+          completionData,
+        );
+      } catch (err) {
+        console.error("Failed to send completion message:", err);
+      }
+
       await fetchData();
     } catch (err: unknown) {
       setError(

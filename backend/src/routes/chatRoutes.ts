@@ -36,13 +36,21 @@ router.post(
 
       const [created] = await db
         .insert(channels)
-        .values({ name: "Community", type: "community", activityId: null, placeId: null })
+        .values({
+          name: "Community",
+          type: "community",
+          activityId: null,
+          placeId: null,
+        })
         .returning();
 
       return res.status(201).json(created);
     } catch (error) {
       console.error("Error creating community channel:", error);
-      res.status(500).json({ error: "Failed to create community channel", details: String(error) });
+      res.status(500).json({
+        error: "Failed to create community channel",
+        details: String(error),
+      });
     }
   },
 );
@@ -114,7 +122,10 @@ async function canAccessChannel(
       .from(activities)
       .where(eq(activities.id, channel.activityId));
 
-    if (activity?.providerId === userId || activity?.assignedDriver === userId) {
+    if (
+      activity?.providerId === userId ||
+      activity?.assignedDriver === userId
+    ) {
       return true;
     }
   }
@@ -268,6 +279,73 @@ router.get(
     } catch (error) {
       console.error("Error fetching latest messages:", error);
       res.status(500).json({ error: "Failed to fetch latest messages" });
+    }
+  },
+);
+
+// Send automated message after order completion
+router.post(
+  "/send-completion-message",
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const { activityId, status, reason, assistanceOptions, assistanceNotes } =
+        req.body;
+
+      if (!activityId || !status) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      const [channel] = await db
+        .select()
+        .from(channels)
+        .where(
+          and(eq(channels.type, "task"), eq(channels.activityId, activityId)),
+        );
+
+      if (!channel) {
+        return res.status(404).json({ error: "Task channel not found" });
+      }
+
+      let messageBody = "";
+      if (status === "completed") {
+        messageBody = "✅ Delivery completed successfully";
+      } else if (status === "incomplete") {
+        messageBody = `⚠️ Delivery incomplete - ${reason || "No reason provided"}`;
+      } else if (status === "need_assistance") {
+        const reasons = [];
+        if (assistanceOptions?.orderTooLarge) reasons.push("Order too large");
+        if (assistanceOptions?.vehicleIssue) reasons.push("Vehicle issue");
+        messageBody = `🚨 Assistance needed - ${reasons.join(", ")}${assistanceNotes ? ` - ${assistanceNotes}` : ""}`;
+      }
+
+      const [msg] = await db
+        .insert(messages)
+        .values({
+          channelId: channel.id,
+          userId,
+          body: messageBody,
+        })
+        .returning();
+
+      const [sender] = await db
+        .select({
+          id: users.id,
+          firstname: users.firstname,
+          lastname: users.lastname,
+          profileImage: users.profileImage,
+        })
+        .from(users)
+        .where(eq(users.id, userId));
+
+      return res.status(201).json({
+        ...msg,
+        user: sender,
+      });
+    } catch (error) {
+      console.error("Error sending completion message:", error);
+      res.status(500).json({ error: "Failed to send completion message" });
     }
   },
 );

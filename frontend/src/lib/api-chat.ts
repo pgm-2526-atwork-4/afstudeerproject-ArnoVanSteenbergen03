@@ -122,3 +122,30 @@ export async function getChannelsLatest(): Promise<
 
   return response.json();
 }
+
+// Send automated completion status message to task channel
+export async function sendCompletionMessage(
+  activityId: string,
+  status: "completed" | "incomplete" | "need_assistance",
+  data?: Record<string, unknown>,
+): Promise<ChatMessage> {
+  const response = await fetch(`${API_BASE_URL}/chat/send-completion-message`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      activityId,
+      status,
+      reason: data?.incompleteReason,
+      assistanceOptions: data?.assistanceOptions,
+      assistanceNotes: data?.assistanceNotes,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || "Failed to send completion message");
+  }
+
+  return response.json();
+}

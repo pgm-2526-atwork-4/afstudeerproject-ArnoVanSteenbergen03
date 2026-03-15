@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import ProtectedPage from "@/components/ProtectedPage";
 import AdminDash from "@/components/dashboard/AdminDash";
+import AdminDashSkeleton from "@/components/dashboard/AdminDashSkeleton";
+import type { User } from "@/types";
 
 function getFallbackRoute(permissions: string[]): string {
   if (permissions.includes("view_orders")) return "/orders";
@@ -41,11 +43,7 @@ export default function DashboardPage() {
   }, [user, loading, router, canViewDashboard, fallbackRoute]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-amber-50">
-        <p className="text-slate-600">Loading...</p>
-      </div>
-    );
+    return <AdminDashSkeleton />;
   }
 
   if (!user || !user.isApproved) return null;

@@ -10,6 +10,7 @@ import { useState, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { updateProfile, uploadProfileImage } from "@/lib/api-client";
 import { updateProfileSchema } from "@shared/schemas/profile";
+import SupplierManagement from "@/components/SupplierManagement";
 import { z } from "zod/v4";
 
 interface ProfileScreenProps {
@@ -172,21 +173,24 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
             <Label className="block text-sm font-semibold text-slate-800 mb-2">
               Name:
             </Label>
-            <Input
-              type="text"
-              value={formData.firstname}
-              onChange={(e) => handleInputChange("firstname", e.target.value)}
-              readOnly={!isEditing}
-              className={`w-full py-2 text-slate-800 transition-all rounded ${
-                isEditing
-                  ? `bg-white px-3 border-2 ${errors.firstname ? "border-red-500" : "border-slate-800"} focus-visible:border-blue-600 focus-visible:ring-0`
-                  : "bg-transparent border-b-2 border-slate-800 focus-visible:ring-0 focus-visible:border-slate-800 cursor-default"
-              }`}
-            />
-            {errors.firstname && (
-              <span className="text-red-500 text-sm mt-1">
-                {errors.firstname}
-              </span>
+            {isEditing ? (
+              <>
+                <Input
+                  type="text"
+                  value={formData.firstname}
+                  onChange={(e) => handleInputChange("firstname", e.target.value)}
+                  className="w-full px-3 py-2 bg-white border-2 border-green-500 rounded text-slate-800"
+                />
+                {errors.firstname && (
+                  <span className="text-red-500 text-sm mt-1">
+                    {errors.firstname}
+                  </span>
+                )}
+              </>
+            ) : (
+              <div className="bg-white border-2 border-slate-800 rounded px-3 py-2">
+                <p className="text-slate-800">{formData.firstname}</p>
+              </div>
             )}
           </div>
 
@@ -194,21 +198,24 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
             <Label className="block text-sm font-semibold text-slate-800 mb-2">
               Last name:
             </Label>
-            <Input
-              type="text"
-              value={formData.lastname}
-              onChange={(e) => handleInputChange("lastname", e.target.value)}
-              readOnly={!isEditing}
-              className={`w-full py-2 text-slate-800 transition-all rounded ${
-                isEditing
-                  ? `bg-white px-3 border-2 ${errors.lastname ? "border-red-500" : "border-slate-800"} focus-visible:border-blue-600 focus-visible:ring-0`
-                  : "bg-transparent border-b-2 border-slate-800 focus-visible:ring-0 focus-visible:border-slate-800 cursor-default"
-              }`}
-            />
-            {errors.lastname && (
-              <span className="text-red-500 text-sm mt-1">
-                {errors.lastname}
-              </span>
+            {isEditing ? (
+              <>
+                <Input
+                  type="text"
+                  value={formData.lastname}
+                  onChange={(e) => handleInputChange("lastname", e.target.value)}
+                  className="w-full px-3 py-2 bg-white border-2 border-green-500 rounded text-slate-800"
+                />
+                {errors.lastname && (
+                  <span className="text-red-500 text-sm mt-1">
+                    {errors.lastname}
+                  </span>
+                )}
+              </>
+            ) : (
+              <div className="bg-white border-2 border-slate-800 rounded px-3 py-2">
+                <p className="text-slate-800">{formData.lastname}</p>
+              </div>
             )}
           </div>
 
@@ -216,21 +223,24 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
             <Label className="block text-sm font-semibold text-slate-800 mb-2">
               Nickname:
             </Label>
-            <Input
-              type="text"
-              value={formData.username}
-              onChange={(e) => handleInputChange("username", e.target.value)}
-              readOnly={!isEditing}
-              className={`w-full py-2 text-slate-800 transition-all rounded ${
-                isEditing
-                  ? `bg-white px-3 border-2 ${errors.username ? "border-red-500" : "border-slate-800"} focus-visible:border-slate-600 focus-visible:ring-0`
-                  : "bg-transparent border-b-2 border-slate-800 focus-visible:ring-0 focus-visible:border-slate-800 cursor-default"
-              }`}
-            />
-            {errors.username && (
-              <span className="text-red-500 text-sm mt-1">
-                {errors.username}
-              </span>
+            {isEditing ? (
+              <>
+                <Input
+                  type="text"
+                  value={formData.username}
+                  onChange={(e) => handleInputChange("username", e.target.value)}
+                  className="w-full px-3 py-2 bg-white border-2 border-green-500 rounded text-slate-800"
+                />
+                {errors.username && (
+                  <span className="text-red-500 text-sm mt-1">
+                    {errors.username}
+                  </span>
+                )}
+              </>
+            ) : (
+              <div className="bg-white border-2 border-slate-800 rounded px-3 py-2">
+                <p className="text-slate-800">{formData.username}</p>
+              </div>
             )}
           </div>
 
@@ -238,19 +248,24 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
             <Label className="block text-sm font-semibold text-slate-800 mb-2">
               E-mail:
             </Label>
-            <Input
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleInputChange("email", e.target.value)}
-              readOnly={!isEditing}
-              className={`w-full py-2 text-slate-800 transition-all rounded ${
-                isEditing
-                  ? `bg-white px-3 border-2 ${errors.email ? "border-red-500" : "border-slate-800"} focus-visible:border-slate-600 focus-visible:ring-0`
-                  : "bg-transparent border-b-2 border-slate-800 focus-visible:ring-0 focus-visible:border-slate-800 cursor-default"
-              }`}
-            />
-            {errors.email && (
-              <span className="text-red-500 text-sm mt-1">{errors.email}</span>
+            {isEditing ? (
+              <>
+                <Input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange("email", e.target.value)}
+                  className="w-full px-3 py-2 bg-white border-2 border-green-500 rounded text-slate-800"
+                />
+                {errors.email && (
+                  <span className="text-red-500 text-sm mt-1">
+                    {errors.email}
+                  </span>
+                )}
+              </>
+            ) : (
+              <div className="bg-white border-2 border-slate-800 rounded px-3 py-2">
+                <p className="text-slate-800">{formData.email}</p>
+              </div>
             )}
           </div>
 
@@ -258,11 +273,17 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
             <Label className="block text-sm font-semibold text-slate-800 mb-2">
               Role:
             </Label>
-            <p className="py-2 text-slate-800 capitalize">
-              {user.userType || ""}
-            </p>
+            <div className="bg-white border-2 border-slate-800 rounded px-3 py-2">
+              <p className="text-slate-800 capitalize">{user.userType || ""}</p>
+            </div>
           </div>
         </div>
+
+        {user.userType === "provider" && (
+          <div className="w-full mt-8">
+            <SupplierManagement user={user} />
+          </div>
+        )}
 
         <div className="w-full mt-8 space-y-3">
           {isEditing ? (
@@ -278,28 +299,30 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
                 onClick={handleCancel}
                 disabled={isLoading}
                 variant="outline"
-                className="w-full border-slate-800 text-slate-800 hover:bg-slate-100 font-bold py-3"
+                className="w-full border-2 border-slate-800 text-slate-800 hover:bg-slate-100 font-bold py-3 rounded"
               >
                 Cancel
               </Button>
             </>
           ) : (
-            <Button
-              onClick={() => setIsEditing(true)}
-              className="w-full bg-[#2D3E2D] hover:bg-[#1D2E1D] text-white font-bold py-3 rounded"
-            >
-              Edit Profile
-            </Button>
+            <>
+              <Button
+                onClick={() => setIsEditing(true)}
+                className="w-full bg-[#2D3E2D] hover:bg-[#1D2E1D] text-white font-bold py-3 rounded"
+              >
+                Edit Profile
+              </Button>
+
+              <Button
+                onClick={handleLogout}
+                disabled={isLoading}
+                className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded"
+              >
+                {isLoading ? "Logging out..." : "Log Out"}
+              </Button>
+            </>
           )}
         </div>
-
-        <Button
-          onClick={handleLogout}
-          disabled={isLoading || isEditing}
-          className="w-full mt-4 bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded"
-        >
-          {isLoading ? "Logging out..." : "Log Out"}
-        </Button>
       </div>
     </div>
   );

@@ -1,7 +1,8 @@
 "use client";
 
 import { DistributionCenter } from "@/types";
-import { useOperatingInfo } from "@/hooks/useOperatingInfo";
+import { OperatingInfo } from "@shared/index";
+import OpeningHoursForm from "@/components/OpeningHoursForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,8 +24,19 @@ export default function DistroForm({
   isLoading = false,
   error,
 }: DistroFormProps) {
-  const { operatingInfo, days, toggleDay, updateTime, isDayOpen, getHours } =
-    useOperatingInfo(initialData?.operatingInfo);
+  const defaultOperatingInfo: OperatingInfo = {
+    monday: null,
+    tuesday: null,
+    wednesday: null,
+    thursday: null,
+    friday: null,
+    saturday: null,
+    sunday: null,
+  };
+
+  const [operatingInfo, setOperatingInfo] = useState<OperatingInfo>(
+    initialData?.operatingInfo || defaultOperatingInfo,
+  );
 
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
@@ -194,65 +206,10 @@ export default function DistroForm({
             <h2 className="text-xl font-semibold text-slate-800 mb-4">
               Operating Hours
             </h2>
-
-            <div className="space-y-4">
-              {days.map((day) => (
-                <div
-                  key={day}
-                  className="border-2 border-slate-300 rounded-lg p-4"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-slate-800 capitalize">
-                      {day}
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={() => toggleDay(day)}
-                      className={`px-3 py-1 rounded text-sm font-semibold transition-colors ${
-                        isDayOpen(day)
-                          ? "bg-green-500 text-white"
-                          : "bg-slate-300 text-slate-600"
-                      }`}
-                    >
-                      {isDayOpen(day) ? "Open" : "Closed"}
-                    </button>
-                  </div>
-
-                  {isDayOpen(day) && (
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label className="block text-sm font-semibold text-slate-800 mb-2">
-                          Opens
-                        </Label>
-                        <Input
-                          type="time"
-                          value={getHours(day)?.open || ""}
-                          onChange={(e) =>
-                            updateTime(day, "open", e.target.value)
-                          }
-                          className="w-full px-3 py-2 border-2 border-slate-800 rounded"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label className="block text-sm font-semibold text-slate-800 mb-2">
-                          Closes
-                        </Label>
-                        <Input
-                          type="time"
-                          value={getHours(day)?.close || ""}
-                          onChange={(e) =>
-                            updateTime(day, "close", e.target.value)
-                          }
-                          className="w-full px-3 py-2 border-2 border-slate-800 rounded"
-                          required
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+            <OpeningHoursForm
+              value={operatingInfo}
+              onChange={setOperatingInfo}
+            />
           </div>
 
           <div className="bg-white border-2 border-slate-800 rounded-lg p-6">

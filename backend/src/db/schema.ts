@@ -74,7 +74,8 @@ export const places = pgTable("places", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   geojson: jsonb("geojson").notNull(),
-  type: text("type").notNull(), // "supplier or distribution_center"
+  type: text("type").notNull(), // "supplier" or "distribution_center"
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }), // for supplier owners
   operatingInfo: jsonb("operating_info"),
   contactInfo: jsonb("contact_info"),
   createdAt: timestamp("created_at").defaultNow(),

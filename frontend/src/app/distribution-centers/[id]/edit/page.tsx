@@ -23,7 +23,7 @@ export default function EditDistributionCenterPage() {
       try {
         setIsLoading(true);
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/distro/${id}`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/distribution-centers/${id}`,
           {
             method: "GET",
             credentials: "include",
@@ -68,7 +68,7 @@ export default function EditDistributionCenterPage() {
       setError(null);
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/distro/${id}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/distribution-centers/${id}`,
         {
           method: "PUT",
           headers: {

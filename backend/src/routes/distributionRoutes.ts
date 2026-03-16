@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { db } from "@/config/database";
 import { places, channels } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { requirePermission } from "@/middleware/auth";
 import { distributionCenterSchema } from "@shared/index";
 
@@ -71,7 +71,7 @@ router.get(
       const [center] = await db
         .select()
         .from(places)
-        .where(eq(places.id, id));
+        .where(and(eq(places.id, id), eq(places.type, "distribution_center")));
 
       if (!center) {
         return res.status(404).json({ error: "Distribution center not found" });
@@ -95,7 +95,7 @@ router.put(
       const [center] = await db
         .select()
         .from(places)
-        .where(eq(places.id, id));
+        .where(and(eq(places.id, id), eq(places.type, "distribution_center")));
 
       if (!center) {
         return res.status(404).json({ error: "Distribution center not found" });
@@ -137,7 +137,7 @@ router.delete(
       const [center] = await db
         .select()
         .from(places)
-        .where(eq(places.id, id));
+        .where(and(eq(places.id, id), eq(places.type, "distribution_center")));
 
       if (!center) {
         return res.status(404).json({ error: "Distribution center not found" });

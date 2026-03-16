@@ -22,7 +22,7 @@ export default function NewDistributionCenterPage() {
       setError(null);
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/distro`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/distribution-centers`,
         {
           method: "POST",
           headers: {

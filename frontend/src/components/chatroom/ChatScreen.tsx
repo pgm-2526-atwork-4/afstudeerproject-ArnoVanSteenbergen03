@@ -15,7 +15,7 @@ import {
   getChannelByActivity,
   getChannelParticipants,
 } from "@/lib/api-chat";
-import { Hash, Send, ArrowLeft, MessageCircle, Building2 } from "lucide-react";
+import { Hash, Send, ArrowLeft, MessageCircle, Building2, Store } from "lucide-react";
 import { useUnreadCounts, markChannelRead } from "../../hooks/useUnreadCounts";
 import ChatManagementModal from "./ChatManagementModal";
 
@@ -272,6 +272,7 @@ export default function ChatScreen() {
   const communityChannels = channels.filter((c) => c.type === "community");
   const taskChannels = channels.filter((c) => c.type === "task");
   const distroChannels = channels.filter((c) => c.type === "distribution_center");
+  const supplierChannels = channels.filter((c) => c.type === "supplier");
 
   return (
     <div className="flex flex-col h-[calc(100dvh-94px)] lg:h-[100dvh] min-h-0">
@@ -374,6 +375,33 @@ export default function ChatScreen() {
                   }`}
                 >
                   <Building2 className="h-4 w-4" />
+                  <span className="flex-1">{ch.name}</span>
+                  {unreadMap[ch.id] && activeChannel?.id !== ch.id && (
+                    <span className="bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
+                      !
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {supplierChannels.length > 0 && (
+            <div className="p-3 border-t border-slate-100">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                Suppliers
+              </p>
+              {supplierChannels.map((ch) => (
+                <button
+                  key={ch.id}
+                  onClick={() => selectChannel(ch)}
+                  className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-left text-sm ${
+                    activeChannel?.id === ch.id
+                      ? "bg-orange-100 text-orange-700 font-medium"
+                      : "text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  <Store className="h-4 w-4" />
                   <span className="flex-1">{ch.name}</span>
                   {unreadMap[ch.id] && activeChannel?.id !== ch.id && (
                     <span className="bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">

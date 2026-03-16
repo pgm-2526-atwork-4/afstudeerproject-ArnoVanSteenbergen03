@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { db } from "@/config/database";
-import { channels, messages, users, activities, chatMembers } from "@/db/schema";
+import { channels, messages, users, activities, chatMembers, places } from "@/db/schema";
 import { eq, desc, and, max, sql, not, inArray } from "drizzle-orm";
 import { requireAuth } from "@/middleware/auth";
 
@@ -9,11 +9,83 @@ const router = Router();
 // Get all channels the user can see
 router.get("/channels", requireAuth, async (req: Request, res: Response) => {
   try {
-    const allChannels = await db
-      .select()
+    const userId = (req.user as any)?.id as string;
+
+    // Get user's channels (through chatMembers) plus community channels
+    const userChannels = await db
+      .select({
+        id: channels.id,
+        name: channels.name,
+        type: channels.type,
+        activityId: channels.activityId,
+        placeId: channels.placeId,
+        createdAt: channels.createdAt,
+      })
       .from(channels)
+      .innerJoin(chatMembers, eq(channels.id, chatMembers.channelId))
+      .where(eq(chatMembers.userId, userId))
       .orderBy(channels.createdAt);
 
+    const communityChannels = await db
+      .select()
+      .from(channels)
+      .where(eq(channels.type, "community"))
+      .orderBy(channels.createdAt);
+
+    // Get user's suppliers and ensure they have channels
+    const userSuppliers = await db
+      .select()
+      .from(places)
+      .where(and(eq(places.userId, userId), eq(places.type, "supplier")));
+
+    // For each supplier, ensure a channel exists
+    const supplierChannels: any[] = [];
+    for (const supplier of userSuppliers) {
+      const [existing] = await db
+        .select()
+        .from(channels)
+        .where(and(eq(channels.placeId, supplier.id), eq(channels.type, "supplier")));
+
+      let channelToUse = existing;
+      if (!existing) {
+        // Create channel for supplier if it doesn't exist
+        const [newChannel] = await db
+          .insert(channels)
+          .values({
+            name: supplier.name,
+            type: "supplier",
+            placeId: supplier.id,
+            activityId: null,
+          })
+          .returning();
+        channelToUse = newChannel;
+      }
+
+      // Ensure user is in the channel
+      await db
+        .insert(chatMembers)
+        .values({
+          channelId: channelToUse.id,
+          userId,
+        })
+        .onConflictDoNothing();
+
+      supplierChannels.push(channelToUse);
+    }
+
+    // Combine and deduplicate
+    const channelMap = new Map();
+    for (const ch of communityChannels) {
+      channelMap.set(ch.id, ch);
+    }
+    for (const ch of userChannels) {
+      channelMap.set(ch.id, ch);
+    }
+    for (const ch of supplierChannels) {
+      channelMap.set(ch.id, ch);
+    }
+
+    const allChannels = Array.from(channelMap.values());
     return res.json(allChannels);
   } catch (error) {
     console.error("Error fetching channels:", error);
@@ -231,6 +303,26 @@ router.get(
   requireAuth,
   async (req: Request, res: Response) => {
     try {
+      const userId = (req.user as any)?.id as string;
+
+      // Get IDs of channels the user is a member of or community channels
+      const userChannelIds = await db
+        .select({ id: channels.id })
+        .from(channels)
+        .innerJoin(chatMembers, eq(channels.id, chatMembers.channelId))
+        .where(eq(chatMembers.userId, userId));
+
+      const communityChannelIds = await db
+        .select({ id: channels.id })
+        .from(channels)
+        .where(eq(channels.type, "community"));
+
+      const allChannelIds = new Set([
+        ...userChannelIds.map((ch) => ch.id),
+        ...communityChannelIds.map((ch) => ch.id),
+      ]);
+
+      // Get message counts only for these channels
       const result = await db
         .select({
           channelId: messages.channelId,
@@ -238,6 +330,7 @@ router.get(
           messageCount: sql<number>`count(*)::int`,
         })
         .from(messages)
+        .where(inArray(messages.channelId, Array.from(allChannelIds)))
         .groupBy(messages.channelId);
 
       const map: Record<

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { db } from "@/config/database";
-import { places } from "@/db/schema";
+import { places, channels, chatMembers } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { requirePermission } from "@/middleware/auth";
 import { distributionCenterSchema } from "@shared/index";
@@ -93,6 +93,28 @@ router.post(
           userId: req.user?.id,
         })
         .returning();
+
+      // Create a channel for this supplier
+      const [supplierChannel] = await db
+        .insert(channels)
+        .values({
+          name: newSupplier.name,
+          type: "supplier",
+          placeId: newSupplier.id,
+          activityId: null,
+        })
+        .returning();
+
+      // Add the supplier owner to the channel
+      if (req.user?.id) {
+        await db
+          .insert(chatMembers)
+          .values({
+            channelId: supplierChannel.id,
+            userId: req.user.id,
+          })
+          .onConflictDoNothing();
+      }
 
       res.status(201).json(newSupplier);
     } catch (error) {

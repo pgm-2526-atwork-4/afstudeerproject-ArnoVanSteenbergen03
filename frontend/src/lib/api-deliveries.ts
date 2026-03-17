@@ -123,3 +123,50 @@ export async function completeDelivery(
 
   return response.json();
 }
+
+// Get assistance requests
+export async function getAssistanceRequests() {
+  const response = await fetch(
+    `${API_BASE_URL}/deliveries/assistance/requests`,
+    {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    try {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to fetch assistance requests");
+    } catch {
+      throw new Error(
+        `Failed to fetch assistance requests: ${response.statusText}`,
+      );
+    }
+  }
+
+  return response.json();
+}
+
+// Accept an assistance request
+export async function acceptAssistance(activityId: string) {
+  const response = await fetch(
+    `${API_BASE_URL}/deliveries/${activityId}/accept-assistance`,
+    {
+      method: "PATCH",
+      credentials: "include",
+    },
+  );
+
+  if (!response.ok) {
+    try {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to accept assistance");
+    } catch {
+      throw new Error(`Failed to accept assistance: ${response.statusText}`);
+    }
+  }
+
+  return response.json();
+}

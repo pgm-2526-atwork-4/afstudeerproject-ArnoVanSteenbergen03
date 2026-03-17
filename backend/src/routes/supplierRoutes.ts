@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { db } from "@/config/database";
-import { places, channels, chatMembers } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { places, channels, chatMembers, users } from "@/db/schema";
+import { eq, and, inArray } from "drizzle-orm";
 import { requireAuth, requirePermission } from "@/middleware/auth";
 import { distributionCenterSchema } from "@shared/index";
 
@@ -80,7 +80,6 @@ router.post(
   async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any)?.id;
-      console.log("Creating supplier for user:", userId);
       
       if (!userId) {
         return res.status(400).json({ error: "User ID not found" });
@@ -102,8 +101,6 @@ router.post(
         })
         .returning();
 
-      console.log("Created supplier:", newSupplier.id);
-
       // Create a channel for this supplier
       const [supplierChannel] = await db
         .insert(channels)
@@ -115,10 +112,8 @@ router.post(
         })
         .returning();
 
-      console.log("Created channel:", supplierChannel.id);
-
       // Add the supplier owner to the channel
-      const result = await db
+      await db
         .insert(chatMembers)
         .values({
           channelId: supplierChannel.id,
@@ -126,7 +121,23 @@ router.post(
         })
         .onConflictDoNothing();
 
-      console.log("Added user to channel:", userId, "in channel:", supplierChannel.id);
+      // Add all admins to the channel
+      const admins = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(
+          inArray(users.userType, ["admin", "manager"]),
+        );
+
+      for (const admin of admins) {
+        await db
+          .insert(chatMembers)
+          .values({
+            channelId: supplierChannel.id,
+            userId: admin.id,
+          })
+          .onConflictDoNothing();
+      }
 
       res.status(201).json(newSupplier);
     } catch (error) {

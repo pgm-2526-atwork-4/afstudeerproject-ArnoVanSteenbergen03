@@ -163,13 +163,6 @@ router.post(
           goods: createdGoods,
         });
 
-        // Auto-create a task channel for this order
-        const [taskChannel] = await db.insert(channels).values({
-          name: location,
-          type: "task",
-          activityId: newActivity.id,
-        }).returning();
-
         // Post to supplier channel
         const [supplierPlace] = await db
           .select()

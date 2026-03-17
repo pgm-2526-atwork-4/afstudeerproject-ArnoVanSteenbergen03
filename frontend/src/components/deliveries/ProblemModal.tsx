@@ -25,11 +25,13 @@ export default function ProblemModal({
 }: ProblemModalProps) {
   const [orderTooLarge, setOrderTooLarge] = useState(false);
   const [vehicleIssue, setVehicleIssue] = useState(false);
+  const [needAdditionalDriver, setNeedAdditionalDriver] = useState(false);
   const [notes, setNotes] = useState("");
 
   const reset = () => {
     setOrderTooLarge(false);
     setVehicleIssue(false);
+    setNeedAdditionalDriver(false);
     setNotes("");
   };
 
@@ -45,6 +47,7 @@ export default function ProblemModal({
       assistanceOptions: {
         orderTooLarge,
         vehicleIssue,
+        needAdditionalDriver: orderTooLarge && needAdditionalDriver,
       },
       assistanceNotes: notes,
     });
@@ -66,7 +69,7 @@ export default function ProblemModal({
 
         <div className="space-y-4 mt-2">
           <p className="text-sm font-medium text-slate-700">
-            What's the problem?
+            What&apos;s the problem?
           </p>
 
           <label className="flex items-center gap-3 p-3 rounded-lg border-2 border-slate-200 cursor-pointer hover:bg-red-50 transition-colors">
@@ -78,6 +81,18 @@ export default function ProblemModal({
             />
             <span className="text-sm text-slate-800">Order too large</span>
           </label>
+
+          {orderTooLarge && (
+            <label className="flex items-center gap-3 p-3 rounded-lg border-2 border-orange-200 bg-orange-50 cursor-pointer hover:bg-orange-100 transition-colors ml-4">
+              <input
+                type="checkbox"
+                checked={needAdditionalDriver}
+                onChange={(e) => setNeedAdditionalDriver(e.target.checked)}
+                className="w-4 h-4 accent-orange-600"
+              />
+              <span className="text-sm text-orange-800">Request additional driver</span>
+            </label>
+          )}
 
           <label className="flex items-center gap-3 p-3 rounded-lg border-2 border-slate-200 cursor-pointer hover:bg-red-50 transition-colors">
             <input

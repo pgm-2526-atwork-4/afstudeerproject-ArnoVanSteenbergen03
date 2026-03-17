@@ -180,6 +180,149 @@ router.patch("/:id/accept", requireAuth, requirePermission("update_activities"),
   }
 });
 
+// Accept assistance request for a delivery
+router.patch("/:id/accept-assistance", requireAuth, requirePermission("update_activities"), async (req: Request, res: Response) => {
+  try {
+    const userId = (req.user as any).id as string;
+    const id = req.params.id as string;
+
+    const [activity] = await db
+      .select()
+      .from(activities)
+      .where(eq(activities.id, id));
+
+    if (!activity) {
+      return res.status(404).json({ error: "Delivery not found" });
+    }
+
+    if (activity.status !== "need_assistance") {
+      return res.status(400).json({ error: "This delivery does not need assistance" });
+    }
+
+    // Update status back to accepted
+    const [updatedActivity] = await db
+      .update(activities)
+      .set({
+        assignedDriver: userId,
+        status: "accepted",
+        updatedAt: new Date(),
+      })
+      .where(eq(activities.id, id))
+      .returning();
+
+    // Add helper driver to the provider's supplier channel
+    const [supplierPlace] = await db
+      .select()
+      .from(places)
+      .where(and(eq(places.userId, activity.providerId), eq(places.type, "supplier")));
+
+    if (supplierPlace) {
+      const [supplierChannel] = await db
+        .select()
+        .from(channels)
+        .where(
+          and(
+            eq(channels.type, "supplier"),
+            eq(channels.placeId, supplierPlace.id),
+          ),
+        );
+
+      if (supplierChannel) {
+        // Check if driver is already a member
+        const [existingMember] = await db
+          .select()
+          .from(chatMembers)
+          .where(
+            and(
+              eq(chatMembers.channelId, supplierChannel.id),
+              eq(chatMembers.userId, userId),
+            ),
+          );
+
+        if (!existingMember) {
+          await db.insert(chatMembers).values({
+            channelId: supplierChannel.id,
+            userId,
+          });
+        }
+      }
+    }
+
+    // Also add to distribution center channel
+    if (activity.assignedCenterId) {
+      const [distroChannel] = await db
+        .select()
+        .from(channels)
+        .where(
+          and(
+            eq(channels.type, "distribution_center"),
+            eq(channels.placeId, activity.assignedCenterId),
+          ),
+        );
+
+      if (distroChannel) {
+        // Check if driver is already a member
+        const [existingMember] = await db
+          .select()
+          .from(chatMembers)
+          .where(
+            and(
+              eq(chatMembers.channelId, distroChannel.id),
+              eq(chatMembers.userId, userId),
+            ),
+          );
+
+        if (!existingMember) {
+          await db.insert(chatMembers).values({
+            channelId: distroChannel.id,
+            userId,
+          });
+        }
+      }
+    }
+
+    return res.json({
+      message: "Assistance accepted",
+      activity: updatedActivity,
+    });
+  } catch (error) {
+    console.error("Error accepting assistance:", error);
+    res.status(500).json({ error: "Failed to accept assistance" });
+  }
+});
+
+// Get assistance requests (deliveries needing help)
+router.get("/assistance/requests", requireAuth, requirePermission("read_activities"), async (_req: Request, res: Response) => {
+  try {
+    const assistanceRequests = await db
+      .select({
+        activity: activities,
+        provider: users,
+        vehicle: vehicles,
+        center: places,
+      })
+      .from(activities)
+      .leftJoin(users, eq(activities.providerId, users.id))
+      .leftJoin(vehicles, eq(activities.vehicleId, vehicles.id))
+      .leftJoin(places, eq(activities.assignedCenterId, places.id))
+      .where(eq(activities.status, "need_assistance"))
+      .orderBy(asc(activities.orderTime));
+
+    // Fetch supplier channels
+    const requestsWithChannels = await Promise.all(
+      assistanceRequests.map(async (request) => ({
+        ...request,
+        supplierChannel: await getSupplierChannelForDelivery(request.activity.providerId),
+      }))
+    );
+
+    return res.json(requestsWithChannels);
+  } catch (error) {
+    console.error("Error fetching assistance requests:", error);
+    res.status(500).json({ error: "Failed to fetch assistance requests" });
+  }
+});
+
 // Get delivery details with items
 router.get("/:id", requireAuth, requirePermission("read_activities"), async (req: Request, res: Response) => {
   try {

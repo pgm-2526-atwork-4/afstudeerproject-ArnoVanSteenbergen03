@@ -501,21 +501,6 @@ async function main() {
     )
   );
 
-  // 5. Task channels for some activities
-  const taskChannels = await Promise.all(
-    insertedActivities.slice(0, 5).map((activity) =>
-      db
-        .insert(channels)
-        .values({
-          name: `Order #${activity.id.slice(0, 8)}`,
-          type: "task",
-          activityId: activity.id,
-          placeId: null,
-        })
-        .returning()
-    )
-  );
-
   console.log("Seeded channels");
 
   // Add users to chatMembers table
@@ -536,7 +521,6 @@ async function main() {
     socialChannel,
     operationsChannel,
     ...distroChannels.map((result) => result[0]),
-    ...taskChannels.map((result) => result[0]),
   ];
 
   for (const channel of allChannels) {
@@ -551,24 +535,6 @@ async function main() {
   // Volunteers and admins in operations channel
   for (const vol of volunteerUsers) {
     await addMemberToChannel(operationsChannel.id, vol.id);
-  }
-
-  // Add volunteers and providers to task channels
-  for (let i = 0; i < taskChannels.length; i++) {
-    const taskChannel = taskChannels[i][0];
-    const randomVolunteer = pickOne(volunteerUsers);
-    const randomProvider = pickOne(providerUsers);
-
-    await addMemberToChannel(taskChannel.id, randomVolunteer.id);
-    await addMemberToChannel(taskChannel.id, randomProvider.id);
-
-    // Add a welcome message in the task channel
-    const activity = insertedActivities[i];
-    await db.insert(messages).values({
-      channelId: taskChannel.id as any,
-      userId: adminUser.id as any,
-      body: `📋 Order created. Assigned volunteer: ${randomVolunteer.firstname} ${randomVolunteer.lastname} | Provider: ${randomProvider.firstname} ${randomProvider.lastname}`,
-    });
   }
 
   console.log("Seeded chat members and initialized channels");

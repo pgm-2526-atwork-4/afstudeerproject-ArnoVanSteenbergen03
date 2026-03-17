@@ -11,7 +11,7 @@ router.get("/channels", requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = (req.user as any)?.id as string;
 
-    // Get user's channels (through chatMembers) plus community channels
+    // Only return channels where user is a member
     const userChannels = await db
       .select({
         id: channels.id,
@@ -26,75 +26,7 @@ router.get("/channels", requireAuth, async (req: Request, res: Response) => {
       .where(eq(chatMembers.userId, userId))
       .orderBy(channels.createdAt);
 
-    const communityChannels = await db
-      .select()
-      .from(channels)
-      .where(eq(channels.type, "community"))
-      .orderBy(channels.createdAt);
-
-    // Get user's suppliers and ensure they have channels
-    const userSuppliers = await db
-      .select()
-      .from(places)
-      .where(and(eq(places.userId, userId), eq(places.type, "supplier")));
-
-    console.log("User suppliers:", userSuppliers.length, "suppliers for user:", userId);
-
-    // For each supplier, ensure a channel exists
-    const supplierChannels: any[] = [];
-    for (const supplier of userSuppliers) {
-      const [existing] = await db
-        .select()
-        .from(channels)
-        .where(and(eq(channels.placeId, supplier.id), eq(channels.type, "supplier")));
-
-      let channelToUse = existing;
-      if (!existing) {
-        // Create channel for supplier if it doesn't exist
-        const [newChannel] = await db
-          .insert(channels)
-          .values({
-            name: supplier.name,
-            type: "supplier",
-            placeId: supplier.id,
-            activityId: null,
-          })
-          .returning();
-        channelToUse = newChannel;
-        console.log("Created missing channel for supplier:", supplier.id);
-      }
-
-      // Ensure user is in the channel
-      try {
-        await db
-          .insert(chatMembers)
-          .values({
-            channelId: channelToUse.id,
-            userId,
-          })
-          .onConflictDoNothing();
-        console.log("Ensured user is in supplier channel:", channelToUse.id);
-      } catch (err) {
-        console.error("Error adding user to supplier channel:", err);
-      }
-
-      supplierChannels.push(channelToUse);
-    }
-
-    // Combine and deduplicate
-    const channelMap = new Map();
-    for (const ch of communityChannels) {
-      channelMap.set(ch.id, ch);
-    }
-    for (const ch of userChannels) {
-      channelMap.set(ch.id, ch);
-    }
-    for (const ch of supplierChannels) {
-      channelMap.set(ch.id, ch);
-    }
-
-    const allChannels = Array.from(channelMap.values());
-    return res.json(allChannels);
+    return res.json(userChannels);
   } catch (error) {
     console.error("Error fetching channels:", error);
     res.status(500).json({ error: "Failed to fetch channels" });
@@ -124,6 +56,24 @@ router.post(
         })
         .returning();
 
+      // Add all admins to community channel
+      const admins = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(
+          inArray(users.userType, ["admin", "manager"]),
+        );
+
+      for (const admin of admins) {
+        await db
+          .insert(chatMembers)
+          .values({
+            channelId: created.id,
+            userId: admin.id,
+          })
+          .onConflictDoNothing();
+      }
+
       return res.status(201).json(created);
     } catch (error) {
       console.error("Error creating community channel:", error);
@@ -136,33 +86,7 @@ router.post(
 );
 
 // Get channel by activity ID
-router.get(
-  "/channels/activity/:activityId",
-  requireAuth,
-  async (req: Request, res: Response) => {
-    try {
-      const activityId = req.params.activityId as string;
-
-      const [channel] = await db
-        .select()
-        .from(channels)
-        .where(
-          and(eq(channels.type, "task"), eq(channels.activityId, activityId)),
-        );
-
-      if (!channel) {
-        return res.status(404).json({ error: "Channel not found" });
-      }
-
-      return res.json(channel);
-    } catch (error) {
-      console.error("Error fetching task channel:", error);
-      res.status(500).json({ error: "Failed to fetch task channel" });
-    }
-  },
-);
-
-// Validate user has access to a channel (task or distro)
+// Validate user has access to a channel (distro)
 async function canAccessChannel(
   userId: string,
   channelId: string,
@@ -190,24 +114,6 @@ async function canAccessChannel(
 
   if (user?.userType === "admin" || user?.userType === "manager") {
     return true;
-  }
-
-  // For task (order) channels, only creator + driver can access
-  if (channel.type === "task" && channel.activityId) {
-    const [activity] = await db
-      .select({
-        providerId: activities.providerId,
-        assignedDriver: activities.assignedDriver,
-      })
-      .from(activities)
-      .where(eq(activities.id, channel.activityId));
-
-    if (
-      activity?.providerId === userId ||
-      activity?.assignedDriver === userId
-    ) {
-      return true;
-    }
   }
 
   // For supplier channels, check if user is a member
@@ -390,15 +296,59 @@ router.post(
         return res.status(400).json({ error: "Missing required fields" });
       }
 
-      const [channel] = await db
+      // Get the activity to find the provider
+      const [activity] = await db
         .select()
-        .from(channels)
-        .where(
-          and(eq(channels.type, "task"), eq(channels.activityId, activityId)),
-        );
+        .from(activities)
+        .where(eq(activities.id, activityId));
+
+      if (!activity) {
+        return res.status(404).json({ error: "Activity not found" });
+      }
+
+      let channel = null;
+
+      // Try to get supplier channel from provider
+      const [supplierPlace] = await db
+        .select()
+        .from(places)
+        .where(and(eq(places.userId, activity.providerId), eq(places.type, "supplier")));
+
+      if (supplierPlace) {
+        const [supplierChannel] = await db
+          .select()
+          .from(channels)
+          .where(
+            and(
+              eq(channels.type, "supplier"),
+              eq(channels.placeId, supplierPlace.id),
+            ),
+          );
+
+        if (supplierChannel) {
+          channel = supplierChannel;
+        }
+      }
+
+      // If no supplier channel, try distribution center channel
+      if (!channel && activity.assignedCenterId) {
+        const [distroChannel] = await db
+          .select()
+          .from(channels)
+          .where(
+            and(
+              eq(channels.type, "distribution_center"),
+              eq(channels.placeId, activity.assignedCenterId),
+            ),
+          );
+
+        if (distroChannel) {
+          channel = distroChannel;
+        }
+      }
 
       if (!channel) {
-        return res.status(404).json({ error: "Task channel not found" });
+        return res.status(404).json({ error: "No channel found for completion message" });
       }
 
       let messageBody = "";
@@ -411,6 +361,10 @@ router.post(
         if (assistanceOptions?.orderTooLarge) reasons.push("Order too large");
         if (assistanceOptions?.vehicleIssue) reasons.push("Vehicle issue");
         messageBody = `🚨 Assistance needed - ${reasons.join(", ")}${assistanceNotes ? ` - ${assistanceNotes}` : ""}`;
+        
+        if (assistanceOptions?.needAdditionalDriver) {
+          messageBody += `\n🤝 Additional driver needed`;
+        }
       }
 
       const [msg] = await db
@@ -422,31 +376,24 @@ router.post(
         })
         .returning();
 
-      // If assistance is needed, also post to the distribution center channel
-      if (status === "need_assistance") {
-        const [activity] = await db
+      // If assistance is needed and we posted to supplier channel, also post to distro
+      if (status === "need_assistance" && channel.type === "supplier" && activity.assignedCenterId) {
+        const [distroChannel] = await db
           .select()
-          .from(activities)
-          .where(eq(activities.id, activityId));
+          .from(channels)
+          .where(
+            and(
+              eq(channels.type, "distribution_center"),
+              eq(channels.placeId, activity.assignedCenterId),
+            ),
+          );
 
-        if (activity && activity.assignedCenterId) {
-          const [distroChannel] = await db
-            .select()
-            .from(channels)
-            .where(
-              and(
-                eq(channels.type, "distribution_center"),
-                eq(channels.placeId, activity.assignedCenterId),
-              ),
-            );
-
-          if (distroChannel) {
-            await db.insert(messages).values({
-              channelId: distroChannel.id,
-              userId,
-              body: messageBody,
-            });
-          }
+        if (distroChannel) {
+          await db.insert(messages).values({
+            channelId: distroChannel.id,
+            userId,
+            body: messageBody,
+          });
         }
       }
 

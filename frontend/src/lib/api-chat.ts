@@ -57,7 +57,7 @@ export async function getChannelByActivity(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.error || "Failed to fetch task channel");
+    throw new Error(error.error || "Failed to fetch channel");
   }
 
   return response.json();
@@ -123,7 +123,7 @@ export async function getChannelsLatest(): Promise<
   return response.json();
 }
 
-// Send automated completion status message to task channel
+// Send automated completion status message to supplier channel
 export async function sendCompletionMessage(
   activityId: string,
   status: "completed" | "incomplete" | "need_assistance",

@@ -191,7 +191,7 @@ export const lookupValues = pgTable(
 export const channels = pgTable("channels", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
-  type: varchar("type", { length: 20 }).notNull(), // "community" | "task" | "distribution_center"
+  type: varchar("type", { length: 20 }).notNull(), // "community" | "distribution_center" | "supplier"
   activityId: uuid("activity_id").references(() => activities.id, {
     onDelete: "cascade",
   }),

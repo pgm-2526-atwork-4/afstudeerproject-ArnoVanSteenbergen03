@@ -12,7 +12,6 @@ import {
   getChannels,
   getOrCreateCommunityChannel,
   getChannelMessages,
-  getChannelByActivity,
   getChannelParticipants,
 } from "@/lib/api-chat";
 import { Hash, Send, ArrowLeft, MessageCircle, Building2, Store } from "lucide-react";
@@ -165,13 +164,6 @@ export default function ChatScreen() {
         if (channelParam) {
           // Direct channel parameter (from delivery chat button)
           target = allChannels.find((c) => c.id === channelParam) || null;
-        } else if (threadParam) {
-          // Thread parameter (task channel by activity)
-          try {
-            target = await getChannelByActivity(threadParam);
-          } catch {
-            // Fall back to community if task channel not found
-          }
         }
 
         if (!target) {
@@ -293,7 +285,6 @@ export default function ChatScreen() {
   }
 
   const communityChannels = channels.filter((c) => c.type === "community");
-  const taskChannels = channels.filter((c) => c.type === "task");
   const distroChannels = channels.filter((c) => c.type === "distribution_center");
   const supplierChannels = channels.filter((c) => c.type === "supplier");
 
@@ -354,33 +345,6 @@ export default function ChatScreen() {
               </button>
             ))}
           </div>
-
-          {taskChannels.length > 0 && (
-            <div className="p-3 border-t border-slate-100">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                Order Threads
-              </p>
-              {taskChannels.map((ch) => (
-                <button
-                  key={ch.id}
-                  onClick={() => selectChannel(ch)}
-                  className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-left text-sm ${
-                    activeChannel?.id === ch.id
-                      ? "bg-orange-100 text-orange-700 font-medium"
-                      : "text-slate-600 hover:bg-slate-50"
-                  }`}
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  <span className="flex-1">{ch.name}</span>
-                  {unreadMap[ch.id] && activeChannel?.id !== ch.id && (
-                    <span className="bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
-                      !
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
 
           {distroChannels.length > 0 && (
             <div className="p-3 border-t border-slate-100">

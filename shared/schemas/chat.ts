@@ -3,7 +3,7 @@ import { z } from "zod";
 export const chatChannelSchema = z.object({
   id: z.string(),
   name: z.string(),
-  type: z.enum(["community", "task", "distribution_center"]),
+  type: z.enum(["community", "distribution_center", "supplier"]),
   activityId: z.string().nullable(),
   placeId: z.string().nullable(),
   createdAt: z.string(),

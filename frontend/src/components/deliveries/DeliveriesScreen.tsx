@@ -19,6 +19,8 @@ import {
   acceptDelivery,
   startDelivery,
   completeDelivery,
+  getAssistanceRequests,
+  acceptAssistance,
 } from "@/lib/api-client";
 import { getDistributionCenters } from "@/lib/api-distro";
 import { sendCompletionMessage } from "@/lib/api-chat";
@@ -42,14 +44,16 @@ import SortableDeliveryCard from "./SortableDeliveryCard";
 // TODO: General dashboard (open / in progress orders) (admin, managers and drivers) dashboard drivers and map.
 
 export default function DeliveriesScreen() {
-  const [activeTab, setActiveTab] = useState<"open" | "mine">("open");
+  const [activeTab, setActiveTab] = useState<"open" | "mine" | "assistance">("open");
   const [openOrders, setOpenOrders] = useState<DeliveryOrder[]>([]);
   const [myOrders, setMyOrders] = useState<DeliveryOrder[]>([]);
+  const [assistanceRequests, setAssistanceRequests] = useState<DeliveryOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const [startingId, setStartingId] = useState<string | null>(null);
   const [completingId, setCompletingId] = useState<string | null>(null);
-  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [expandedOpenOrderId, setExpandedOpenOrderId] = useState<string | null>(null);
+  const [expandedMyOrderId, setExpandedMyOrderId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Filters
@@ -91,13 +95,15 @@ export default function DeliveriesScreen() {
     try {
       setLoading(true);
       setError(null);
-      const [open, mine, distros] = await Promise.all([
+      const [open, mine, assisted, distros] = await Promise.all([
         getOpenDeliveries(),
         getMyDeliveries(),
+        getAssistanceRequests().catch(() => []),
         getDistributionCenters().catch(() => []),
       ]);
       setOpenOrders(open);
       setMyOrders(applySavedOrder(mine));
+      setAssistanceRequests(assisted);
       setCenters(distros);
     } catch (err) {
       console.error(err);
@@ -135,7 +141,7 @@ export default function DeliveriesScreen() {
       setCompletingId(activityId);
       await completeDelivery(activityId, completionStatus, completionData);
 
-      // Send automated message to the task channel
+      // Send automated message to the supplier channel
       try {
         await sendCompletionMessage(
           activityId,
@@ -153,6 +159,21 @@ export default function DeliveriesScreen() {
       );
     } finally {
       setCompletingId(null);
+    }
+  };
+
+  const handleAcceptAssistance = async (activityId: string) => {
+    try {
+      setAcceptingId(activityId);
+      await acceptAssistance(activityId);
+      await fetchData();
+      setActiveTab("mine");
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : "Failed to accept assistance",
+      );
+    } finally {
+      setAcceptingId(null);
     }
   };
 
@@ -240,7 +261,7 @@ export default function DeliveriesScreen() {
 
   // Filter logic
   const filteredOrders = useMemo(() => {
-    const source = activeTab === "open" ? openOrders : myOrders;
+    const source = activeTab === "open" ? openOrders : activeTab === "mine" ? myOrders : assistanceRequests;
     return source.filter((d) => {
       if (filterCenter !== "all" && d.center?.id !== filterCenter) return false;
       if (filterDay !== "all") {
@@ -251,7 +272,7 @@ export default function DeliveriesScreen() {
       }
       return true;
     });
-  }, [activeTab, openOrders, myOrders, filterCenter, filterDay]);
+  }, [activeTab, openOrders, myOrders, assistanceRequests, filterCenter, filterDay]);
 
   const displayedOrders = filteredOrders;
 
@@ -314,6 +335,21 @@ export default function DeliveriesScreen() {
           {myOrders.length > 0 && (
             <span className="ml-2 bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">
               {myOrders.length}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab("assistance")}
+          className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
+            activeTab === "assistance"
+              ? "bg-[#2D3E2D] text-white"
+              : "bg-white text-slate-800 border-2 border-slate-800"
+          }`}
+        >
+          Help Requests
+          {assistanceRequests.length > 0 && (
+            <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+              {assistanceRequests.length}
             </span>
           )}
         </button>
@@ -455,15 +491,27 @@ export default function DeliveriesScreen() {
             <h2 className="text-xl font-semibold text-slate-800 mb-2">
               {activeTab === "open"
                 ? "No Open Deliveries"
-                : "No Deliveries Yet"}
+                : activeTab === "mine"
+                  ? "No Deliveries Yet"
+                  : "No Help Requests"}
             </h2>
             <p className="text-slate-600 mb-8">
               {activeTab === "open"
                 ? "There are no unassigned deliveries available right now. Check back later!"
-                : "You haven't accepted any deliveries yet. Check the Open Deliveries tab to find available orders."}
+                : activeTab === "mine"
+                  ? "You haven't accepted any deliveries yet. Check the Open Deliveries tab to find available orders."
+                  : "There are no deliveries needing additional help right now."}
             </p>
 
             {activeTab === "mine" && (
+              <Button
+                onClick={() => setActiveTab("open")}
+                className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-6 px-8 text-lg rounded-lg"
+              >
+                View Open Deliveries
+              </Button>
+            )}
+            {activeTab === "assistance" && (
               <Button
                 onClick={() => setActiveTab("open")}
                 className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-6 px-8 text-lg rounded-lg"
@@ -489,8 +537,8 @@ export default function DeliveriesScreen() {
                       <SortableDeliveryCard
                         key={delivery.activity.id}
                         delivery={delivery}
-                        expandedOrderId={expandedOrderId}
-                        setExpandedOrderId={setExpandedOrderId}
+                        expandedOrderId={expandedMyOrderId}
+                        setExpandedOrderId={setExpandedMyOrderId}
                         formatTime={formatTime}
                         formatDate={formatDate}
                         getVehicleIcon={getVehicleIcon}
@@ -503,14 +551,53 @@ export default function DeliveriesScreen() {
                   </div>
                 </SortableContext>
               </DndContext>
+            ) : activeTab === "assistance" ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {displayedOrders.map((delivery) => (
+                  <div key={delivery.activity.id} className="bg-white rounded-lg border-2 border-red-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h3 className="text-lg font-bold text-slate-800">
+                          {delivery.provider?.firstName} {delivery.provider?.lastName}
+                        </h3>
+                        <p className="text-sm text-slate-600">
+                          {formatDate(delivery.activity.orderTime)} at {formatTime(delivery.activity.orderTime)}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {getVehicleIcon(delivery.vehicle?.icon)}
+                      </div>
+                    </div>
+
+                    <div className="mb-4">
+                      <p className="text-sm text-slate-700">
+                        <span className="font-semibold">Location:</span> {delivery.activity.location}
+                      </p>
+                      {delivery.center && (
+                        <p className="text-sm text-slate-700">
+                          <span className="font-semibold">Center:</span> {delivery.center.name}
+                        </p>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => handleAcceptAssistance(delivery.activity.id)}
+                      disabled={acceptingId === delivery.activity.id}
+                      className="w-full bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                    >
+                      {acceptingId === delivery.activity.id ? "Accepting..." : "Accept Help"}
+                    </button>
+                  </div>
+                ))}
+              </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {displayedOrders.map((delivery) => (
                   <DeliveryCard
                     key={delivery.activity.id}
                     delivery={delivery}
-                    expandedOrderId={expandedOrderId}
-                    setExpandedOrderId={setExpandedOrderId}
+                    expandedOrderId={expandedOpenOrderId}
+                    setExpandedOrderId={setExpandedOpenOrderId}
                     acceptingId={acceptingId}
                     handleAccept={handleAccept}
                     formatTime={formatTime}

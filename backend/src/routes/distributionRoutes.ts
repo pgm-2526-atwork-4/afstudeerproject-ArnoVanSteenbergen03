@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { db } from "@/config/database";
-import { places, channels } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { places, channels, users, chatMembers } from "@/db/schema";
+import { eq, and, inArray } from "drizzle-orm";
 import { requirePermission } from "@/middleware/auth";
 import { distributionCenterSchema } from "@shared/index";
 
@@ -47,11 +47,29 @@ router.post(
         .returning();
 
       // Auto-create a channel for this distribution center
-      await db.insert(channels).values({
+      const [newChannel] = await db.insert(channels).values({
         name: `${newCenter.name} - Distro`,
         type: "distribution_center",
         placeId: newCenter.id,
-      });
+      }).returning();
+
+      // Add all admins to the channel
+      const admins = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(
+          inArray(users.userType, ["admin", "manager"]),
+        );
+
+      for (const admin of admins) {
+        await db
+          .insert(chatMembers)
+          .values({
+            channelId: newChannel.id,
+            userId: admin.id,
+          })
+          .onConflictDoNothing();
+      }
 
       res.status(201).json(newCenter);
     } catch (error) {

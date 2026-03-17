@@ -99,6 +99,8 @@ export default function ChatScreen() {
   const { hasPermission } = usePermissions();
   const searchParams = useSearchParams();
   const threadParam = searchParams.get("thread");
+  const channelParam = searchParams.get("channel");
+  const activityParam = searchParams.get("activity");
 
   const isAdmin = hasPermission("manage_chat_members");
 
@@ -112,6 +114,7 @@ export default function ChatScreen() {
   const [participants, setParticipants] = useState<ChatParticipant[]>([]);
   const [showSidebar, setShowSidebar] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const activityMessageRef = useRef<HTMLDivElement>(null);
   const messagesCountRef = useRef(0);
   const messageIdsRef = useRef<Set<string>>(new Set());
   const { unreadMap, refresh: refreshUnread } = useUnreadCounts();
@@ -157,18 +160,30 @@ export default function ChatScreen() {
         const allChannels = await getChannels();
         setChannels(allChannels);
 
-        if (threadParam) {
+        let target: ChatChannel | null = null;
+
+        if (channelParam) {
+          // Direct channel parameter (from delivery chat button)
+          target = allChannels.find((c) => c.id === channelParam) || null;
+        } else if (threadParam) {
+          // Thread parameter (task channel by activity)
           try {
-            const taskChannel = await getChannelByActivity(threadParam);
-            setActiveChannel(taskChannel);
-            setShowSidebar(false);
+            target = await getChannelByActivity(threadParam);
           } catch {
-            const community = allChannels.find((c) => c.type === "community");
-            if (community) setActiveChannel(community);
+            // Fall back to community if task channel not found
           }
-        } else {
-          const community = allChannels.find((c) => c.type === "community");
-          if (community) setActiveChannel(community);
+        }
+
+        if (!target) {
+          // Default to community channel
+          target = allChannels.find((c) => c.type === "community") || null;
+        }
+
+        if (target) {
+          setActiveChannel(target);
+          if (channelParam || threadParam) {
+            setShowSidebar(false);
+          }
         }
       } catch (error) {
         console.error("Failed to load channels:", error);
@@ -177,7 +192,7 @@ export default function ChatScreen() {
       }
     }
     load();
-  }, [threadParam]);
+  }, [threadParam, channelParam]);
 
   useEffect(() => {
     if (!activeChannel) return;
@@ -244,8 +259,16 @@ export default function ChatScreen() {
   }, [activeChannel]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (activityParam && activityMessageRef.current) {
+      // Scroll to the activity message if we have one
+      setTimeout(() => {
+        activityMessageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
+    } else {
+      // Otherwise scroll to the end
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, activityParam]);
 
   function handleSend() {
     if (!input.trim() || !activeChannel) return;
@@ -431,10 +454,16 @@ export default function ChatScreen() {
                     )}
                     {messages.map((msg) => {
                       const isOwn = msg.user.id === user?.id;
+                      const containsActivity = msg.body.includes(`[${activityParam}]`);
+                      const displayBody = msg.body.replace(`\n[${/`\w{8}-\w{4}-\w{4}-\w{4}-\w{12}`/}]`, "").trim();
+                      
                       return (
                         <div
                           key={msg.id}
-                          className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
+                          ref={containsActivity ? activityMessageRef : undefined}
+                          className={`flex ${isOwn ? "justify-end" : "justify-start"} ${
+                            containsActivity ? "ring-2 ring-blue-400 rounded-2xl" : ""
+                          }`}
                         >
                           <div
                             className={`max-w-[75%] rounded-2xl px-4 py-2 ${
@@ -449,7 +478,7 @@ export default function ChatScreen() {
                               </p>
                             )}
                             <p className="text-sm whitespace-pre-wrap">
-                              {msg.body}
+                              {displayBody}
                             </p>
                             <p
                               className={`text-[10px] mt-1 ${isOwn ? "text-orange-200" : "text-slate-400"}`}

@@ -2,7 +2,7 @@ import { Router, Request, Response } from "express";
 import { db } from "@/config/database";
 import { places, channels, chatMembers } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
-import { requirePermission } from "@/middleware/auth";
+import { requireAuth, requirePermission } from "@/middleware/auth";
 import { distributionCenterSchema } from "@shared/index";
 
 const router = Router();
@@ -75,9 +75,17 @@ router.get(
 // Create supplier
 router.post(
   "/",
+  requireAuth,
   requirePermission("create_places"),
   async (req: Request, res: Response) => {
     try {
+      const userId = (req.user as any)?.id;
+      console.log("Creating supplier for user:", userId);
+      
+      if (!userId) {
+        return res.status(400).json({ error: "User ID not found" });
+      }
+
       const validated = distributionCenterSchema
         .omit({ id: true, createdAt: true, updatedAt: true })
         .parse({ ...req.body, type: "supplier" });
@@ -90,9 +98,11 @@ router.post(
           geojson: validated.geojson,
           operatingInfo: validated.operatingInfo || null,
           contactInfo: validated.contactInfo || null,
-          userId: req.user?.id,
+          userId,
         })
         .returning();
+
+      console.log("Created supplier:", newSupplier.id);
 
       // Create a channel for this supplier
       const [supplierChannel] = await db
@@ -105,16 +115,18 @@ router.post(
         })
         .returning();
 
+      console.log("Created channel:", supplierChannel.id);
+
       // Add the supplier owner to the channel
-      if (req.user?.id) {
-        await db
-          .insert(chatMembers)
-          .values({
-            channelId: supplierChannel.id,
-            userId: req.user.id,
-          })
-          .onConflictDoNothing();
-      }
+      const result = await db
+        .insert(chatMembers)
+        .values({
+          channelId: supplierChannel.id,
+          userId,
+        })
+        .onConflictDoNothing();
+
+      console.log("Added user to channel:", userId, "in channel:", supplierChannel.id);
 
       res.status(201).json(newSupplier);
     } catch (error) {

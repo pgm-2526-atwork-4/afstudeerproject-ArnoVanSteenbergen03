@@ -5,11 +5,6 @@ import { useAuth } from "@/lib/auth-context";
 import { Suspense } from "react";
 import ChatScreen from "@/components/chatroom/ChatScreen";
 
-// TODO: chatroom per supplier (auto creates)
-// TODO: supplier maakt order en maakt een post in de channel
-// TODO: driver accepteerd order en word toegevoegd in de channel (link driver box chat naar supplier channel en autoscrolled naar de post in de channel)
-
-
 export default function ChatroomPage() {
   const { user } = useAuth();
 

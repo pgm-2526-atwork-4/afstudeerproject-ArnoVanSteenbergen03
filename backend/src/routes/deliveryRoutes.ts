@@ -1,10 +1,32 @@
 import { Router, Request, Response } from "express";
 import { db } from "@/config/database";
-import { activities, goods, collectionActivities, places, users, vehicles } from "@/db/schema";
+import { activities, goods, collectionActivities, places, users, vehicles, channels, chatMembers } from "@/db/schema";
 import { eq, and, isNull, asc, notInArray } from "drizzle-orm";
 import { requireAuth, requirePermission } from "@/middleware/auth";
 
 const router = Router();
+
+// Helper function to get supplier channel for a delivery
+async function getSupplierChannelForDelivery(providerId: string) {
+  const [supplierPlace] = await db
+    .select()
+    .from(places)
+    .where(and(eq(places.userId, providerId), eq(places.type, "supplier")));
+
+  if (!supplierPlace) return null;
+
+  const [supplierChannel] = await db
+    .select()
+    .from(channels)
+    .where(
+      and(
+        eq(channels.type, "supplier"),
+        eq(channels.placeId, supplierPlace.id),
+      ),
+    );
+
+  return supplierChannel || null;
+}
 
 // Get open (unassigned) deliveries
 router.get("/open", requireAuth, requirePermission("read_activities"), async (_req: Request, res: Response) => {
@@ -28,7 +50,15 @@ router.get("/open", requireAuth, requirePermission("read_activities"), async (_r
       )
       .orderBy(asc(activities.orderTime));
 
-    return res.json(openDeliveries);
+    // Fetch supplier channels
+    const deliveriesWithChannels = await Promise.all(
+      openDeliveries.map(async (delivery) => ({
+        ...delivery,
+        supplierChannel: await getSupplierChannelForDelivery(delivery.activity.providerId),
+      }))
+    );
+
+    return res.json(deliveriesWithChannels);
   } catch (error) {
     console.error("Error fetching open deliveries:", error);
     res.status(500).json({ error: "Failed to fetch open deliveries" });
@@ -58,7 +88,15 @@ router.get("/mine", requireAuth, requirePermission("read_activities"), async (re
         )
       );
 
-    return res.json(myDeliveries);
+    // Fetch supplier channels
+    const deliveriesWithChannels = await Promise.all(
+      myDeliveries.map(async (delivery) => ({
+        ...delivery,
+        supplierChannel: await getSupplierChannelForDelivery(delivery.activity.providerId),
+      }))
+    );
+
+    return res.json(deliveriesWithChannels);
   } catch (error) {
     console.error("Error fetching my deliveries:", error);
     res.status(500).json({ error: "Failed to fetch deliveries" });
@@ -93,6 +131,44 @@ router.patch("/:id/accept", requireAuth, requirePermission("update_activities"),
       })
       .where(eq(activities.id, id))
       .returning();
+
+    // Add driver to the provider's supplier channel
+    const [supplierPlace] = await db
+      .select()
+      .from(places)
+      .where(and(eq(places.userId, activity.providerId), eq(places.type, "supplier")));
+
+    if (supplierPlace) {
+      const [supplierChannel] = await db
+        .select()
+        .from(channels)
+        .where(
+          and(
+            eq(channels.type, "supplier"),
+            eq(channels.placeId, supplierPlace.id),
+          ),
+        );
+
+      if (supplierChannel) {
+        // Check if driver is already a member
+        const [existingMember] = await db
+          .select()
+          .from(chatMembers)
+          .where(
+            and(
+              eq(chatMembers.channelId, supplierChannel.id),
+              eq(chatMembers.userId, userId),
+            ),
+          );
+
+        if (!existingMember) {
+          await db.insert(chatMembers).values({
+            channelId: supplierChannel.id,
+            userId,
+          });
+        }
+      }
+    }
 
     return res.json({
       message: "Delivery accepted",

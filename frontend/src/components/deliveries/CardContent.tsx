@@ -1,8 +1,16 @@
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { DeliveryOrder } from "@shared/index";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, MapPin, Clock, Calendar } from "lucide-react";
+import {
+  ChevronDown,
+  MapPin,
+  Clock,
+  Calendar,
+  MessageSquare,
+} from "lucide-react";
 import CompletionModal from "./CompletionModal";
+import ProblemModal from "./ProblemModal";
 
 export interface CardProps {
   delivery: DeliveryOrder;
@@ -41,9 +49,20 @@ export default function CardContent({
   isOpen?: boolean;
 }) {
   const [completionOpen, setCompletionOpen] = useState(false);
+  const [problemOpen, setProblemOpen] = useState(false);
+  const router = useRouter();
   const isCompleting = completingId === delivery.activity.id;
   const isStarting = startingId === delivery.activity.id;
   const status = delivery.activity.status;
+
+  const handleChatClick = () => {
+    if (delivery.supplierChannel) {
+      // Navigate to the chat with a anchor to scroll to the order post
+      router.push(
+        `/chatroom?channel=${delivery.supplierChannel.id}&activity=${delivery.activity.id}`,
+      );
+    }
+  };
 
   const getStatusBadge = () => {
     const map: Record<string, { label: string; color: string }> = {
@@ -111,6 +130,17 @@ export default function CardContent({
 
         <div className="flex-1" />
 
+        {delivery.supplierChannel ? (
+          <button
+            onClick={handleChatClick}
+            className="p-0 bg-transparent border-none cursor-pointer"
+          >
+            <MessageSquare className="w-5 h-5 text-slate-600 hover:text-slate-900 transition-colors" />
+          </button>
+        ) : (
+          <div className="w-5 h-5" />
+        )}
+
         {isOpen && handleAccept ? (
           <Button
             onClick={() => handleAccept(delivery.activity.id)}
@@ -169,27 +199,46 @@ export default function CardContent({
           )}
 
           {handleComplete && status === "in_progress" && (
-            <Button
-              onClick={() => setCompletionOpen(true)}
-              disabled={isCompleting}
-              className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg text-sm"
-            >
-              {isCompleting ? "Processing..." : "Complete Delivery"}
-            </Button>
+            <div className="flex gap-2 mt-2">
+              <Button
+                onClick={() => setCompletionOpen(true)}
+                disabled={isCompleting}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg text-sm"
+              >
+                {isCompleting ? "Processing..." : "Complete Order"}
+              </Button>
+              <Button
+                onClick={() => setProblemOpen(true)}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-lg text-sm"
+              >
+                Problem?
+              </Button>
+            </div>
           )}
         </div>
       )}
 
       {handleComplete && (
-        <CompletionModal
-          open={completionOpen}
-          onOpenChange={setCompletionOpen}
-          submitting={isCompleting}
-          onSubmit={(completionStatus, data) => {
-            handleComplete(delivery.activity.id, completionStatus, data);
-            setCompletionOpen(false);
-          }}
-        />
+        <>
+          <CompletionModal
+            open={completionOpen}
+            onOpenChange={setCompletionOpen}
+            submitting={isCompleting}
+            onSubmit={(completionStatus, data) => {
+              handleComplete(delivery.activity.id, completionStatus, data);
+              setCompletionOpen(false);
+            }}
+          />
+          <ProblemModal
+            open={problemOpen}
+            onOpenChange={setProblemOpen}
+            submitting={isCompleting}
+            onSubmit={(data) => {
+              handleComplete(delivery.activity.id, "need_assistance", data);
+              setProblemOpen(false);
+            }}
+          />
+        </>
       )}
     </>
   );

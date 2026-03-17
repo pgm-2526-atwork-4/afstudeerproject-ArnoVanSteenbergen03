@@ -8,6 +8,8 @@ import {
   places,
   lookupValues,
   channels,
+  messages,
+  chatMembers,
 } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { requireAuth, requirePermission } from "@/middleware/auth";
@@ -162,11 +164,56 @@ router.post(
         });
 
         // Auto-create a task channel for this order
-        await db.insert(channels).values({
+        const [taskChannel] = await db.insert(channels).values({
           name: location,
           type: "task",
           activityId: newActivity.id,
-        });
+        }).returning();
+
+        // Post to supplier channel
+        const [supplierPlace] = await db
+          .select()
+          .from(places)
+          .where(and(eq(places.userId, userId), eq(places.type, "supplier")));
+
+        if (supplierPlace) {
+          const [supplierChannel] = await db
+            .select()
+            .from(channels)
+            .where(
+              and(
+                eq(channels.type, "supplier"),
+                eq(channels.placeId, supplierPlace.id),
+              ),
+            );
+
+          if (supplierChannel) {
+            // Ensure provider is a member of their own supplier channel
+            const [existingMember] = await db
+              .select()
+              .from(chatMembers)
+              .where(
+                and(
+                  eq(chatMembers.channelId, supplierChannel.id),
+                  eq(chatMembers.userId, userId),
+                ),
+              );
+
+            if (!existingMember) {
+              await db.insert(chatMembers).values({
+                channelId: supplierChannel.id,
+                userId,
+              });
+            }
+
+            const goodsInfo = goodsData.map((g: any) => `${g.name} (${g.quantity} ${g.unit})`).join(", ");
+            await db.insert(messages).values({
+              channelId: supplierChannel.id,
+              userId,
+              body: `📦 New order: ${location} - ${goodsInfo}\n[${newActivity.id}]`,
+            });
+          }
+        }
       }
 
       return res.status(201).json({

@@ -147,6 +147,12 @@ export const deliveryOrderSchema = z.object({
       name: z.string(),
     })
     .nullable(),
+  supplierChannel: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+    })
+    .nullable(),
 });
 
 export type DeliveryOrder = z.infer<typeof deliveryOrderSchema>;

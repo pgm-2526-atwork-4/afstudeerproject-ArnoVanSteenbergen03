@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
-import { Footer } from "@/components/Footer";
 import { registerSchema } from "@shared/schemas/auth";
 import { z } from "zod/v4";
 
@@ -222,8 +221,6 @@ export function RegisterForm({ userType, onBack }: RegisterFormProps) {
           </p>
         </div>
       </div>
-
-      <Footer />
     </div>
   );
 }

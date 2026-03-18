@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { Footer } from "@/components/Footer";
 
 interface IntentionSelectionProps {
   onSelect: (userType: "volunteer" | "provider") => void;
@@ -77,7 +76,6 @@ export default function IntentionSelection({ onSelect }: IntentionSelectionProps
           </div>
         </div>
       </div>
-      <Footer />
     </div>
   );
 }

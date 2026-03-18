@@ -2,7 +2,6 @@ import { LoginForm } from "@/components/login/LoginForm";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { Footer } from "@/components/Footer";
 
 export default function LoginPage() {
   return (
@@ -37,8 +36,6 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
-
-      <Footer />
     </div>
   );
 }

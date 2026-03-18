@@ -4,7 +4,6 @@ import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Footer } from "@/components/Footer";
 import { Clock, LogOut } from "lucide-react";
 
 export default function PendingApprovalPage() {
@@ -77,7 +76,6 @@ export default function PendingApprovalPage() {
         </div>
       </div>
 
-      <Footer />
     </div>
   );
 }

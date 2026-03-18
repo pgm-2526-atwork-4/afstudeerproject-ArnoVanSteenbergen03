@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
-import { Footer } from "@/components/Footer";
 
 //TODO: ADD MORE GREEN FN
 
@@ -56,8 +55,6 @@ export default function Home() {
           </Button>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

@@ -90,7 +90,9 @@ export default function ProblemModal({
                 onChange={(e) => setNeedAdditionalDriver(e.target.checked)}
                 className="w-4 h-4 accent-orange-600"
               />
-              <span className="text-sm text-orange-800">Request additional driver</span>
+              <span className="text-sm text-orange-800">
+                Request additional driver
+              </span>
             </label>
           )}
 

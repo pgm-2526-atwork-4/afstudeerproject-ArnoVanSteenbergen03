@@ -44,16 +44,24 @@ import SortableDeliveryCard from "./SortableDeliveryCard";
 // TODO: General dashboard (open / in progress orders) (admin, managers and drivers) dashboard drivers and map.
 
 export default function DeliveriesScreen() {
-  const [activeTab, setActiveTab] = useState<"open" | "mine" | "assistance">("open");
+  const [activeTab, setActiveTab] = useState<"open" | "mine" | "assistance">(
+    "open",
+  );
   const [openOrders, setOpenOrders] = useState<DeliveryOrder[]>([]);
   const [myOrders, setMyOrders] = useState<DeliveryOrder[]>([]);
-  const [assistanceRequests, setAssistanceRequests] = useState<DeliveryOrder[]>([]);
+  const [assistanceRequests, setAssistanceRequests] = useState<DeliveryOrder[]>(
+    [],
+  );
   const [loading, setLoading] = useState(true);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const [startingId, setStartingId] = useState<string | null>(null);
   const [completingId, setCompletingId] = useState<string | null>(null);
-  const [expandedOpenOrderId, setExpandedOpenOrderId] = useState<string | null>(null);
-  const [expandedMyOrderId, setExpandedMyOrderId] = useState<string | null>(null);
+  const [expandedOpenOrderId, setExpandedOpenOrderId] = useState<string | null>(
+    null,
+  );
+  const [expandedMyOrderId, setExpandedMyOrderId] = useState<string | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
 
   // Filters
@@ -261,7 +269,12 @@ export default function DeliveriesScreen() {
 
   // Filter logic
   const filteredOrders = useMemo(() => {
-    const source = activeTab === "open" ? openOrders : activeTab === "mine" ? myOrders : assistanceRequests;
+    const source =
+      activeTab === "open"
+        ? openOrders
+        : activeTab === "mine"
+          ? myOrders
+          : assistanceRequests;
     return source.filter((d) => {
       if (filterCenter !== "all" && d.center?.id !== filterCenter) return false;
       if (filterDay !== "all") {
@@ -272,7 +285,14 @@ export default function DeliveriesScreen() {
       }
       return true;
     });
-  }, [activeTab, openOrders, myOrders, assistanceRequests, filterCenter, filterDay]);
+  }, [
+    activeTab,
+    openOrders,
+    myOrders,
+    assistanceRequests,
+    filterCenter,
+    filterDay,
+  ]);
 
   const displayedOrders = filteredOrders;
 
@@ -554,14 +574,19 @@ export default function DeliveriesScreen() {
             ) : activeTab === "assistance" ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {displayedOrders.map((delivery) => (
-                  <div key={delivery.activity.id} className="bg-white rounded-lg border-2 border-red-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+                  <div
+                    key={delivery.activity.id}
+                    className="bg-white rounded-lg border-2 border-red-200 p-5 shadow-sm hover:shadow-md transition-shadow"
+                  >
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <h3 className="text-lg font-bold text-slate-800">
-                          {delivery.provider?.firstName} {delivery.provider?.lastName}
+                          {delivery.provider?.firstName}{" "}
+                          {delivery.provider?.lastName}
                         </h3>
                         <p className="text-sm text-slate-600">
-                          {formatDate(delivery.activity.orderTime)} at {formatTime(delivery.activity.orderTime)}
+                          {formatDate(delivery.activity.orderTime)} at{" "}
+                          {formatTime(delivery.activity.orderTime)}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -571,21 +596,27 @@ export default function DeliveriesScreen() {
 
                     <div className="mb-4">
                       <p className="text-sm text-slate-700">
-                        <span className="font-semibold">Location:</span> {delivery.activity.location}
+                        <span className="font-semibold">Location:</span>{" "}
+                        {delivery.activity.location}
                       </p>
                       {delivery.center && (
                         <p className="text-sm text-slate-700">
-                          <span className="font-semibold">Center:</span> {delivery.center.name}
+                          <span className="font-semibold">Center:</span>{" "}
+                          {delivery.center.name}
                         </p>
                       )}
                     </div>
 
                     <button
-                      onClick={() => handleAcceptAssistance(delivery.activity.id)}
+                      onClick={() =>
+                        handleAcceptAssistance(delivery.activity.id)
+                      }
                       disabled={acceptingId === delivery.activity.id}
                       className="w-full bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded-lg transition-colors"
                     >
-                      {acceptingId === delivery.activity.id ? "Accepting..." : "Accept Help"}
+                      {acceptingId === delivery.activity.id
+                        ? "Accepting..."
+                        : "Accept Help"}
                     </button>
                   </div>
                 ))}

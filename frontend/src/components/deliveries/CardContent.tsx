@@ -12,6 +12,8 @@ import {
 import CompletionModal from "./CompletionModal";
 import ProblemModal from "./ProblemModal";
 
+// A single delivery card content component
+
 export interface CardProps {
   delivery: DeliveryOrder;
   expandedOrderId: string | null;
@@ -57,7 +59,7 @@ export default function CardContent({
 
   const handleChatClick = () => {
     if (delivery.supplierChannel) {
-      // Navigate to the chat with a anchor to scroll to the order post
+      //auto scrolls to order post in the supplier channel
       router.push(
         `/chatroom?channel=${delivery.supplierChannel.id}&activity=${delivery.activity.id}`,
       );

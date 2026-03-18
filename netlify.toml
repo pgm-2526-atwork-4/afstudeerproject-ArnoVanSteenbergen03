@@ -1,0 +1,9 @@
+[build]
+  base = "."
+  command = "npm install && npm run build --workspace=frontend"
+  publish = "frontend/.next"
+
+[[redirects]]
+  from = "/*"
+  to = "/"
+  status = 200

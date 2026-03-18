@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import OrderTypeStep from "@/components/orders/CreateOrderSteps/OrderTypeStep";
 import RecurrenceStep from "@/components/orders/CreateOrderSteps/RecurrenceStep";
@@ -11,7 +11,7 @@ import { createOrder, getProviderOrderById } from "@/lib/api-client";
 import { CardSkeleton } from "@/components/ui/loading";
 import type { GoodsData, OrderFormData } from "@/types";
 
-export default function CreateOrderPage() {
+function CreateOrderContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const templateId = searchParams.get("from");
@@ -251,5 +251,13 @@ export default function CreateOrderPage() {
         )}
       </div>
     </ProtectedPage>
+  );
+}
+
+export default function CreateOrderPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <CreateOrderContent />
+    </Suspense>
   );
 }

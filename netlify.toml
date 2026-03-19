@@ -1,9 +1,0 @@
-[build]
-  base = "."
-  command = "npm install --legacy-peer-deps && cd frontend && npm run build"
-  publish = "frontend/.next"
-
-[[redirects]]
-  from = "/*"
-  to = "/"
-  status = 200

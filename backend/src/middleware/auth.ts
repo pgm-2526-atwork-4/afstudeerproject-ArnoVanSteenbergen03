@@ -11,6 +11,7 @@ export const requireAuth = (
   next: NextFunction,
 ) => {
   if (!req.user) {
+    console.error(`[Auth] requireAuth failed - Session: ${req.sessionID}, User: ${req.user}`);
     return res.status(401).json({ error: "Authentication required" });
   }
   next();

@@ -94,8 +94,11 @@ router.post("/login", (req: Request, res: Response, next: NextFunction) => {
 
     req.login(user, async (loginErr: any) => {
       if (loginErr) {
+        console.error("[Auth] Login failed:", loginErr);
         return res.status(500).json({ error: "Login failed" });
       }
+
+      console.log(`[Auth] User ${user.email} logged in. Session ID: ${req.sessionID}`);
 
       // Compute isApproved from applications table
       const approvedApp = await db.query.applications.findFirst({
@@ -124,16 +127,19 @@ router.post("/login", (req: Request, res: Response, next: NextFunction) => {
 // Get current user with permissions
 router.get("/me", requireAuth, async (req: Request, res: Response) => {
   if (!req.user) {
+    console.error(`[Auth] /me endpoint: requireAuth passed but req.user is null`);
     return res.status(401).json({ error: "Not authenticated" });
   }
 
   const userId = req.user.id;
+  console.log(`[Auth] /me requested by user ${userId} (session: ${req.sessionID})`);
 
   const fullUser = await db.query.users.findFirst({
     where: eq(users.id, userId),
   });
 
   if (!fullUser) {
+    console.error(`[Auth] User ${userId} not found in database`);
     return res.status(404).json({ error: "User not found" });
   }
 
@@ -180,7 +186,7 @@ router.post("/logout", (req: Request, res: Response) => {
     res.clearCookie("connect.sid", { 
       httpOnly: true,
       secure: true,
-      sameSite: "none",
+      sameSite: "lax",
     });
     res.json({ message: "Logged out successfully" });
   });

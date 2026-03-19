@@ -11,6 +11,32 @@ import { generateUsername } from "@/services/generateUsername";
 
 const router = Router();
 
+function getSessionCookieSettings() {
+  const frontendOrigins = process.env.FRONTEND_URL ?? "";
+  const sessionCookieDomain = process.env.SESSION_COOKIE_DOMAIN;
+  const firstOrigin = frontendOrigins
+    .split(",")
+    .map((origin) => origin.trim())
+    .find(Boolean);
+
+  let secure = process.env.NODE_ENV === "production";
+  if (firstOrigin) {
+    try {
+      secure = new URL(firstOrigin).protocol === "https:";
+    } catch {
+      // Keep fallback value when FRONTEND_URL is malformed.
+    }
+  }
+
+  const sameSite: "lax" | "none" = secure ? "none" : "lax";
+
+  return {
+    secure,
+    sameSite,
+    ...(sessionCookieDomain ? { domain: sessionCookieDomain } : {}),
+  };
+}
+
 router.get("/", requireAuth, (req, res) => {
   res.json({ ok: true });
 });
@@ -54,15 +80,22 @@ router.post("/register", async (req: Request, res: Response) => {
       if (err) {
         return res.status(500).json({ error: "Login failed" });
       }
-      res.status(201).json({
-        message: "Registration successful — awaiting admin approval",
-        user: {
-          id: newUser.id,
-          email: newUser.email,
-          username: newUser.username,
-          userType: newUser.userType,
-          isApproved: false,
-        },
+
+      req.session.save((sessionErr) => {
+        if (sessionErr) {
+          return res.status(500).json({ error: "Session save failed" });
+        }
+
+        res.status(201).json({
+          message: "Registration successful — awaiting admin approval",
+          user: {
+            id: newUser.id,
+            email: newUser.email,
+            username: newUser.username,
+            userType: newUser.userType,
+            isApproved: false,
+          },
+        });
       });
     });
   } catch (error: any) {
@@ -105,17 +138,22 @@ router.post("/login", (req: Request, res: Response, next: NextFunction) => {
         ),
       });
 
-      // Ensure session is persisted before responding
-      res.status(200).json({
-        message: "Login successful",
-        user: {
-          id: user.id,
-          email: user.email,
-          username: user.username,
-          userType: user.userType,
-          profileImage: user.profileImage,
-          isApproved: user.userType === "admin" || !!approvedApp,
-        },
+      req.session.save((sessionErr) => {
+        if (sessionErr) {
+          return res.status(500).json({ error: "Session save failed" });
+        }
+
+        res.status(200).json({
+          message: "Login successful",
+          user: {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            userType: user.userType,
+            profileImage: user.profileImage,
+            isApproved: user.userType === "admin" || !!approvedApp,
+          },
+        });
       });
     });
   })(req, res, next);
@@ -175,13 +213,16 @@ router.post("/logout", (req: Request, res: Response) => {
     if (err) {
       return res.status(500).json({ error: "Logout failed" });
     }
+
+    const sessionCookieSettings = getSessionCookieSettings();
+
     // Session is automatically destroyed by passport.logout()
     // Clear cookies just to be safe
-    res.clearCookie("connect.sid", { 
+    res.clearCookie("connect.sid", {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      ...sessionCookieSettings,
     });
+
     res.json({ message: "Logged out successfully" });
   });
 });

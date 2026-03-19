@@ -2,88 +2,39 @@
 
 Pick-Up-And-Give is a platform built together with Let's Save Food to manage food donations, pickups, deliveries, and distribution-center operations.
 
-## Documentation
+The app coordinates **providers** (restaurants, stores), **volunteers** (delivery drivers), and **administrators** in a unified workflow to reduce food waste and ensure timely delivery of donations.
 
-The project documentation is split into multiple sections:
+## Getting Started
 
-- [Documentation Index](docs/README.md)
-- [Tech Stack](docs/tech-stack/README.md)
-- [Folder Structure](docs/folder-structure/README.md)
-- [Routing Guide](docs/routing/README.md)
-- [User Types and Visibility](docs/user-types/README.md)
-- [API Endpoint Reference](ROUTING.md)
-
-## Monorepo Overview
-
-This repository uses npm workspaces and contains three packages:
-
-- `backend`: Express API, authentication, authorization, business logic
-- `frontend`: Next.js web application
-- `shared`: shared Zod schemas and TypeScript types used by backend and frontend
-
-## Quick Start
-
-### 1. Install dependencies
+### Development Setup
 
 From the repository root:
 
 ```bash
 npm install
-```
-
-### 2. Configure environment variables
-
-Create `backend/.env`:
-
-```env
-DATABASE_URL=postgresql://user:password@localhost:5432/pickup_and_give
-SESSION_SECRET=your-session-secret
-FRONTEND_URL=http://localhost:3000
-PORT=5000
-```
-
-Create `frontend/.env.local`:
-
-```env
-NEXT_PUBLIC_API_BASE_URL=http://localhost:5000/api
-```
-
-### 3. Prepare the database
-
-```bash
-cd backend
 npm run db:migrate
 npm run db:seed
-```
-
-### 4. Run the app in development
-
-Use two terminals:
-
-Terminal 1:
-
-```bash
-cd backend
 npm run dev
 ```
 
-Terminal 2:
+For detailed setup and environment configuration, see [Quick Start Guide](docs/README.md).
 
-```bash
-cd frontend
-npm run dev
-```
+## Documentation
 
-Then open `http://localhost:3000`.
+- [Tech Stack](docs/tech-stack/README.md) – Frontend, backend, and database technologies
+- [Folder Structure](docs/folder-structure/README.md) – Codebase organization
+- [Routing Guide](docs/routing/README.md) – Backend API and frontend page routing
+- [User Types and Visibility](docs/user-types/README.md) – Roles, permissions, and access control
+- [API Endpoint Reference](ROUTING.md) – Full endpoint documentation
 
-## Build
+## Project Structure
 
-From the repository root:
+This is an npm monorepo with three packages:
 
-```bash
-npm run build:all
-```
+- **`backend`** – Express API, authentication, business logic
+- **`frontend`** – Next.js web application
+- **`shared`** – Zod schemas and TypeScript types
 
 ## About
 
-This project focuses on reducing food waste by coordinating providers, volunteers, and administrators in one operational workflow.
+This project focuses on reducing food waste by coordinating food providers, volunteers, and administrators in one operational workflow. Built with Let's Save Food.

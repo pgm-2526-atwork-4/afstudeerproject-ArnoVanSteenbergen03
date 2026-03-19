@@ -71,6 +71,7 @@ const sessionMiddleware = session({
 
 console.log(`[Session] Using PgStore with database: ${process.env.DATABASE_URL?.substring(0, 50)}...`);
 console.log(`[Session] Cookie settings: secure=true, sameSite=none, httpOnly=true, proxy=true`);
+console.log(`[Init] Backend started - version: 2026-03-19`);
 
 app.use(sessionMiddleware);
 app.use(passport.initialize());

@@ -105,7 +105,8 @@ router.post("/login", (req: Request, res: Response, next: NextFunction) => {
         ),
       });
 
-      res.json({
+      // Ensure session is persisted before responding
+      res.status(200).json({
         message: "Login successful",
         user: {
           id: user.id,
@@ -174,7 +175,13 @@ router.post("/logout", (req: Request, res: Response) => {
     if (err) {
       return res.status(500).json({ error: "Logout failed" });
     }
-    res.clearCookie("connect.sid");
+    // Session is automatically destroyed by passport.logout()
+    // Clear cookies just to be safe
+    res.clearCookie("connect.sid", { 
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
     res.json({ message: "Logged out successfully" });
   });
 });

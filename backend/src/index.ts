@@ -32,6 +32,8 @@ const PgStore = connectPgSimple(session);
 const corsOptions = {
   origin: process.env.FRONTEND_URL,
   credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type"],
 };
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -52,7 +54,7 @@ const sessionMiddleware = session({
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: true, // Always true for HTTPS connections (railway/netlify enforce HTTPS)
     sameSite: "none",
     maxAge: 24 * 60 * 60 * 1000,
   },

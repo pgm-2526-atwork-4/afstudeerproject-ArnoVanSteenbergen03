@@ -149,10 +149,20 @@ async function main() {
     })
     .onConflictDoNothing();
 
+  // Ensure password is up to date
+  await db
+    .update(users)
+    .set({ password: passwordHash })
+    .where(eq(users.email, "admin@test.com"));
+
   const [adminUser] = await db
     .select()
     .from(users)
     .where(eq(users.email, "admin@test.com"));
+
+  if (!adminUser) {
+    throw new Error("Failed to create/fetch admin user");
+  }
 
   // Manager user (approved, dashboard + order management + read-only admin pages)
   await db
@@ -167,10 +177,20 @@ async function main() {
     })
     .onConflictDoNothing();
 
+  // Ensure password is up to date
+  await db
+    .update(users)
+    .set({ password: passwordHash })
+    .where(eq(users.email, "manager@test.com"));
+
   const [managerUser] = await db
     .select()
     .from(users)
     .where(eq(users.email, "manager@test.com"));
+
+  if (!managerUser) {
+    throw new Error("Failed to create/fetch manager user");
+  }
 
   // Provider users (approved)
   const providerData = Array.from({ length: 4 }).map(() => {
@@ -192,6 +212,12 @@ async function main() {
       .insert(users)
       .values(data)
       .onConflictDoNothing();
+
+    // Ensure password is up to date for existing users
+    await db
+      .update(users)
+      .set({ password: passwordHash })
+      .where(eq(users.email, data.email));
 
     const [user] = await db
       .select()
@@ -224,6 +250,12 @@ async function main() {
       .values(data)
       .onConflictDoNothing();
 
+    // Ensure password is up to date for existing users
+    await db
+      .update(users)
+      .set({ password: passwordHash })
+      .where(eq(users.email, data.email));
+
     const [user] = await db
       .select()
       .from(users)
@@ -254,6 +286,12 @@ async function main() {
       .insert(users)
       .values(data)
       .onConflictDoNothing();
+
+    // Ensure password is up to date for existing users
+    await db
+      .update(users)
+      .set({ password: passwordHash })
+      .where(eq(users.email, data.email));
 
     const [user] = await db
       .select()

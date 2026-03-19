@@ -69,10 +69,6 @@ const sessionMiddleware = session({
   },
 });
 
-console.log(`[Session] Using PgStore with database: ${process.env.DATABASE_URL?.substring(0, 50)}...`);
-console.log(`[Session] Cookie settings: secure=true, sameSite=none, httpOnly=true, proxy=true`);
-console.log(`[Init] Backend started - version: 2026-03-19`);
-
 app.use(sessionMiddleware);
 app.use(passport.initialize());
 app.use(passport.session());
@@ -84,20 +80,6 @@ setupSocketIO(io, sessionMiddleware);
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", authenticated: !!req.user });
-});
-
-// Debug endpoint (remove in production)
-app.get("/api/debug/session", (req, res) => {
-  console.log(`[Debug] Session check:`);
-  console.log(`  - sessionID: ${req.sessionID}`);
-  console.log(`  - req.user: ${req.user ? req.user.email : "null"}`);
-  console.log(`  - cookies: ${req.headers.cookie || "none"}`);
-  res.json({
-    authenticated: !!req.user,
-    user: req.user || null,
-    sessionID: req.sessionID,
-    cookies: req.headers.cookie || "none",
-  });
 });
 
 // Serve uploaded files

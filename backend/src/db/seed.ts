@@ -3,6 +3,7 @@ import { faker } from "@faker-js/faker";
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { hash } from "bcrypt";
+import { eq } from "drizzle-orm";
 import {
   users,
   permissions,
@@ -136,7 +137,7 @@ async function main() {
   const passwordHash = await hash("Test1234!", 10);
 
   // Admin user (pre-approved, all permissions)
-  const [adminUser]: User[] = await db
+  await db
     .insert(users)
     .values({
       email: "admin@test.com",
@@ -146,10 +147,15 @@ async function main() {
       password: passwordHash,
       userType: "admin",
     })
-    .returning();
+    .onConflictDoNothing();
+
+  const [adminUser] = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, "admin@test.com"));
 
   // Manager user (approved, dashboard + order management + read-only admin pages)
-  const [managerUser]: User[] = await db
+  await db
     .insert(users)
     .values({
       email: "manager@test.com",
@@ -159,64 +165,105 @@ async function main() {
       password: passwordHash,
       userType: "manager",
     })
-    .returning();
+    .onConflictDoNothing();
+
+  const [managerUser] = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, "manager@test.com"));
 
   // Provider users (approved)
-  const providerUsers: User[] = await db
-    .insert(users)
-    .values(
-      Array.from({ length: 4 }).map(() => {
-        const firstname = faker.person.firstName();
-        const lastname = faker.person.lastName();
-        return {
-          email: faker.internet.email().toLowerCase(),
-          firstname,
-          lastname,
-          username: `${firstname}${lastname}`.toLowerCase(),
-          password: passwordHash,
-          userType: "provider" as const,
-        };
-      }),
-    )
-    .returning();
+  const providerData = Array.from({ length: 4 }).map(() => {
+    const firstname = faker.person.firstName();
+    const lastname = faker.person.lastName();
+    return {
+      email: faker.internet.email().toLowerCase(),
+      firstname,
+      lastname,
+      username: `${firstname}${lastname}`.toLowerCase(),
+      password: passwordHash,
+      userType: "provider" as const,
+    };
+  });
+
+  const providerUsers: User[] = [];
+  for (const data of providerData) {
+    await db
+      .insert(users)
+      .values(data)
+      .onConflictDoNothing();
+
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, data.email));
+
+    if (user) {
+      providerUsers.push(user);
+    }
+  }
 
   // Volunteer users (approved)
-  const volunteerUsers: User[] = await db
-    .insert(users)
-    .values(
-      Array.from({ length: 4 }).map(() => {
-        const firstname = faker.person.firstName();
-        const lastname = faker.person.lastName();
-        return {
-          email: faker.internet.email().toLowerCase(),
-          firstname,
-          lastname,
-          username: `${firstname}${lastname}`.toLowerCase(),
-          password: passwordHash,
-          userType: "volunteer" as const,
-        };
-      }),
-    )
-    .returning();
+  const volunteerData = Array.from({ length: 4 }).map(() => {
+    const firstname = faker.person.firstName();
+    const lastname = faker.person.lastName();
+    return {
+      email: faker.internet.email().toLowerCase(),
+      firstname,
+      lastname,
+      username: `${firstname}${lastname}`.toLowerCase(),
+      password: passwordHash,
+      userType: "volunteer" as const,
+    };
+  });
+
+  const volunteerUsers: User[] = [];
+  for (const data of volunteerData) {
+    await db
+      .insert(users)
+      .values(data)
+      .onConflictDoNothing();
+
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, data.email));
+
+    if (user) {
+      volunteerUsers.push(user);
+    }
+  }
 
   // Pending users (not yet approved — will have applications)
-  const pendingUsers: User[] = await db
-    .insert(users)
-    .values(
-      Array.from({ length: 3 }).map(() => {
-        const firstname = faker.person.firstName();
-        const lastname = faker.person.lastName();
-        return {
-          email: faker.internet.email().toLowerCase(),
-          firstname,
-          lastname,
-          username: `${firstname}${lastname}`.toLowerCase(),
-          password: passwordHash,
-          userType: pickOne(["provider", "volunteer"]),
-        };
-      }),
-    )
-    .returning();
+  const pendingData = Array.from({ length: 3 }).map(() => {
+    const firstname = faker.person.firstName();
+    const lastname = faker.person.lastName();
+    return {
+      email: faker.internet.email().toLowerCase(),
+      firstname,
+      lastname,
+      username: `${firstname}${lastname}`.toLowerCase(),
+      password: passwordHash,
+      userType: pickOne(["provider", "volunteer"]),
+    };
+  });
+
+  const pendingUsers: User[] = [];
+  for (const data of pendingData) {
+    await db
+      .insert(users)
+      .values(data)
+      .onConflictDoNothing();
+
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, data.email));
+
+    if (user) {
+      pendingUsers.push(user);
+    }
+  }
 
   const allApprovedUsers = [adminUser, managerUser, ...providerUsers, ...volunteerUsers];
 

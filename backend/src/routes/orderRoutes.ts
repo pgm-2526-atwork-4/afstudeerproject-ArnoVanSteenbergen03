@@ -203,7 +203,7 @@ router.post(
             await db.insert(messages).values({
               channelId: supplierChannel.id,
               userId,
-              body: `📦 New order: ${location} - ${goodsInfo}\n[${newActivity.id}]`,
+              body: `📦 New order: ${location} - ${goodsInfo}`,
             });
           }
         }

@@ -64,13 +64,13 @@ const sessionMiddleware = session({
   cookie: {
     httpOnly: true,
     secure: true, // Always true for HTTPS (Railway enforces HTTPS)
-    sameSite: "lax", // More compatible with cross-origin cookies
+    sameSite: "none", // Required for cross-origin cookie sending
     maxAge: 24 * 60 * 60 * 1000,
   },
 });
 
 console.log(`[Session] Using PgStore with database: ${process.env.DATABASE_URL?.substring(0, 50)}...`);
-console.log(`[Session] Cookie settings: secure=true, sameSite=lax, httpOnly=true, proxy=true`);
+console.log(`[Session] Cookie settings: secure=true, sameSite=none, httpOnly=true, proxy=true`);
 
 app.use(sessionMiddleware);
 app.use(passport.initialize());

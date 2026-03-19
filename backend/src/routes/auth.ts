@@ -186,7 +186,7 @@ router.post("/logout", (req: Request, res: Response) => {
     res.clearCookie("connect.sid", { 
       httpOnly: true,
       secure: true,
-      sameSite: "lax",
+      sameSite: "none",
     });
     res.json({ message: "Logged out successfully" });
   });

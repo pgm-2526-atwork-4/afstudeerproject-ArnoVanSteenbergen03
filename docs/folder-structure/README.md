@@ -9,9 +9,7 @@
 ├── shared/               # Shared schemas and types
 ├── docs/                 # Documentation
 ├── README.md             # Project overview
-├── ROUTING.md            # API endpoint reference
 ├── package.json          # Workspace root config
-└── netlify.toml          # Frontend deployment settings
 ```
 
 ## Backend Structure
@@ -20,7 +18,7 @@
 backend/
 ├── src/
 │   ├── config/
-│   │   ├── database.ts          # Database configuration and client
+│   │   ├── database.ts          # Database configuration   and client
 │   │   └── passport.ts          # Passport.js authentication strategies
 │   ├── db/
 │   │   ├── schema.ts            # Drizzle ORM schema definitions
@@ -49,13 +47,11 @@ backend/
 │   ├── index.ts                  # Server bootstrap and middleware setup
 │   └── socket.ts                 # Socket.IO configuration
 ├── drizzle/
-│   └── migrations/               # Database migration files (auto-generated)
+│   └── migrations/               # Database migration files
 ├── uploads/
 │   ├── goods/                    # Uploaded goods images
 │   └── profiles/                 # Uploaded profile images
-├── drizzle.config.ts             # Drizzle configuration
-├── package.json                  # Dependencies and scripts
-└── tsconfig.json                 # TypeScript configuration
+└──
 ```
 
 ### Key Backend Folders
@@ -153,12 +149,7 @@ frontend/
 │   ├── favicon/                   # Favicon and app icons
 │   ├── icons/                     # UI icons
 │   └── images/                    # Static images
-├── next.config.ts                 # Next.js configuration
-├── components.json                # Shadcn component config
-├── postcss.config.mjs             # PostCSS configuration
-├── eslint.config.mjs              # ESLint rules
-├── package.json                   # Dependencies and scripts
-└── tsconfig.json                  # TypeScript configuration
+└── 
 ```
 
 ### Key Frontend Folders
@@ -185,9 +176,8 @@ shared/
 │   ├── applications.ts      # Application approval schemas
 │   ├── vehicles.ts          # Vehicle schemas
 │   └── types.ts             # Shared TypeScript type definitions
-├── index.ts                 # Barrel export (used by backend & frontend)
-├── package.json             # Package metadata
-└── tsconfig.json            # TypeScript configuration
+├── index.ts                 # Barrel export
+└── 
 ```
 
 ### Key Shared Files

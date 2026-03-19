@@ -54,6 +54,7 @@ The stack is TypeScript-first end-to-end, with shared contracts between frontend
 
 ### Database and Data Access
 
+- Neon Hosting for an online database
 - PostgreSQL
 - Drizzle ORM
 - Drizzle Kit for migrations and schema generation
@@ -82,10 +83,6 @@ This keeps API payload shapes consistent across backend and frontend.
 - TypeScript compiler and path alias tooling (`tsc-alias`, `tsconfig-paths`)
 - ESLint in frontend
 
-## Deployment Notes
-
-- Frontend includes `netlify.toml` with Next.js build settings.
-- Backend is configured for secure cookies and cross-origin sessions, with environment-driven configuration.
 
 ## Required Environment Variables
 

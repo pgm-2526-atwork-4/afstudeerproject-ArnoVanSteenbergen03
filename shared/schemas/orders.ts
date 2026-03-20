@@ -14,6 +14,17 @@ export const GoodsSchema = z.object({
   image: z.string().optional(),
 });
 
+export const recurrenceSlotSchema = z.object({
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
+  time: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Time must be in HH:mm format"),
+});
+
+export type RecurrenceSlot = z.infer<typeof recurrenceSlotSchema>;
+
 export const CreateOrderSchema = z.object({
   location: z.string().min(1, "Location is required"),
   assignedCenterId: z.string().optional(),
@@ -22,8 +33,7 @@ export const CreateOrderSchema = z.object({
   notes: z.string().optional(),
   goods: z.array(GoodsSchema).min(1, "At least one good item is required"),
   orderType: z.enum(["single", "repeated"]).default("single"),
-  selectedDates: z.array(z.string()).optional(),
-  recurrenceTime: z.string().optional(),
+  recurrenceSlots: z.array(recurrenceSlotSchema).optional(),
 });
 
 export type CreateOrderInput = z.infer<typeof CreateOrderSchema>;
@@ -41,11 +51,37 @@ export const orderSchema = z.object({
   activityType: z.string().optional(),
   centerName: z.string().nullable().optional(),
   firstGoodCategory: z.string().nullable().optional(),
-  weekly: z.boolean().optional(),
-  monthly: z.boolean().optional(),
 });
 
 export type Order = z.infer<typeof orderSchema>;
+
+export const adminOrderRowSchema = z.object({
+  id: z.string(),
+  status: z.string(),
+  orderTime: z.string(),
+  location: z.string(),
+  activityType: z.string(),
+  notes: z.string().nullable(),
+  assignedCenterId: z.string().nullable(),
+  createdAt: z.string().nullable().optional(),
+  providerFirstname: z.string().nullable(),
+  providerLastname: z.string().nullable(),
+  centerName: z.string().nullable(),
+});
+
+export type AdminOrderRow = z.infer<typeof adminOrderRowSchema>;
+
+export const adminOrdersResponseSchema = z.object({
+  orders: z.array(adminOrderRowSchema),
+  pagination: z.object({
+    page: z.number(),
+    limit: z.number(),
+    total: z.number(),
+    totalPages: z.number(),
+  }),
+});
+
+export type AdminOrdersResponse = z.infer<typeof adminOrdersResponseSchema>;
 
 // Goods item form data
 export const goodsDataSchema = z.object({
@@ -85,10 +121,8 @@ export const apiGoodsItemSchema = z.object({
   sourcePlaceId: z.string().nullable().optional(),
   currentPlaceId: z.string().nullable().optional(),
   sourceActivityId: z.number().nullable().optional(),
-  distributionActivityId: z.string().nullable().optional(),
   metadata: z.record(z.string(), z.unknown()).nullable().optional(),
   image: z.string().nullable().optional(),
-  createdBy: z.string().nullable().optional(),
   createdAt: z.string().nullable().optional(),
   updatedAt: z.string().nullable().optional(),
   allergies: z.string().nullable().optional(),
@@ -106,8 +140,7 @@ export const orderFormDataSchema = z.object({
   vehicleId: z.string(),
   deliveryNotes: z.string(),
   orderTime: z.string(),
-  selectedDates: z.array(z.string()).optional(),
-  recurrenceTime: z.string().optional(),
+  recurrenceSlots: z.array(recurrenceSlotSchema).optional(),
 });
 
 export type OrderFormData = z.infer<typeof orderFormDataSchema>;

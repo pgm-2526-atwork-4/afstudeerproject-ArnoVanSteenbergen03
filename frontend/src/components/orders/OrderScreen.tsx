@@ -8,7 +8,6 @@ import {
   ChevronDown,
   MessageCircle,
   Copy,
-  CalendarClock,
 } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -186,23 +185,17 @@ export default function OrdersScreen({ user }: { user: User }) {
               </p>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
               {displayedOrders.map((order, index) => (
                 <div
                   key={order.id}
-                  className="bg-white border-2 border-slate-800 rounded-lg p-6 hover:shadow-md transition-shadow h-full"
+                  className="bg-white border-2 border-slate-800 rounded-lg p-6 hover:shadow-md transition-shadow"
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-2">
                       <h3 className="text-lg font-bold text-slate-800">
                         #{index + 1}
                       </h3>
-                      {(order.weekly || order.monthly) && (
-                        <span className="flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">
-                          <CalendarClock className="w-3 h-3" />
-                          {order.weekly ? "Weekly" : "Monthly"}
-                        </span>
-                      )}
                     </div>
                     <p className="text-sm text-slate-600">
                       {formatDate(order.orderTime)}

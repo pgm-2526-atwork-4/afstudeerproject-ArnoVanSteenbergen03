@@ -37,7 +37,7 @@ function pickOne<T>(arr: readonly T[]): T {
 // Types for seed data
 type Permission = { id: number; resource: string; action: string; key: string };
 type User = { id: string; userType: string; firstname: string; lastname: string; email: string; username: string; password: string };
-type Place = { id: string; type: string; name: string };
+type Place = { id: string; type: string; name: string; userId: string | null };
 type Vehicle = { id: string };
 
 // All resources and CRUD actions for generating permissions
@@ -438,16 +438,45 @@ async function main() {
 
   console.log("Seeded applications");
 
-  const insertedPlaces: Place[] = await db
+  // Every provider should have a supplier place linked to their user.
+  const supplierPlaces: Place[] = await db
     .insert(places)
     .values(
-      Array.from({ length: 8 }).map((_, i) => ({
+      providerUsers.map((provider) => ({
+        name: `${provider.firstname} ${provider.lastname} Supplier`,
+        geojson: {
+          type: "Point",
+          coordinates: [faker.location.longitude(), faker.location.latitude()],
+        },
+        type: "supplier",
+        userId: provider.id,
+        operatingInfo: {
+          monday: { open: "08:00", close: "17:00" },
+          tuesday: { open: "08:00", close: "17:00" },
+          wednesday: { open: "08:00", close: "17:00" },
+          thursday: { open: "08:00", close: "17:00" },
+          friday: { open: "08:00", close: "16:00" },
+          saturday: null,
+          sunday: null,
+        },
+        contactInfo: {
+          phone: faker.phone.number(),
+          email: provider.email,
+        },
+      })),
+    )
+    .returning();
+
+  const centers: Place[] = await db
+    .insert(places)
+    .values(
+      Array.from({ length: 4 }).map(() => ({
         name: faker.company.name(),
         geojson: {
           type: "Point",
           coordinates: [faker.location.longitude(), faker.location.latitude()],
         },
-        type: i < 4 ? "supplier" : "distribution_center",
+        type: "distribution_center",
         operatingInfo: {
           monday: { open: "08:00", close: "17:00" },
           tuesday: { open: "08:00", close: "17:00" },
@@ -465,6 +494,8 @@ async function main() {
     )
     .returning();
 
+  const insertedPlaces: Place[] = [...supplierPlaces, ...centers];
+
   const insertedVehicles: Vehicle[] = await db
     .insert(vehicles)
     .values([
@@ -474,26 +505,35 @@ async function main() {
     ])
     .returning();
 
-  const centers = insertedPlaces.filter(
-    (p: { id: string; type: string }) => p.type === "distribution_center",
-  );
-
   const insertedActivities = await db
     .insert(activities)
     .values(
-      Array.from({ length: 15 }).map(() => ({
-        providerId: pickOne(providerUsers).id,
-        location: faker.location.streetAddress({ useFullAddress: true }),
-        activityType: "collection",
-        assignedCenterId: pickOne(centers).id,
-        status: pickOne(["requested", "assigned", "completed"]),
-        orderTime: faker.date.soon({ days: 14 }),
-        notes: faker.lorem.sentence(),
-        details: { fragile: faker.datatype.boolean() },
-        freezerItemIncluded: faker.datatype.boolean(),
-        damagedGoods: faker.datatype.boolean(),
-        vehicleId: pickOne(insertedVehicles).id,
-      })),
+      Array.from({ length: 15 }).map(() => {
+        const orderDate = faker.date.soon({ days: 14 });
+        const status = pickOne([
+          "requested",
+          "accepted",
+          "in_progress",
+          "completed",
+          "need_assistance",
+        ]);
+
+        return {
+          providerId: pickOne(providerUsers).id,
+          assignedDriver:
+            status === "requested" ? null : pickOne(volunteerUsers).id,
+          location: faker.location.streetAddress({ useFullAddress: true }),
+          activityType: "collection",
+          assignedCenterId: pickOne(centers).id,
+          status,
+          orderTime: orderDate,
+          notes: faker.lorem.sentence(),
+          details: { fragile: faker.datatype.boolean() },
+          freezerItemIncluded: faker.datatype.boolean(),
+          damagedGoods: faker.datatype.boolean(),
+          vehicleId: pickOne(insertedVehicles).id,
+        };
+      }),
     )
     .returning();
 
@@ -573,8 +613,8 @@ async function main() {
 
   // 4. Channels for each distribution center
   const distroChannels = await Promise.all(
-    centers.map((center) =>
-      db
+    centers.map(async (center) => {
+      const [channel] = await db
         .insert(channels)
         .values({
           name: center.name,
@@ -582,8 +622,27 @@ async function main() {
           activityId: null,
           placeId: center.id,
         })
-        .returning()
-    )
+        .returning();
+
+      return channel;
+    }),
+  );
+
+  // 5. A supplier channel for every supplier place
+  const supplierChannels = await Promise.all(
+    supplierPlaces.map(async (supplier) => {
+      const [channel] = await db
+        .insert(channels)
+        .values({
+          name: supplier.name,
+          type: "supplier",
+          activityId: null,
+          placeId: supplier.id,
+        })
+        .returning();
+
+      return channel;
+    }),
   );
 
   console.log("Seeded channels");
@@ -605,11 +664,17 @@ async function main() {
     communityChannel,
     socialChannel,
     operationsChannel,
-    ...distroChannels.map((result) => result[0]),
+    ...distroChannels,
+    ...supplierChannels,
   ];
 
   for (const channel of allChannels) {
     await addMemberToChannel(channel.id, adminUser.id);
+  }
+
+  // Manager can also see all channels in the chat list.
+  for (const channel of allChannels) {
+    await addMemberToChannel(channel.id, managerUser.id);
   }
 
   // Volunteers and admins in social channel
@@ -621,6 +686,26 @@ async function main() {
   for (const vol of volunteerUsers) {
     await addMemberToChannel(operationsChannel.id, vol.id);
   }
+
+  // Supplier owners should be members of their own supplier channel.
+  for (const supplier of supplierPlaces) {
+    const channel = supplierChannels.find((c) => c.placeId === supplier.id);
+    if (channel && supplier.userId) {
+      await addMemberToChannel(channel.id, supplier.userId);
+
+      await db.insert(messages).values({
+        channelId: channel.id,
+        userId: supplier.userId,
+        body: `Welcome to ${supplier.name}. New collection orders will appear here.`,
+      });
+    }
+  }
+
+  await db.insert(messages).values({
+    channelId: communityChannel.id,
+    userId: adminUser.id,
+    body: "Welcome to the community chat.",
+  });
 
   console.log("Seeded chat members and initialized channels");
   console.log("Seed completed");

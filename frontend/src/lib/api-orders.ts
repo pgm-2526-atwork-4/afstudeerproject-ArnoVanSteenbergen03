@@ -1,31 +1,13 @@
-import { CreateOrderInput } from "@shared/index";
+import {
+  CreateOrderInput,
+  type AdminOrderRow,
+  type AdminOrdersResponse,
+  adminOrdersResponseSchema,
+} from "@shared/index";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-// Admin: get paginated orders with filters
-export interface AdminOrderRow {
-  id: string;
-  status: string;
-  orderTime: string;
-  location: string;
-  activityType: string;
-  notes: string | null;
-  assignedCenterId: string | null;
-  createdAt: string;
-  providerFirstname: string | null;
-  providerLastname: string | null;
-  centerName: string | null;
-}
-
-export interface AdminOrdersResponse {
-  orders: AdminOrderRow[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
+export type { AdminOrderRow, AdminOrdersResponse };
 
 export async function getAdminOrders(params: {
   page?: number;
@@ -54,7 +36,8 @@ export async function getAdminOrders(params: {
     throw new Error(error.error || "Failed to fetch orders");
   }
 
-  return response.json();
+  const json = await response.json();
+  return adminOrdersResponseSchema.parse(json);
 }
 
 // Admin: get single order by id (full details)

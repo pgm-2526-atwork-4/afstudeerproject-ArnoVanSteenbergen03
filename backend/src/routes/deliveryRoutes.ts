@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { db } from "@/config/database";
-import { activities, goods, collectionActivities, places, users, vehicles, channels, chatMembers } from "@/db/schema";
-import { eq, and, isNull, asc, notInArray } from "drizzle-orm";
+import { activities, goods, collectionActivities, places, users, vehicles, channels, chatMembers, activityDrivers } from "@/db/schema";
+import { eq, and, isNull, asc, notInArray, or, inArray } from "drizzle-orm";
 import { requireAuth, requirePermission } from "@/middleware/auth";
 
 const router = Router();
@@ -70,6 +70,19 @@ router.get("/mine", requireAuth, requirePermission("read_activities"), async (re
   try {
     const userId = (req.user as any).id as string;
 
+    const linkedRows = await db
+      .select({ activityId: activityDrivers.activityId })
+      .from(activityDrivers)
+      .where(eq(activityDrivers.userId, userId));
+
+    const linkedActivityIds = linkedRows.map((r) => r.activityId);
+    const driverAssignmentCondition = linkedActivityIds.length > 0
+      ? or(
+          eq(activities.assignedDriver, userId),
+          inArray(activities.id, linkedActivityIds),
+        )
+      : eq(activities.assignedDriver, userId);
+
     const myDeliveries = await db
       .select({
         activity: activities,
@@ -83,7 +96,7 @@ router.get("/mine", requireAuth, requirePermission("read_activities"), async (re
       .leftJoin(places, eq(activities.assignedCenterId, places.id))
       .where(
         and(
-          eq(activities.assignedDriver, userId),
+          driverAssignmentCondition,
           notInArray(activities.status, ["completed", "incomplete", "need_assistance"])
         )
       );
@@ -118,7 +131,7 @@ router.patch("/:id/accept", requireAuth, requirePermission("update_activities"),
       return res.status(404).json({ error: "Delivery not found" });
     }
 
-    if (activity.assignedDriver) {
+    if (activity.assignedDriver || activity.status !== "requested") {
       return res.status(400).json({ error: "Delivery has already been accepted" });
     }
 
@@ -129,8 +142,20 @@ router.patch("/:id/accept", requireAuth, requirePermission("update_activities"),
         status: "accepted",
         updatedAt: new Date(),
       })
-      .where(eq(activities.id, id))
+      .where(and(eq(activities.id, id), isNull(activities.assignedDriver), eq(activities.status, "requested")))
       .returning();
+
+    if (!updatedActivity) {
+      return res.status(409).json({ error: "Delivery was accepted by another driver" });
+    }
+
+    await db
+      .insert(activityDrivers)
+      .values({
+        activityId: id,
+        userId,
+      })
+      .onConflictDoNothing();
 
     // Add driver to the provider's supplier channel
     const [supplierPlace] = await db
@@ -199,16 +224,23 @@ router.patch("/:id/accept-assistance", requireAuth, requirePermission("update_ac
       return res.status(400).json({ error: "This delivery does not need assistance" });
     }
 
-    // Update status back to accepted
+    // Keep the primary driver assignment and add helper linkage
     const [updatedActivity] = await db
       .update(activities)
       .set({
-        assignedDriver: userId,
         status: "accepted",
         updatedAt: new Date(),
       })
       .where(eq(activities.id, id))
       .returning();
+
+    await db
+      .insert(activityDrivers)
+      .values({
+        activityId: id,
+        userId,
+      })
+      .onConflictDoNothing();
 
     // Add helper driver to the provider's supplier channel
     const [supplierPlace] = await db

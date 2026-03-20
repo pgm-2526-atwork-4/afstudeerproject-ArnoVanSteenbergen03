@@ -56,6 +56,7 @@ export default function CardContent({
   const isCompleting = completingId === delivery.activity.id;
   const isStarting = startingId === delivery.activity.id;
   const status = delivery.activity.status;
+  const canOpenChat = !isOpen && status !== "requested";
 
   const handleChatClick = () => {
     if (delivery.supplierChannel) {
@@ -63,7 +64,10 @@ export default function CardContent({
       router.push(
         `/chatroom?channel=${delivery.supplierChannel.id}&activity=${delivery.activity.id}`,
       );
+      return;
     }
+
+    router.push("/chatroom");
   };
 
   const getStatusBadge = () => {
@@ -132,7 +136,7 @@ export default function CardContent({
 
         <div className="flex-1" />
 
-        {delivery.supplierChannel ? (
+        {canOpenChat ? (
           <button
             onClick={handleChatClick}
             className="p-0 bg-transparent border-none cursor-pointer"

@@ -1,0 +1,1 @@
+ALTER TABLE "activity_drivers" DROP COLUMN "role";

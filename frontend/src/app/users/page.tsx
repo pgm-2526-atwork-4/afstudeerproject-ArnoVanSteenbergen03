@@ -7,8 +7,16 @@ import { useAuth } from "@/lib/auth-context";
 import { getApplicationCount, getUsers, deleteUser, createUser, getAllPermissions, checkEmailAvailable, AdminUser, type Permission } from "@/lib/api-client";
 import { createUserSchema } from "@shared/schemas/users";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -20,6 +28,8 @@ import {
 import { CardSkeleton } from "@/components/ui/loading";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Plus, Edit2, Trash2, FileText, Loader2, CheckCircle, X } from "lucide-react";
+
+const ALL_ROLES_FILTER = "__all_roles__";
 
 export default function UsersPage() {
   const { user } = useAuth();
@@ -250,17 +260,23 @@ export default function UsersPage() {
           </PermissionGate>
 
           <div className="mb-6">
-            <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className="w-full border-2 border-slate-800 rounded-lg px-4 py-3 bg-white text-slate-800 font-semibold"
+            <Select
+              value={roleFilter || ALL_ROLES_FILTER}
+              onValueChange={(value) =>
+                setRoleFilter(value === ALL_ROLES_FILTER ? "" : value)
+              }
             >
-              <option value="">All Roles</option>
-              <option value="admin">Admin</option>
-              <option value="manager">Manager</option>
-              <option value="provider">Provider</option>
-              <option value="volunteer">Volunteer</option>
-            </select>
+              <SelectTrigger className="w-full border-2 border-slate-800 rounded-lg px-4 py-3 bg-white text-slate-800 font-semibold">
+                <SelectValue placeholder="All Roles" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_ROLES_FILTER}>All Roles</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="manager">Manager</SelectItem>
+                <SelectItem value="provider">Provider</SelectItem>
+                <SelectItem value="volunteer">Volunteer</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {loading && <CardSkeleton />}
@@ -435,17 +451,22 @@ export default function UsersPage() {
                   </div>
                   <div>
                     <Label htmlFor="create-role" className="text-slate-700 font-semibold">Role</Label>
-                    <select
-                      id="create-role"
+                    <Select
                       value={newUser.userType}
-                      onChange={(e) => setNewUser((p) => ({ ...p, userType: e.target.value }))}
-                      className="mt-1 w-full border-2 border-slate-300 rounded-lg px-3 py-2 bg-white text-slate-800"
+                      onValueChange={(value) =>
+                        setNewUser((p) => ({ ...p, userType: value }))
+                      }
                     >
-                      <option value="admin">Admin</option>
-                      <option value="manager">Manager</option>
-                      <option value="provider">Provider</option>
-                      <option value="volunteer">Volunteer</option>
-                    </select>
+                      <SelectTrigger id="create-role" className="mt-1 w-full border-2 border-slate-300 rounded-lg px-3 py-2 bg-white text-slate-800">
+                        <SelectValue placeholder="Select a role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="manager">Manager</SelectItem>
+                        <SelectItem value="provider">Provider</SelectItem>
+                        <SelectItem value="volunteer">Volunteer</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               )}
@@ -455,7 +476,7 @@ export default function UsersPage() {
                   <p className="text-sm text-slate-500 mb-4">Select which pages this user can access.</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {permissionGrid.pagePermissions.map((perm) => (
-                      <label
+                      <div
                         key={perm.id}
                         className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors ${
                           selectedPermissionIds.has(perm.id)
@@ -463,16 +484,19 @@ export default function UsersPage() {
                             : "bg-white border-slate-200 hover:bg-slate-50"
                         }`}
                       >
-                        <input
-                          type="checkbox"
-                          className="w-4 h-4 rounded accent-green-600"
+                        <Checkbox
+                          id={`create-page-perm-${perm.id}`}
+                          className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
                           checked={selectedPermissionIds.has(perm.id)}
-                          onChange={() => togglePermission(perm.id)}
+                          onCheckedChange={() => togglePermission(perm.id)}
                         />
-                        <span className="text-sm font-medium text-slate-800">
+                        <Label
+                          htmlFor={`create-page-perm-${perm.id}`}
+                          className="text-sm font-medium text-slate-800 cursor-pointer"
+                        >
                           {formatPageKey(perm.key)}
-                        </span>
-                      </label>
+                        </Label>
+                      </div>
                     ))}
                   </div>
                 </>
@@ -486,15 +510,15 @@ export default function UsersPage() {
                       <thead>
                         <tr className="bg-slate-100">
                           <th className="text-left p-3 font-semibold text-slate-700 border border-slate-300 min-w-[140px]">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                className="w-4 h-4 rounded accent-slate-800"
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                id="create-all-crud-perms"
+                                className="data-[state=checked]:bg-slate-800 data-[state=checked]:border-slate-800"
                                 checked={
                                   permissionGrid.crudPermissions.length > 0 &&
                                   permissionGrid.crudPermissions.every((p) => selectedPermissionIds.has(p.id))
                                 }
-                                onChange={() => {
+                                onCheckedChange={() => {
                                   const crudPerms = permissionGrid.crudPermissions;
                                   const allSelected = crudPerms.every((p) => selectedPermissionIds.has(p.id));
                                   setSelectedPermissionIds((prev) => {
@@ -504,8 +528,10 @@ export default function UsersPage() {
                                   });
                                 }}
                               />
-                              Resource
-                            </label>
+                              <Label htmlFor="create-all-crud-perms" className="cursor-pointer">
+                                Resource
+                              </Label>
+                            </div>
                           </th>
                           {permissionGrid.actions.map((action) => (
                             <th key={action} className="text-center p-3 font-semibold text-slate-700 border border-slate-300 capitalize w-24">
@@ -521,26 +547,28 @@ export default function UsersPage() {
                           return (
                             <tr key={resource} className="hover:bg-amber-50 transition-colors">
                               <td className="p-3 border border-slate-300 font-medium text-slate-800">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    className="w-4 h-4 rounded accent-slate-800"
+                                <div className="flex items-center gap-2">
+                                  <Checkbox
+                                    id={`create-resource-${resource}`}
+                                    className="data-[state=checked]:bg-slate-800 data-[state=checked]:border-slate-800"
                                     checked={allRowSelected}
-                                    onChange={() => toggleResourceRow(resource)}
+                                    onCheckedChange={() => toggleResourceRow(resource)}
                                   />
-                                  {formatResource(resource)}
-                                </label>
+                                  <Label htmlFor={`create-resource-${resource}`} className="cursor-pointer">
+                                    {formatResource(resource)}
+                                  </Label>
+                                </div>
                               </td>
                               {permissionGrid.actions.map((action) => {
                                 const perm = getPermissionByResourceAction(resource, action);
                                 return (
                                   <td key={action} className="text-center p-3 border border-slate-300">
                                     {perm ? (
-                                      <input
-                                        type="checkbox"
-                                        className="w-4 h-4 rounded accent-green-600 cursor-pointer"
+                                      <Checkbox
+                                        id={`create-perm-${resource}-${action}-${perm.id}`}
+                                        className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
                                         checked={selectedPermissionIds.has(perm.id)}
-                                        onChange={() => togglePermission(perm.id)}
+                                        onCheckedChange={() => togglePermission(perm.id)}
                                       />
                                     ) : (
                                       <span className="text-slate-300">—</span>

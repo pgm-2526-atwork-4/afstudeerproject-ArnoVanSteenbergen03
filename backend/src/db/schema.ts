@@ -50,7 +50,6 @@ export const userPermissions = pgTable(
       .notNull()
       .references(() => permissions.id, { onDelete: "cascade" }),
     grantedBy: uuid("granted_by").references(() => users.id, { onDelete: "set null" }),
-    grantedAt: timestamp("granted_at").defaultNow(),
   },
   (table) => [primaryKey({ columns: [table.userId, table.permissionId] })],
 );
@@ -100,16 +99,30 @@ export const activities = pgTable("activities", {
   details: jsonb("details"),
   freezerItemIncluded: boolean("freezer_item").notNull().default(false),
   damagedGoods: boolean("damaged_goods").notNull().default(false),
-  weekly: boolean("weekly").notNull().default(false),
-  monthly: boolean("monthly").notNull().default(false),
-  recurrenceDays: jsonb("recurrence_days"),
-  recurrenceTime: text("recurrence_time"),
   vehicleId: uuid("vehicle_id").references(() => vehicles.id, {
     onDelete: "cascade",
   }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+// Additional drivers linked to an activity (primary/helper)
+export const activityDrivers = pgTable(
+  "activity_drivers",
+  {
+    activityId: uuid("activity_id")
+      .notNull()
+      .references(() => activities.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    acceptedAt: timestamp("accepted_at").defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.activityId, table.userId] }),
+    index("activity_drivers_user_idx").on(table.userId),
+  ],
+);
 
 // Collection activities
 export const collectionActivities = pgTable(
@@ -143,14 +156,11 @@ export const goods = pgTable(
     currentPlaceId: uuid("current_place_id").references(() => places.id),
     
     sourceActivityId: serial("source_activity_id").references(() => collectionActivities.id),
-    distributionActivityId: uuid("distribution_activity_id").references(() => activities.id, { onDelete: "set null" }),
-
-
+ 
    
     metadata: jsonb("metadata"),// Extra comment 
     
     image: text("image"),
-    createdBy: uuid("created_by").references(() => users.id),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
@@ -239,7 +249,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   activitiesCreated: many(activities),
   userPermissions: many(userPermissions),
   applications: many(applications),
-  goodsCreated: many(goods),
+  activityDriverLinks: many(activityDrivers),
 }));
 
 export const permissionsRelations = relations(permissions, ({ many }) => ({
@@ -299,8 +309,22 @@ export const activitiesRelations = relations(activities, ({ one, many }) => ({
     fields: [activities.id],
     references: [collectionActivities.activityId],
   }),
-  goodsDistributed: many(goods),
+  driverLinks: many(activityDrivers),
 }));
+
+export const activityDriversRelations = relations(
+  activityDrivers,
+  ({ one }) => ({
+    activity: one(activities, {
+      fields: [activityDrivers.activityId],
+      references: [activities.id],
+    }),
+    user: one(users, {
+      fields: [activityDrivers.userId],
+      references: [users.id],
+    }),
+  }),
+);
 
 export const collectionActivitiesRelations = relations(
   collectionActivities,
@@ -327,14 +351,6 @@ export const goodsRelations = relations(goods, ({ one }) => ({
   sourceActivity: one(collectionActivities, {
     fields: [goods.sourceActivityId],
     references: [collectionActivities.id],
-  }),
-  distributionActivity: one(activities, {
-    fields: [goods.distributionActivityId],
-    references: [activities.id],
-  }),
-  creator: one(users, {
-    fields: [goods.createdBy],
-    references: [users.id],
   }),
 }));
 

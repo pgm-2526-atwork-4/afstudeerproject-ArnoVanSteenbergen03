@@ -62,6 +62,7 @@ export function useOperatingInfo(initial?: OperatingInfo) {
 
   return {
     operatingInfo,
+    setOperatingInfo,
     days: DAYS,
     toggleDay,
     updateTime,

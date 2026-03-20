@@ -2,10 +2,15 @@
 
 import { DistributionCenter } from "@/types";
 import { useOperatingInfo } from "@/hooks/useOperatingInfo";
+import OpeningHoursForm from "@/components/OpeningHoursForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  supplierFormSchema,
+  toSupplierPayload,
+} from "@/lib/place-form-validation";
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -23,8 +28,10 @@ export default function SupplierForm({
   isLoading = false,
   error,
 }: SupplierFormProps) {
-  const { operatingInfo, days, toggleDay, updateTime, isDayOpen, getHours } =
-    useOperatingInfo(initialData?.operatingInfo);
+  const { operatingInfo, setOperatingInfo } = useOperatingInfo(
+    initialData?.operatingInfo,
+  );
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
@@ -39,6 +46,9 @@ export default function SupplierForm({
   });
 
   const handleChange = (field: string, value: string | number) => {
+    if (validationError) {
+      setValidationError(null);
+    }
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -50,6 +60,9 @@ export default function SupplierForm({
     field: string,
     value: string | number,
   ) => {
+    if (validationError) {
+      setValidationError(null);
+    }
     setFormData((prev) => {
       if (section === "contactInfo") {
         return {
@@ -74,20 +87,26 @@ export default function SupplierForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setValidationError(null);
 
-    const submitData: Partial<DistributionCenter> = {
+    const validated = supplierFormSchema.safeParse({
       name: formData.name,
-      type: "supplier",
       contactInfo: formData.contactInfo,
+      coordinates: formData.coordinates,
       operatingInfo,
-      geojson: {
-        type: "Point",
-        coordinates: [formData.coordinates.lng, formData.coordinates.lat],
-      },
-    };
+    });
 
-    await onSubmit(submitData);
+    if (!validated.success) {
+      setValidationError(
+        validated.error.issues[0]?.message || "Please check the form values.",
+      );
+      return;
+    }
+
+    await onSubmit(toSupplierPayload(validated.data));
   };
+
+  const displayError = validationError || error;
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-100px)] bg-amber-50 p-4 pb-24">
@@ -107,9 +126,9 @@ export default function SupplierForm({
       </div>
 
       <div className="max-w-2xl mx-auto w-full">
-        {error && (
+        {displayError && (
           <Alert variant="destructive" className="mb-6">
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>{displayError}</AlertDescription>
           </Alert>
         )}
 
@@ -175,65 +194,15 @@ export default function SupplierForm({
             <h2 className="text-xl font-semibold text-slate-800 mb-4">
               Operating Hours
             </h2>
-
-            <div className="space-y-4">
-              {days.map((day) => (
-                <div
-                  key={day}
-                  className="border-2 border-slate-300 rounded-lg p-4"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-slate-800 capitalize">
-                      {day}
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={() => toggleDay(day)}
-                      className={`px-3 py-1 rounded text-sm font-semibold transition-colors ${
-                        isDayOpen(day)
-                          ? "bg-green-500 text-white"
-                          : "bg-slate-300 text-slate-600"
-                      }`}
-                    >
-                      {isDayOpen(day) ? "Open" : "Closed"}
-                    </button>
-                  </div>
-
-                  {isDayOpen(day) && (
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label className="block text-sm font-semibold text-slate-800 mb-2">
-                          Opens
-                        </Label>
-                        <Input
-                          type="time"
-                          value={getHours(day)?.open || ""}
-                          onChange={(e) =>
-                            updateTime(day, "open", e.target.value)
-                          }
-                          className="w-full px-3 py-2 border-2 border-slate-800 rounded"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label className="block text-sm font-semibold text-slate-800 mb-2">
-                          Closes
-                        </Label>
-                        <Input
-                          type="time"
-                          value={getHours(day)?.close || ""}
-                          onChange={(e) =>
-                            updateTime(day, "close", e.target.value)
-                          }
-                          className="w-full px-3 py-2 border-2 border-slate-800 rounded"
-                          required
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+            <OpeningHoursForm
+              value={operatingInfo}
+              onChange={(hours) => {
+                setOperatingInfo(hours);
+                if (validationError) {
+                  setValidationError(null);
+                }
+              }}
+            />
           </div>
 
           <div className="bg-white border-2 border-slate-800 rounded-lg p-6">

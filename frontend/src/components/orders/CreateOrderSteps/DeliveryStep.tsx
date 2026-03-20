@@ -3,12 +3,26 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft } from "lucide-react";
 import { useState, useEffect } from "react";
 import * as LucideIcons from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { getVehicles } from "@/lib/api-client";
 import type { Vehicle } from "@shared/index";
+import { z } from "zod/v4";
+
+const deliveryStepSchema = z.object({
+  location: z.string().trim().min(1, "Please enter a location."),
+  vehicleId: z.string().trim().min(1, "Please select a vehicle type."),
+});
+
+const orderTimeSchema = z
+  .string()
+  .min(1, "Please select an order time.")
+  .refine((value) => !Number.isNaN(new Date(value).getTime()), {
+    message: "Please select a valid order time.",
+  });
 
 interface DeliveryStepProps {
   onBack: () => void;
@@ -75,35 +89,56 @@ export default function DeliveryStep({
   };
 
   const handleFinishOrder = () => {
-    if (!location.trim()) {
-      setValidationError("Please enter a location.");
+    const validated = deliveryStepSchema.safeParse({
+      location,
+      vehicleId: selectedVehicle,
+    });
+
+    if (!validated.success) {
+      setValidationError(
+        validated.error.issues[0]?.message || "Please check the form values.",
+      );
       return;
     }
-    if (!selectedVehicle) {
-      setValidationError("Please select a vehicle type.");
+
+    if (!hideDateTime) {
+      const orderTimeValidated = orderTimeSchema.safeParse(orderTime);
+      if (!orderTimeValidated.success) {
+        setValidationError(
+          orderTimeValidated.error.issues[0]?.message ||
+            "Please select a valid order time.",
+        );
+        return;
+      }
+    }
+
+    const orderDate = hideDateTime ? new Date() : new Date(orderTime);
+    if (Number.isNaN(orderDate.getTime())) {
+      setValidationError("Please select a valid order time.");
       return;
     }
-    if (!hideDateTime && !orderTime) {
-      setValidationError("Please select an order time.");
-      return;
-    }
+
     setValidationError(null);
 
-    const orderDateTime = hideDateTime
-      ? new Date().toISOString()
-      : new Date(orderTime).toISOString();
-    onSubmit(location, selectedVehicle, notes, orderDateTime);
+    onSubmit(
+      validated.data.location,
+      validated.data.vehicleId,
+      notes,
+      orderDate.toISOString(),
+    );
   };
 
   return (
     <div className="space-y-6">
-      <button
+      <Button
+        type="button"
         onClick={onBack}
+        variant="ghost"
         className="flex items-center gap-2 text-slate-800 hover:text-slate-600 font-semibold"
       >
         <ArrowLeft className="w-5 h-5" />
         Back
-      </button>
+      </Button>
 
       <div className="bg-white border-2 border-slate-800 rounded-lg p-6">
         <Label className="block text-sm font-semibold text-slate-800 mb-4">
@@ -113,7 +148,12 @@ export default function DeliveryStep({
           type="text"
           placeholder="e.g., 123 Main St, Downtown"
           value={location}
-          onChange={(e) => setLocation(e.target.value)}
+          onChange={(e) => {
+            setLocation(e.target.value);
+            if (validationError) {
+              setValidationError(null);
+            }
+          }}
           className="w-full px-3 py-2 border-2 border-slate-800 rounded"
         />
       </div>
@@ -126,7 +166,12 @@ export default function DeliveryStep({
           <Input
             type="datetime-local"
             value={orderTime}
-            onChange={(e) => setOrderTime(e.target.value)}
+            onChange={(e) => {
+              setOrderTime(e.target.value);
+              if (validationError) {
+                setValidationError(null);
+              }
+            }}
             className="w-full px-3 py-2 border-2 border-slate-800 rounded"
           />
         </div>
@@ -144,9 +189,16 @@ export default function DeliveryStep({
               const IconComponent = getIconComponent(vehicle.icon);
               const isSelected = selectedVehicle === vehicle.id;
               return (
-                <button
+                <Button
+                  type="button"
                   key={vehicle.id}
-                  onClick={() => setSelectedVehicle(vehicle.id)}
+                  onClick={() => {
+                    setSelectedVehicle(vehicle.id);
+                    if (validationError) {
+                      setValidationError(null);
+                    }
+                  }}
+                  variant="outline"
                   className={`flex flex-col items-center gap-3 p-4 border-2 rounded-lg transition ${
                     isSelected
                       ? "border-orange-600 bg-orange-50"
@@ -162,7 +214,7 @@ export default function DeliveryStep({
                       ({vehicle.amount} available)
                     </p>
                   </div>
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -173,7 +225,7 @@ export default function DeliveryStep({
         <Label className="block text-sm font-semibold text-slate-800 mb-4">
           Extra notes about the Delivery
         </Label>
-        <textarea
+        <Textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Add any additional information about the delivery..."

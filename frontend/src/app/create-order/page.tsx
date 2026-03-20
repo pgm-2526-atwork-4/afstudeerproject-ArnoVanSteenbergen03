@@ -9,7 +9,7 @@ import DeliveryStep from "@/components/orders/CreateOrderSteps/DeliveryStep";
 import ProtectedPage from "@/components/ProtectedPage";
 import { createOrder, getProviderOrderById } from "@/lib/api-client";
 import { CardSkeleton } from "@/components/ui/loading";
-import type { GoodsData, OrderFormData } from "@/types";
+import type { GoodsData, OrderFormData, RecurrenceSlot } from "@/types";
 
 function CreateOrderContent() {
   const router = useRouter();
@@ -28,8 +28,7 @@ function CreateOrderContent() {
     vehicleId: "",
     deliveryNotes: "",
     orderTime: new Date().toISOString(),
-    selectedDates: [],
-    recurrenceTime: "",
+    recurrenceSlots: [],
   });
 
   useEffect(() => {
@@ -93,8 +92,7 @@ function CreateOrderContent() {
   };
 
   const handleRecurrenceNext = (data: {
-    selectedDates: string[];
-    recurrenceTime: string;
+    recurrenceSlots: RecurrenceSlot[];
   }) => {
     setFormData((prev) => ({ ...prev, ...data }));
     setCurrentStep(2);
@@ -130,8 +128,7 @@ function CreateOrderContent() {
         orderTime,
         notes: deliveryNotes || undefined,
         orderType: formData.orderType,
-        selectedDates: formData.selectedDates,
-        recurrenceTime: formData.recurrenceTime || undefined,
+        recurrenceSlots: formData.recurrenceSlots,
         goods: formData.goods.map((item) => ({
           goodState: item.goodState,
           overDueDate: item.overDueDate,
@@ -222,8 +219,7 @@ function CreateOrderContent() {
             <RecurrenceStep
               onNext={handleRecurrenceNext}
               onBack={() => setCurrentStep(0)}
-              initialDates={formData.selectedDates}
-              initialTime={formData.recurrenceTime}
+              initialSlots={formData.recurrenceSlots}
             />
           )}
 

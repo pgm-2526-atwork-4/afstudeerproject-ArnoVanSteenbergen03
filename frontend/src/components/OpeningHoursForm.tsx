@@ -1,6 +1,7 @@
 "use client";
 
 import { OperatingInfo, TimeRange } from "@shared/index";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -65,17 +66,27 @@ export default function OpeningHoursForm({
             <h3 className="font-semibold text-slate-800 capitalize">
               {day}
             </h3>
-            <button
-              type="button"
-              onClick={() => toggleDay(day)}
-              className={`px-3 py-1 rounded text-sm font-semibold transition-colors ${
-                isDayOpen(day)
-                  ? "bg-green-500 text-white"
-                  : "bg-slate-300 text-slate-600"
-              }`}
-            >
-              {isDayOpen(day) ? "Open" : "Closed"}
-            </button>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id={`hours-${day}`}
+                checked={isDayOpen(day)}
+                onCheckedChange={(checked) => {
+                  const shouldOpen = checked === true;
+                  if (shouldOpen !== isDayOpen(day)) {
+                    toggleDay(day);
+                  }
+                }}
+                className="border-slate-500 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+              />
+              <Label
+                htmlFor={`hours-${day}`}
+                className={`text-sm font-semibold ${
+                  isDayOpen(day) ? "text-green-700" : "text-slate-500"
+                }`}
+              >
+                {isDayOpen(day) ? "Open" : "Closed"}
+              </Label>
+            </div>
           </div>
 
           {isDayOpen(day) && (

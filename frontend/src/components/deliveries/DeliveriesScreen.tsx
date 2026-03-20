@@ -5,6 +5,13 @@ import { DistributionCenter } from "@shared/index";
 import { Button } from "@/components/ui/button";
 import { CardSkeleton } from "@/components/ui/loading";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   FileText,
   Truck,
   icons,
@@ -394,18 +401,22 @@ export default function DeliveriesScreen() {
               <label className="block text-xs font-medium text-slate-500 mb-1">
                 Distribution Center
               </label>
-              <select
+              <Select
                 value={filterCenter}
-                onChange={(e) => setFilterCenter(e.target.value)}
-                className="w-full p-2 border border-slate-200 rounded-lg text-sm"
+                onValueChange={setFilterCenter}
               >
-                <option value="all">All Centers</option>
-                {centers.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="w-full p-2 border border-slate-200 rounded-lg text-sm">
+                  <SelectValue placeholder="All Centers" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Centers</SelectItem>
+                  {centers.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             {(filterCenter !== "all" || filterDay !== "all") && (
               <button

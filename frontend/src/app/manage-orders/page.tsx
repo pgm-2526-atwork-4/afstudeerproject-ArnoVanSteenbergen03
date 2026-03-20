@@ -8,9 +8,17 @@ import {
   getDistributionCenters,
   type AdminOrderRow,
 } from "@/lib/api-client";
+import type { DistributionCenter } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CardSkeleton } from "@/components/ui/loading";
 import Link from "next/link";
 import {
@@ -22,13 +30,10 @@ import {
   Pencil,
 } from "lucide-react";
 
-interface DistroOption {
-  id: string;
-  name: string;
-}
-
 const STATUSES = ["requested", "accepted", "in_progress", "completed", "cancelled"];
 const PAGE_SIZE = 10;
+const ALL_CENTERS = "__all_centers__";
+const ALL_STATUSES = "__all_statuses__";
 
 export default function ManageOrdersPage() {
   const { user } = useAuth();
@@ -46,11 +51,11 @@ export default function ManageOrdersPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
-  const [centers, setCenters] = useState<DistroOption[]>([]);
+  const [centers, setCenters] = useState<Array<Pick<DistributionCenter, "id" | "name">>>([]);
 
   useEffect(() => {
     getDistributionCenters()
-      .then((data: DistroOption[]) => setCenters(data.map((c) => ({ id: c.id, name: c.name }))))
+      .then((data) => setCenters(data.map((c) => ({ id: c.id, name: c.name }))))
       .catch(() => {});
   }, []);
 
@@ -143,35 +148,47 @@ export default function ManageOrdersPage() {
                 <label className="text-xs font-medium text-slate-500 mb-1 block">
                   Distribution Center
                 </label>
-                <select
-                  value={centerId}
-                  onChange={(e) => setCenterId(e.target.value)}
-                  className="w-full border-2 border-slate-300 rounded-lg px-3 py-2 bg-white text-slate-800 text-sm"
+                <Select
+                  value={centerId || ALL_CENTERS}
+                  onValueChange={(value) =>
+                    setCenterId(value === ALL_CENTERS ? "" : value)
+                  }
                 >
-                  <option value="">All centers</option>
-                  {centers.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full border-2 border-slate-300 rounded-lg px-3 py-2 bg-white text-slate-800 text-sm">
+                    <SelectValue placeholder="All centers" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL_CENTERS}>All centers</SelectItem>
+                    {centers.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label className="text-xs font-medium text-slate-500 mb-1 block">
                   Status
                 </label>
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  className="w-full border-2 border-slate-300 rounded-lg px-3 py-2 bg-white text-slate-800 text-sm"
+                <Select
+                  value={status || ALL_STATUSES}
+                  onValueChange={(value) =>
+                    setStatus(value === ALL_STATUSES ? "" : value)
+                  }
                 >
-                  <option value="">All statuses</option>
-                  {STATUSES.map((s) => (
-                    <option key={s} value={s}>
-                      {formatStatus(s)}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full border-2 border-slate-300 rounded-lg px-3 py-2 bg-white text-slate-800 text-sm">
+                    <SelectValue placeholder="All statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL_STATUSES}>All statuses</SelectItem>
+                    {STATUSES.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {formatStatus(s)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label className="text-xs font-medium text-slate-500 mb-1 block">

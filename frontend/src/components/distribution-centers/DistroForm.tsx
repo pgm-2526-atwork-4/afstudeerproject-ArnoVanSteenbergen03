@@ -7,6 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  distributionCenterFormSchema,
+  toDistributionCenterPayload,
+} from "@/lib/place-form-validation";
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -24,6 +35,7 @@ export default function DistroForm({
   isLoading = false,
   error,
 }: DistroFormProps) {
+  const [validationError, setValidationError] = useState<string | null>(null);
   const defaultOperatingInfo: OperatingInfo = {
     monday: null,
     tuesday: null,
@@ -54,6 +66,9 @@ export default function DistroForm({
   });
 
   const handleChange = (field: string, value: string | number) => {
+    if (validationError) {
+      setValidationError(null);
+    }
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -65,6 +80,9 @@ export default function DistroForm({
     field: string,
     value: string | number,
   ) => {
+    if (validationError) {
+      setValidationError(null);
+    }
     setFormData((prev) => {
       if (section === "contactInfo") {
         return {
@@ -89,20 +107,27 @@ export default function DistroForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setValidationError(null);
 
-    const submitData: Partial<DistributionCenter> = {
+    const validated = distributionCenterFormSchema.safeParse({
       name: formData.name,
       type: formData.type,
       contactInfo: formData.contactInfo,
+      coordinates: formData.coordinates,
       operatingInfo,
-      geojson: {
-        type: "Point",
-        coordinates: [formData.coordinates.lng, formData.coordinates.lat],
-      },
-    };
+    });
 
-    await onSubmit(submitData);
+    if (!validated.success) {
+      setValidationError(
+        validated.error.issues[0]?.message || "Please check the form values.",
+      );
+      return;
+    }
+
+    await onSubmit(toDistributionCenterPayload(validated.data));
   };
+
+  const displayError = validationError || error;
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-100px)] bg-amber-50 p-4 pb-24">
@@ -122,9 +147,9 @@ export default function DistroForm({
       </div>
 
       <div className="max-w-2xl mx-auto w-full">
-        {error && (
+        {displayError && (
           <Alert variant="destructive" className="mb-6">
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>{displayError}</AlertDescription>
           </Alert>
         )}
 
@@ -152,16 +177,20 @@ export default function DistroForm({
                 <Label className="block text-sm font-semibold text-slate-800 mb-2">
                   Type
                 </Label>
-                <select
+                <Select
                   value={formData.type}
-                  onChange={(e) => handleChange("type", e.target.value)}
-                  className="w-full px-3 py-2 border-2 border-slate-800 rounded"
+                  onValueChange={(value) => handleChange("type", value)}
                 >
-                  <option value="distribution_center">
-                    Distribution Center
-                  </option>
-                  <option value="supplier">Supplier</option>
-                </select>
+                  <SelectTrigger className="w-full px-3 py-2 border-2 border-slate-800 rounded">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="distribution_center">
+                      Distribution Center
+                    </SelectItem>
+                    <SelectItem value="supplier">Supplier</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -208,7 +237,12 @@ export default function DistroForm({
             </h2>
             <OpeningHoursForm
               value={operatingInfo}
-              onChange={setOperatingInfo}
+              onChange={(hours) => {
+                setOperatingInfo(hours);
+                if (validationError) {
+                  setValidationError(null);
+                }
+              }}
             />
           </div>
 

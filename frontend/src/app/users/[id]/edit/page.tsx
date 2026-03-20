@@ -12,11 +12,31 @@ import {
   type Permission,
 } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { LoadingScreen } from "@/components/ui/loading";
 import Link from "next/link";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { z } from "zod/v4";
+
+const USER_ROLES = ["admin", "manager", "provider", "volunteer"] as const;
+
+const editUserSchema = z.object({
+  firstname: z.string().trim().min(1, "First name is required"),
+  lastname: z.string().trim().min(1, "Last name is required"),
+  username: z.string().trim().min(1, "Username is required"),
+  email: z.string().trim().email("Invalid email address"),
+  userType: z.enum(USER_ROLES),
+  permissionIds: z.array(z.number()),
+});
 
 export default function EditUserPage() {
   const { user: authUser, loading: authLoading } = useAuth();
@@ -111,15 +131,25 @@ export default function EditUserPage() {
     setError(null);
     setSuccess(null);
 
+    const validated = editUserSchema.safeParse({
+      firstname,
+      lastname,
+      username,
+      email,
+      userType,
+      permissionIds: selectedPermissionIds,
+    });
+
+    if (!validated.success) {
+      setSaving(false);
+      setError(
+        validated.error.issues[0]?.message || "Please check the form values.",
+      );
+      return;
+    }
+
     try {
-      await updateUser(userId, {
-        firstname,
-        lastname,
-        username,
-        email,
-        userType,
-        permissionIds: selectedPermissionIds,
-      });
+      await updateUser(userId, validated.data);
       router.push("/users");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update user");
@@ -236,17 +266,20 @@ export default function EditUserPage() {
                 <Label htmlFor="userType" className="text-slate-700 font-semibold">
                   Role
                 </Label>
-                <select
-                  id="userType"
+                <Select
                   value={userType}
-                  onChange={(e) => setUserType(e.target.value)}
-                  className="mt-1 w-full border-2 border-slate-300 rounded-lg px-3 py-2 bg-white text-slate-800"
+                  onValueChange={(value) => setUserType(value)}
                 >
-                  <option value="admin">Admin</option>
-                  <option value="manager">Manager</option>
-                  <option value="provider">Provider</option>
-                  <option value="volunteer">Volunteer</option>
-                </select>
+                  <SelectTrigger id="userType" className="mt-1 w-full border-2 border-slate-300 rounded-lg px-3 py-2 bg-white text-slate-800">
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="provider">Provider</SelectItem>
+                    <SelectItem value="volunteer">Volunteer</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -273,41 +306,44 @@ export default function EditUserPage() {
                         key={resource}
                         className="border border-slate-200 rounded-lg p-4"
                       >
-                        <label className="flex items-center gap-2 cursor-pointer mb-2">
-                          <input
-                            type="checkbox"
-                            checked={allChecked}
-                            ref={(el) => {
-                              if (el) el.indeterminate = someChecked;
-                            }}
-                            onChange={() => toggleResourceGroup(resource)}
-                            className="w-4 h-4 rounded accent-slate-800"
+                        <div className="flex items-center gap-2 mb-2">
+                          <Checkbox
+                            id={`resource-${resource}`}
+                            checked={allChecked ? true : someChecked ? "indeterminate" : false}
+                            onCheckedChange={() => toggleResourceGroup(resource)}
+                            className="border-slate-500 data-[state=checked]:bg-slate-800 data-[state=checked]:border-slate-800"
                           />
-                          <span className="font-semibold text-slate-800 capitalize">
+                          <Label
+                            htmlFor={`resource-${resource}`}
+                            className="font-semibold text-slate-800 capitalize cursor-pointer"
+                          >
                             {resource.replace(/_/g, " ")}
-                          </span>
-                        </label>
+                          </Label>
+                        </div>
 
                         <div className="grid grid-cols-2 gap-2 ml-6">
                           {perms.map((perm) => (
-                            <label
+                            <div
                               key={perm.id}
-                              className="flex items-center gap-2 cursor-pointer text-sm text-slate-600"
+                              className="flex items-center gap-2 text-sm text-slate-600"
                             >
-                              <input
-                                type="checkbox"
+                              <Checkbox
+                                id={`perm-${resource}-${perm.id}`}
                                 checked={selectedPermissionIds.includes(
                                   perm.id,
                                 )}
-                                onChange={() => togglePermission(perm.id)}
-                                className="w-3.5 h-3.5 rounded accent-slate-800"
+                                onCheckedChange={() => togglePermission(perm.id)}
+                                className="border-slate-500 data-[state=checked]:bg-slate-800 data-[state=checked]:border-slate-800"
                               />
-                              <span className="capitalize">
+                              <Label
+                                htmlFor={`perm-${resource}-${perm.id}`}
+                                className="capitalize cursor-pointer"
+                              >
                                 {resource === "page"
                                   ? perm.key.replace(/^view_/, "").replace(/_/g, " ")
                                   : perm.action}
-                              </span>
-                            </label>
+                              </Label>
+                            </div>
                           ))}
                         </div>
                       </div>

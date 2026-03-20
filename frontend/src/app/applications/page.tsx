@@ -12,7 +12,10 @@ import {
   type Permission,
 } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { CardSkeleton } from "@/components/ui/loading";
+import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -139,17 +142,6 @@ export default function ApplicationsPage() {
       });
       return next;
     });
-  };
-
-  const toggleAll = () => {
-    const allSelected = allPermissions.every((p) =>
-      selectedPermissionIds.has(p.id),
-    );
-    if (allSelected) {
-      setSelectedPermissionIds(new Set());
-    } else {
-      setSelectedPermissionIds(new Set(allPermissions.map((p) => p.id)));
-    }
   };
 
   const handleConfirmApprove = async () => {
@@ -339,7 +331,7 @@ export default function ApplicationsPage() {
                       <div className="border-t border-slate-200 pt-4 mt-2">
                         {denyingId === app.id ? (
                           <div className="space-y-3">
-                            <textarea
+                            <Textarea
                               className="w-full border border-slate-300 rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-slate-400"
                               placeholder="Reason for denial (optional)..."
                               rows={2}
@@ -436,7 +428,7 @@ export default function ApplicationsPage() {
                   <p className="text-sm text-slate-500 mb-4">Select which pages this user can access.</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {permissionGrid.pagePermissions.map((perm) => (
-                      <label
+                      <div
                         key={perm.id}
                         className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors ${
                           selectedPermissionIds.has(perm.id)
@@ -444,16 +436,19 @@ export default function ApplicationsPage() {
                             : "bg-white border-slate-200 hover:bg-slate-50"
                         }`}
                       >
-                        <input
-                          type="checkbox"
-                          className="w-4 h-4 rounded accent-green-600"
+                        <Checkbox
+                          id={`approve-page-perm-${perm.id}`}
+                          className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
                           checked={selectedPermissionIds.has(perm.id)}
-                          onChange={() => togglePermission(perm.id)}
+                          onCheckedChange={() => togglePermission(perm.id)}
                         />
-                        <span className="text-sm font-medium text-slate-800">
+                        <Label
+                          htmlFor={`approve-page-perm-${perm.id}`}
+                          className="text-sm font-medium text-slate-800 cursor-pointer"
+                        >
                           {formatPageKey(perm.key)}
-                        </span>
-                      </label>
+                        </Label>
+                      </div>
                     ))}
                   </div>
                 </>
@@ -465,17 +460,17 @@ export default function ApplicationsPage() {
                       <thead>
                         <tr className="bg-slate-100">
                           <th className="text-left p-3 font-semibold text-slate-700 border border-slate-300 min-w-[140px]">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                className="w-4 h-4 rounded accent-slate-800"
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                id="approve-all-crud-perms"
+                                className="data-[state=checked]:bg-slate-800 data-[state=checked]:border-slate-800"
                                 checked={
                                   permissionGrid.crudPermissions.length > 0 &&
                                   permissionGrid.crudPermissions.every((p) =>
                                     selectedPermissionIds.has(p.id),
                                   )
                                 }
-                                onChange={() => {
+                                onCheckedChange={() => {
                                   const crudPerms = permissionGrid.crudPermissions;
                                   const allSelected = crudPerms.every((p) =>
                                     selectedPermissionIds.has(p.id),
@@ -490,8 +485,10 @@ export default function ApplicationsPage() {
                                   });
                                 }}
                               />
-                              Resource
-                            </label>
+                              <Label htmlFor="approve-all-crud-perms" className="cursor-pointer">
+                                Resource
+                              </Label>
+                            </div>
                           </th>
                           {permissionGrid.actions.map((action) => (
                             <th
@@ -518,15 +515,17 @@ export default function ApplicationsPage() {
                               className="hover:bg-amber-50 transition-colors"
                             >
                               <td className="p-3 border border-slate-300 font-medium text-slate-800">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    className="w-4 h-4 rounded accent-slate-800"
+                                <div className="flex items-center gap-2">
+                                  <Checkbox
+                                    id={`approve-resource-${resource}`}
+                                    className="data-[state=checked]:bg-slate-800 data-[state=checked]:border-slate-800"
                                     checked={allRowSelected}
-                                    onChange={() => toggleResourceRow(resource)}
+                                    onCheckedChange={() => toggleResourceRow(resource)}
                                   />
-                                  {formatResource(resource)}
-                                </label>
+                                  <Label htmlFor={`approve-resource-${resource}`} className="cursor-pointer">
+                                    {formatResource(resource)}
+                                  </Label>
+                                </div>
                               </td>
                               {permissionGrid.actions.map((action) => {
                                 const perm = getPermissionByResourceAction(
@@ -539,11 +538,11 @@ export default function ApplicationsPage() {
                                     className="text-center p-3 border border-slate-300"
                                   >
                                     {perm ? (
-                                      <input
-                                        type="checkbox"
-                                        className="w-4 h-4 rounded accent-green-600 cursor-pointer"
+                                      <Checkbox
+                                        id={`approve-perm-${resource}-${action}-${perm.id}`}
+                                        className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
                                         checked={selectedPermissionIds.has(perm.id)}
-                                        onChange={() => togglePermission(perm.id)}
+                                        onCheckedChange={() => togglePermission(perm.id)}
                                       />
                                     ) : (
                                       <span className="text-slate-300">—</span>

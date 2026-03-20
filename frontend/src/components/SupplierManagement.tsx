@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { OperatingInfo } from "@shared/index";
 import OpeningHoursForm from "@/components/OpeningHoursForm";
+import { supplierFormSchema, toSupplierPayload } from "@/lib/place-form-validation";
 import { X } from "lucide-react";
 
 interface SupplierData {
@@ -52,11 +53,7 @@ export default function SupplierManagement({ user }: SupplierManagementProps) {
     geojson: { type: "Point", coordinates: [0, 0] },
   });
 
-  useEffect(() => {
-    fetchUserSupplier();
-  }, [user.id]);
-
-  const fetchUserSupplier = async () => {
+  const fetchUserSupplier = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await fetch(
@@ -77,9 +74,16 @@ export default function SupplierManagement({ user }: SupplierManagementProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user.id]);
+
+  useEffect(() => {
+    fetchUserSupplier();
+  }, [fetchUserSupplier]);
 
   const handleInputChange = (field: string, value: string | number) => {
+    if (error) {
+      setError(null);
+    }
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -91,6 +95,9 @@ export default function SupplierManagement({ user }: SupplierManagementProps) {
     field: string,
     value: string | number,
   ) => {
+    if (error) {
+      setError(null);
+    }
     setFormData((prev) => {
       if (section === "contactInfo") {
         return {
@@ -128,6 +135,23 @@ export default function SupplierManagement({ user }: SupplierManagementProps) {
     setError(null);
     setSuccess(null);
 
+    const validated = supplierFormSchema.safeParse({
+      name: formData.name,
+      contactInfo: formData.contactInfo,
+      coordinates: {
+        lat: formData.geojson.coordinates[1],
+        lng: formData.geojson.coordinates[0],
+      },
+      operatingInfo: formData.operatingInfo,
+    });
+
+    if (!validated.success) {
+      setError(
+        validated.error.issues[0]?.message || "Please check the form values.",
+      );
+      return;
+    }
+
     try {
       setIsLoading(true);
 
@@ -142,7 +166,7 @@ export default function SupplierManagement({ user }: SupplierManagementProps) {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify(formData),
+        body: JSON.stringify(toSupplierPayload(validated.data)),
       });
 
       if (!response.ok) {
@@ -344,12 +368,15 @@ export default function SupplierManagement({ user }: SupplierManagementProps) {
                   </h3>
                   <OpeningHoursForm
                     value={formData.operatingInfo}
-                    onChange={(hours) =>
+                    onChange={(hours) => {
                       setFormData((prev) => ({
                         ...prev,
                         operatingInfo: hours,
-                      }))
-                    }
+                      }));
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
                   />
                 </div>
 

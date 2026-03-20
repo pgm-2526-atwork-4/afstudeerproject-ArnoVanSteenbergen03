@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -72,45 +75,60 @@ export default function ProblemModal({
             What&apos;s the problem?
           </p>
 
-          <label className="flex items-center gap-3 p-3 rounded-lg border-2 border-slate-200 cursor-pointer hover:bg-red-50 transition-colors">
-            <input
-              type="checkbox"
+          <div className="flex items-center gap-3 p-3 rounded-lg border-2 border-slate-200 hover:bg-red-50 transition-colors">
+            <Checkbox
+              id="problem-order-too-large"
               checked={orderTooLarge}
-              onChange={(e) => setOrderTooLarge(e.target.checked)}
-              className="w-4 h-4 accent-red-600"
+              onCheckedChange={(checked) => setOrderTooLarge(checked === true)}
+              className="data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
             />
-            <span className="text-sm text-slate-800">Order too large</span>
-          </label>
+            <Label
+              htmlFor="problem-order-too-large"
+              className="text-sm text-slate-800 cursor-pointer"
+            >
+              Order too large
+            </Label>
+          </div>
 
           {orderTooLarge && (
-            <label className="flex items-center gap-3 p-3 rounded-lg border-2 border-orange-200 bg-orange-50 cursor-pointer hover:bg-orange-100 transition-colors ml-4">
-              <input
-                type="checkbox"
+            <div className="flex items-center gap-3 p-3 rounded-lg border-2 border-orange-200 bg-orange-50 hover:bg-orange-100 transition-colors ml-4">
+              <Checkbox
+                id="problem-additional-driver"
                 checked={needAdditionalDriver}
-                onChange={(e) => setNeedAdditionalDriver(e.target.checked)}
-                className="w-4 h-4 accent-orange-600"
+                onCheckedChange={(checked) =>
+                  setNeedAdditionalDriver(checked === true)
+                }
+                className="data-[state=checked]:bg-orange-600 data-[state=checked]:border-orange-600"
               />
-              <span className="text-sm text-orange-800">
+              <Label
+                htmlFor="problem-additional-driver"
+                className="text-sm text-orange-800 cursor-pointer"
+              >
                 Request additional driver
-              </span>
-            </label>
+              </Label>
+            </div>
           )}
 
-          <label className="flex items-center gap-3 p-3 rounded-lg border-2 border-slate-200 cursor-pointer hover:bg-red-50 transition-colors">
-            <input
-              type="checkbox"
+          <div className="flex items-center gap-3 p-3 rounded-lg border-2 border-slate-200 hover:bg-red-50 transition-colors">
+            <Checkbox
+              id="problem-vehicle-issue"
               checked={vehicleIssue}
-              onChange={(e) => setVehicleIssue(e.target.checked)}
-              className="w-4 h-4 accent-red-600"
+              onCheckedChange={(checked) => setVehicleIssue(checked === true)}
+              className="data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
             />
-            <span className="text-sm text-slate-800">Vehicle issue</span>
-          </label>
+            <Label
+              htmlFor="problem-vehicle-issue"
+              className="text-sm text-slate-800 cursor-pointer"
+            >
+              Vehicle issue
+            </Label>
+          </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <Label className="block text-sm font-medium text-slate-700 mb-1">
               Additional notes (optional)
-            </label>
-            <textarea
+            </Label>
+            <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Describe the problem..."

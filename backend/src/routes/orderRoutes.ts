@@ -83,21 +83,32 @@ router.post(
 
       // Build the list of order times with filter
       const orderTimes: Date[] = [];
+      let normalizedSlots: { date: string; time: string }[] = [];
 
-      if (
-        orderData.orderType === "repeated" &&
-        orderData.selectedDates &&
-        orderData.selectedDates.length > 0
-      ) {
-        const time = orderData.recurrenceTime || "09:00";
-        for (const dateStr of orderData.selectedDates) {
-          orderTimes.push(new Date(`${dateStr}T${time}:00`));
+      if (orderData.orderType === "repeated") {
+        normalizedSlots = [...(orderData.recurrenceSlots || [])].sort((a, b) =>
+          `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`),
+        );
+
+        if (normalizedSlots.length === 0) {
+          return res.status(400).json({
+            error: "Repeated orders require at least one day/time slot",
+          });
+        }
+
+        for (const slot of normalizedSlots) {
+          const dateTime = new Date(`${slot.date}T${slot.time}:00`);
+          if (Number.isNaN(dateTime.getTime())) {
+            return res.status(400).json({
+              error: `Invalid recurrence slot: ${slot.date} ${slot.time}`,
+            });
+          }
+          orderTimes.push(dateTime);
         }
       } else {
         orderTimes.push(new Date(orderTime));
       }
 
-      const isRepeated = orderData.orderType === "repeated";
       const allCreated: any[] = [];
 
       for (const time of orderTimes) {
@@ -115,10 +126,6 @@ router.post(
             orderTime: time,
             notes: orderData.notes,
             status: "requested",
-            weekly: isRepeated,
-            monthly: false,
-            recurrenceDays: isRepeated ? orderData.selectedDates ?? null : null,
-            recurrenceTime: isRepeated ? orderData.recurrenceTime ?? null : null,
             details: {
               orderType: orderData.orderType,
             },

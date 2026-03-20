@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -118,10 +120,10 @@ export default function CompletionModal({
         {selected === "incomplete" && (
           <div className="space-y-4 mt-2">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <Label className="block text-sm font-medium text-slate-700 mb-1">
                 Reason for incomplete delivery
-              </label>
-              <textarea
+              </Label>
+              <Textarea
                 value={incompleteReason}
                 onChange={(e) => setIncompleteReason(e.target.value)}
                 placeholder="Describe why the delivery could not be completed..."

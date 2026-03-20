@@ -1,14 +1,46 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { X, Plus, ImageIcon, Loader2, ArrowLeft } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { uploadGoodsImage, getLookupValues } from "@/lib/api-client";
 import type { GoodsData, GoodsFormItem } from "@/types";
 import type { LookupValue } from "@/lib/api-lookups";
+import { z } from "zod/v4";
+
+const CATEGORY_PLACEHOLDER = "__select_category__";
+
+const goodsItemValidationSchema = z.object({
+  goodState: z.enum(["fresh", "old", "dry"]),
+  overDueDate: z.boolean(),
+  category: z.string().trim().min(1, "Category is required"),
+  name: z.string().trim().min(1, "Item name is required"),
+  quantity: z
+    .string()
+    .trim()
+    .min(1, "Quantity is required")
+    .refine((value) => {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) && parsed > 0;
+    }, "Quantity must be a positive number")
+    .transform((value) => Number(value)),
+  unit: z.enum(["kg", "items", "boxes", "pallets", "liters"]),
+  allergies: z.string().trim().optional(),
+  expirationDate: z.string().optional(),
+  packageIncluded: z.boolean(),
+  image: z.string().optional(),
+});
 
 interface GoodsStepProps {
   onNext: (goods: GoodsData[]) => void;
@@ -79,11 +111,17 @@ export default function GoodsStep({
   }
 
   const addGoodsItem = () => {
+    if (validationError) {
+      setValidationError(null);
+    }
     setGoodsItems([...goodsItems, createEmptyItem(String(Date.now()))]);
   };
 
   const removeGoodsItem = (id: string) => {
     if (goodsItems.length > 1) {
+      if (validationError) {
+        setValidationError(null);
+      }
       setGoodsItems(goodsItems.filter((item) => item.id !== id));
     }
   };
@@ -93,6 +131,9 @@ export default function GoodsStep({
     field: keyof GoodsFormItem,
     value: string | boolean,
   ) => {
+    if (validationError) {
+      setValidationError(null);
+    }
     setGoodsItems(
       goodsItems.map((item) =>
         item.id === id ? { ...item, [field]: value } : item,
@@ -110,6 +151,49 @@ export default function GoodsStep({
     } finally {
       setUploadingItemId(null);
     }
+  };
+
+  const handleContinue = () => {
+    const parsedItems: GoodsData[] = [];
+
+    for (let index = 0; index < goodsItems.length; index++) {
+      const item = goodsItems[index];
+      const parsed = goodsItemValidationSchema.safeParse({
+        goodState: item.goodState,
+        overDueDate: item.overDueDate,
+        category: item.category,
+        name: item.name,
+        quantity: item.quantity,
+        unit: item.unit,
+        allergies: item.allergies || undefined,
+        expirationDate: item.expirationDate || undefined,
+        packageIncluded: item.packageIncluded,
+        image: item.image || undefined,
+      });
+
+      if (!parsed.success) {
+        setValidationError(
+          `Item ${index + 1}: ${parsed.error.issues[0]?.message || "Validation failed"}`,
+        );
+        return;
+      }
+
+      parsedItems.push({
+        goodState: parsed.data.goodState,
+        overDueDate: parsed.data.overDueDate,
+        category: parsed.data.category,
+        name: parsed.data.name,
+        quantity: parsed.data.quantity,
+        unit: parsed.data.unit,
+        allergies: parsed.data.allergies || undefined,
+        expirationDate: parsed.data.expirationDate || undefined,
+        packageIncluded: parsed.data.packageIncluded,
+        image: parsed.data.image || undefined,
+      });
+    }
+
+    setValidationError(null);
+    onNext(parsedItems);
   };
 
   return (
@@ -149,39 +233,60 @@ export default function GoodsStep({
                   <Label className="block text-sm font-semibold text-slate-800 mb-2">
                     State
                   </Label>
-                  <select
+                  <Select
                     value={item.goodState}
-                    onChange={(e) =>
-                      updateGoodsItem(item.id, "goodState", e.target.value)
+                    onValueChange={(value) =>
+                      updateGoodsItem(item.id, "goodState", value)
                     }
-                    className="w-full px-3 py-2 border-2 border-slate-800 rounded bg-white"
                   >
-                    {goodStates.map((t) => (
-                      <option key={t.value} value={t.value}>
-                        {t.label}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full px-3 py-2 border-2 border-slate-800 rounded bg-white">
+                      <SelectValue placeholder="Select state" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(goodStates.length > 0
+                        ? goodStates
+                        : [
+                            { value: "fresh", label: "Fresh" },
+                            { value: "old", label: "Old" },
+                            { value: "dry", label: "Dry" },
+                          ]
+                      ).map((t) => (
+                        <SelectItem key={t.value} value={t.value}>
+                          {t.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div>
                   <Label className="block text-sm font-semibold text-slate-800 mb-2">
                     Category
                   </Label>
-                  <select
-                    value={item.category}
-                    onChange={(e) =>
-                      updateGoodsItem(item.id, "category", e.target.value)
+                  <Select
+                    value={item.category || CATEGORY_PLACEHOLDER}
+                    onValueChange={(value) =>
+                      updateGoodsItem(
+                        item.id,
+                        "category",
+                        value === CATEGORY_PLACEHOLDER ? "" : value,
+                      )
                     }
-                    className="w-full px-3 py-2 border-2 border-slate-800 rounded bg-white"
                   >
-                    <option value="">Select a category</option>
-                    {categories.map((c) => (
-                      <option key={c.value} value={c.value}>
-                        {c.label}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full px-3 py-2 border-2 border-slate-800 rounded bg-white">
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={CATEGORY_PLACEHOLDER}>
+                        Select a category
+                      </SelectItem>
+                      {categories.map((c) => (
+                        <SelectItem key={c.value} value={c.value}>
+                          {c.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -220,19 +325,32 @@ export default function GoodsStep({
                   <Label className="block text-sm font-semibold text-slate-800 mb-2">
                     Unit
                   </Label>
-                  <select
+                  <Select
                     value={item.unit}
-                    onChange={(e) =>
-                      updateGoodsItem(item.id, "unit", e.target.value)
+                    onValueChange={(value) =>
+                      updateGoodsItem(item.id, "unit", value)
                     }
-                    className="w-full px-3 py-2 border-2 border-slate-800 rounded bg-white"
                   >
-                    {units.map((u) => (
-                      <option key={u.value} value={u.value}>
-                        {u.label}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full px-3 py-2 border-2 border-slate-800 rounded bg-white">
+                      <SelectValue placeholder="Select unit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(units.length > 0
+                        ? units
+                        : [
+                            { value: "kg", label: "Kg" },
+                            { value: "items", label: "Items" },
+                            { value: "boxes", label: "Boxes" },
+                            { value: "pallets", label: "Pallets" },
+                            { value: "liters", label: "Liters" },
+                          ]
+                      ).map((u) => (
+                        <SelectItem key={u.value} value={u.value}>
+                          {u.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -267,39 +385,45 @@ export default function GoodsStep({
               </div>
 
               <div className="space-y-2">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    id={`overdue-${item.id}`}
                     checked={item.overDueDate}
-                    onChange={(e) =>
-                      updateGoodsItem(item.id, "overDueDate", e.target.checked)
+                    onCheckedChange={(checked) =>
+                      updateGoodsItem(item.id, "overDueDate", checked === true)
                     }
-                    className="w-4 h-4 border-2 border-slate-800 rounded"
+                    className="border-slate-800"
                   />
-                  <span className="text-sm font-semibold text-slate-800">
+                  <Label
+                    htmlFor={`overdue-${item.id}`}
+                    className="text-sm font-semibold text-slate-800"
+                  >
                     Over due date
-                  </span>
-                </label>
+                  </Label>
+                </div>
               </div>
 
               <div className="space-y-2">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    id={`package-${item.id}`}
                     checked={item.packageIncluded}
-                    onChange={(e) =>
+                    onCheckedChange={(checked) =>
                       updateGoodsItem(
                         item.id,
                         "packageIncluded",
-                        e.target.checked,
+                        checked === true,
                       )
                     }
-                    className="w-4 h-4 border-2 border-slate-800 rounded"
+                    className="border-slate-800"
                   />
-                  <span className="text-sm font-semibold text-slate-800">
+                  <Label
+                    htmlFor={`package-${item.id}`}
+                    className="text-sm font-semibold text-slate-800"
+                  >
                     Packaging included
-                  </span>
-                </label>
+                  </Label>
+                </div>
               </div>
 
               <div>
@@ -374,34 +498,7 @@ export default function GoodsStep({
           Cancel Order
         </Button>
         <Button
-          onClick={() => {
-            const hasEmptyItems = goodsItems.some(
-              (item) =>
-                !item.name.trim() || !item.quantity || !item.category.trim(),
-            );
-            if (hasEmptyItems) {
-              setValidationError(
-                "Please fill in name, category, and quantity for all items.",
-              );
-              return;
-            }
-            setValidationError(null);
-
-            const itemsData: GoodsData[] = goodsItems.map((item) => ({
-              goodState: item.goodState,
-              overDueDate: item.overDueDate,
-              category: item.category,
-              name: item.name,
-              quantity: parseFloat(item.quantity),
-              unit: item.unit,
-              allergies: item.allergies || undefined,
-              expirationDate: item.expirationDate || undefined,
-              packageIncluded: item.packageIncluded,
-              image: item.image || undefined,
-            }));
-
-            onNext(itemsData);
-          }}
+          onClick={handleContinue}
           className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3"
         >
           Continue to delivery

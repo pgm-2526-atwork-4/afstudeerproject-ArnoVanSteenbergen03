@@ -127,6 +127,34 @@
       "when": 1773660723041,
       "tag": "0017_tiny_the_twelve",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1774000639529,
+      "tag": "0018_drop_unused_columns_option1",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1774001979858,
+      "tag": "0019_add_activity_drivers",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1774003142609,
+      "tag": "0020_clever_tarantula",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1774004665487,
+      "tag": "0021_fine_invisible_woman",
+      "breakpoints": true
     }
   ]
 }

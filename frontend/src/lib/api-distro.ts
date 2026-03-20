@@ -1,9 +1,12 @@
-import { DistributionCenter } from "@shared/index";
+import {
+  type DistributionCenter,
+  distributionCenterSchema,
+} from "@shared/index";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // Get distribution centers
-export async function getDistributionCenters() {
+export async function getDistributionCenters(): Promise<DistributionCenter[]> {
   const response = await fetch(`${API_BASE_URL}/distribution-centers`, {
     method: "GET",
     credentials: "include",
@@ -19,7 +22,8 @@ export async function getDistributionCenters() {
     }
   }
 
-  return response.json();
+  const json = await response.json();
+  return distributionCenterSchema.array().parse(json);
 }
 
 // Update distribution center

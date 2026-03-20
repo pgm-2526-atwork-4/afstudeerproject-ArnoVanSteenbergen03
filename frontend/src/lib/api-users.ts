@@ -1,4 +1,9 @@
-import type { AdminUser, AdminUserDetail } from "@shared/index";
+import {
+  type AdminUser,
+  type AdminUserDetail,
+  adminUserSchema,
+  adminUserDetailSchema,
+} from "@shared/index";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -37,7 +42,8 @@ export async function getUsers(role?: string): Promise<AdminUser[]> {
     }
   }
 
-  return response.json();
+  const json = await response.json();
+  return adminUserSchema.array().parse(json);
 }
 
 export async function getUserById(id: string): Promise<AdminUserDetail> {
@@ -52,7 +58,8 @@ export async function getUserById(id: string): Promise<AdminUserDetail> {
     throw new Error(error.error || "Failed to fetch user");
   }
 
-  return response.json();
+  const json = await response.json();
+  return adminUserDetailSchema.parse(json);
 }
 
 export async function updateUser(

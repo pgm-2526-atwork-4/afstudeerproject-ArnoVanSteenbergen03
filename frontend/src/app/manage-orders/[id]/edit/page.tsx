@@ -14,22 +14,38 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingScreen } from "@/components/ui/loading";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import type { AdminUser, DistributionCenter } from "@/types";
 import Link from "next/link";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { z } from "zod/v4";
 
-const STATUSES = ["requested", "accepted", "in_progress", "completed", "cancelled"];
-const ACTIVITY_TYPES = ["collection", "distribution", "hygiene", "other"];
+const STATUSES = ["requested", "accepted", "in_progress", "completed", "cancelled"] as const;
+const ACTIVITY_TYPES = ["collection", "distribution", "hygiene", "other"] as const;
+const NO_VOLUNTEER = "__no_volunteer__";
+const NO_CENTER = "__no_center__";
 
-interface DistroOption {
-  id: string;
-  name: string;
-}
-
-interface VolunteerOption {
-  id: string;
-  firstname: string;
-  lastname: string;
-}
+const editOrderSchema = z.object({
+  status: z.enum(STATUSES),
+  assignedDriver: z.string().nullable(),
+  assignedCenterId: z.string().nullable(),
+  location: z.string().trim().min(1, "Location is required"),
+  activityType: z.enum(ACTIVITY_TYPES),
+  orderTime: z
+    .string()
+    .min(1, "Order time is required")
+    .refine((value) => !Number.isNaN(new Date(value).getTime()), {
+      message: "Order time is invalid",
+    }),
+  notes: z.string().optional(),
+});
 
 export default function EditOrderPage() {
   const { user } = useAuth();
@@ -52,8 +68,8 @@ export default function EditOrderPage() {
 
   const [providerName, setProviderName] = useState("");
 
-  const [centers, setCenters] = useState<DistroOption[]>([]);
-  const [volunteers, setVolunteers] = useState<VolunteerOption[]>([]);
+  const [centers, setCenters] = useState<Array<Pick<DistributionCenter, "id" | "name">>>([]);
+  const [volunteers, setVolunteers] = useState<Array<Pick<AdminUser, "id" | "firstname" | "lastname">>>([]);
 
   useEffect(() => {
     if (!user || !orderId) return;
@@ -87,10 +103,10 @@ export default function EditOrderPage() {
         }
 
         setCenters(
-          centersData.map((c: DistroOption) => ({ id: c.id, name: c.name })),
+          centersData.map((c) => ({ id: c.id, name: c.name })),
         );
         setVolunteers(
-          volunteersData.map((v: VolunteerOption) => ({
+          volunteersData.map((v) => ({
             id: v.id,
             firstname: v.firstname,
             lastname: v.lastname,
@@ -110,15 +126,34 @@ export default function EditOrderPage() {
     setSaving(true);
     setError(null);
     setSuccess(null);
+
+    const validated = editOrderSchema.safeParse({
+      status,
+      assignedDriver,
+      assignedCenterId,
+      location,
+      activityType,
+      orderTime,
+      notes,
+    });
+
+    if (!validated.success) {
+      setSaving(false);
+      setError(
+        validated.error.issues[0]?.message || "Please check the form values.",
+      );
+      return;
+    }
+
     try {
       await updateAdminOrder(orderId, {
-        status,
-        assignedDriver,
-        assignedCenterId,
-        location,
-        activityType,
-        orderTime: new Date(orderTime).toISOString(),
-        notes: notes || null,
+        status: validated.data.status,
+        assignedDriver: validated.data.assignedDriver,
+        assignedCenterId: validated.data.assignedCenterId,
+        location: validated.data.location,
+        activityType: validated.data.activityType,
+        orderTime: new Date(validated.data.orderTime).toISOString(),
+        notes: validated.data.notes?.trim() ? validated.data.notes.trim() : null,
       });
       setSuccess("Order updated successfully");
       setTimeout(() => router.push("/manage-orders"), 1000);
@@ -162,74 +197,90 @@ export default function EditOrderPage() {
 
               <div>
                 <Label className="text-sm font-medium text-slate-700">Status</Label>
-                <select
+                <Select
                   value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  className="w-full border-2 border-slate-300 rounded-lg px-3 py-2 bg-white text-slate-800 text-sm mt-1"
+                  onValueChange={(value) => setStatus(value)}
                 >
-                  {STATUSES.map((s) => (
-                    <option key={s} value={s}>
-                      {formatStatus(s)}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full border-2 border-slate-300 rounded-lg px-3 py-2 bg-white text-slate-800 text-sm mt-1">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUSES.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {formatStatus(s)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
                 <Label className="text-sm font-medium text-slate-700">
                   Assigned Volunteer
                 </Label>
-                <select
-                  value={assignedDriver ?? ""}
-                  onChange={(e) =>
-                    setAssignedDriver(e.target.value || null)
+                <Select
+                  value={assignedDriver ?? NO_VOLUNTEER}
+                  onValueChange={(value) =>
+                    setAssignedDriver(value === NO_VOLUNTEER ? null : value)
                   }
-                  className="w-full border-2 border-slate-300 rounded-lg px-3 py-2 bg-white text-slate-800 text-sm mt-1"
                 >
-                  <option value="">No volunteer assigned</option>
-                  {volunteers.map((v) => (
-                    <option key={v.id} value={v.id}>
-                      {v.firstname} {v.lastname}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full border-2 border-slate-300 rounded-lg px-3 py-2 bg-white text-slate-800 text-sm mt-1">
+                    <SelectValue placeholder="No volunteer assigned" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NO_VOLUNTEER}>No volunteer assigned</SelectItem>
+                    {volunteers.map((v) => (
+                      <SelectItem key={v.id} value={v.id}>
+                        {v.firstname} {v.lastname}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
                 <Label className="text-sm font-medium text-slate-700">
                   Distribution Center
                 </Label>
-                <select
-                  value={assignedCenterId ?? ""}
-                  onChange={(e) =>
-                    setAssignedCenterId(e.target.value || null)
+                <Select
+                  value={assignedCenterId ?? NO_CENTER}
+                  onValueChange={(value) =>
+                    setAssignedCenterId(value === NO_CENTER ? null : value)
                   }
-                  className="w-full border-2 border-slate-300 rounded-lg px-3 py-2 bg-white text-slate-800 text-sm mt-1"
                 >
-                  <option value="">No center assigned</option>
-                  {centers.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full border-2 border-slate-300 rounded-lg px-3 py-2 bg-white text-slate-800 text-sm mt-1">
+                    <SelectValue placeholder="No center assigned" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NO_CENTER}>No center assigned</SelectItem>
+                    {centers.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
                 <Label className="text-sm font-medium text-slate-700">
                   Activity Type
                 </Label>
-                <select
+                <Select
                   value={activityType}
-                  onChange={(e) => setActivityType(e.target.value)}
-                  className="w-full border-2 border-slate-300 rounded-lg px-3 py-2 bg-white text-slate-800 text-sm mt-1"
+                  onValueChange={(value) => setActivityType(value)}
                 >
-                  {ACTIVITY_TYPES.map((t) => (
-                    <option key={t} value={t}>
-                      {t.charAt(0).toUpperCase() + t.slice(1)}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full border-2 border-slate-300 rounded-lg px-3 py-2 bg-white text-slate-800 text-sm mt-1">
+                    <SelectValue placeholder="Select activity type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ACTIVITY_TYPES.map((t) => (
+                      <SelectItem key={t} value={t}>
+                        {t.charAt(0).toUpperCase() + t.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
@@ -255,7 +306,7 @@ export default function EditOrderPage() {
 
               <div>
                 <Label className="text-sm font-medium text-slate-700">Notes</Label>
-                <textarea
+                <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={3}

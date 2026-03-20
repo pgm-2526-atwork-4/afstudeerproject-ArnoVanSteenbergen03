@@ -34,5 +34,5 @@ for (const pkg of candidates) {
   }
 }
 
-console.error("[ensure-lightningcss] Unable to install lightningcss native binary on Linux.");
-process.exit(1);
+console.warn("[ensure-lightningcss] Unable to install lightningcss native binary on Linux. Falling back to JavaScript implementation.");
+process.exit(0);

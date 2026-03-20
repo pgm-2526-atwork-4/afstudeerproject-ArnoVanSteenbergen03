@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useState, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { updateProfile, uploadProfileImage } from "@/lib/api-client";
@@ -135,10 +136,13 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
         <div className="mb-6">
           <div className="w-24 h-24 rounded-full border-4 border-slate-800 flex items-center justify-center bg-white overflow-hidden">
             {profileImage ? (
-              <img
+              <Image
                 src={`${process.env.NEXT_PUBLIC_API_BASE_URL?.replace('/api', '')}${profileImage}`}
                 alt="Profile"
                 className="w-full h-full object-cover"
+                width={96}
+                height={96}
+                unoptimized
               />
             ) : (
               <div className="text-slate-400 text-4xl">✕</div>

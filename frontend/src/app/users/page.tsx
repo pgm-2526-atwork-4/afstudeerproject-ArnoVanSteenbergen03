@@ -298,7 +298,7 @@ export default function UsersPage() {
             {users.map((usr) => (
               <div
                 key={usr.id}
-                className="bg-white border-2 border-slate-800 rounded-lg p-6"
+                className="bg-white border-2 border-[#2D3E2D] rounded-lg p-6"
               >
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
@@ -382,7 +382,7 @@ export default function UsersPage() {
       {/* Create user modal - 3 step wizard */}
       {showCreateDialog && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl border-2 border-slate-800 w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="bg-white rounded-xl border-2 border-[#2D3E2D] w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between p-6 border-b border-slate-200">
               <div>
                 <h2 className="text-xl font-bold text-slate-800">

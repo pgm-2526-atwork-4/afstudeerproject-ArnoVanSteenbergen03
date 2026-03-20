@@ -71,8 +71,8 @@ export default function OrdersScreen({ user }: { user: User }) {
       <div className="flex flex-col min-h-[calc(100vh-120px)] lg:min-h-screen bg-amber-50 p-4">
         <div className="flex justify-center mb-8">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-slate-800 mb-4">Orders</h1>
-            <div className="h-1 bg-slate-800 w-32 mx-auto"></div>
+            <h1 className="text-4xl font-bold text-slate-800 mb-2">Orders</h1>
+          <div className="h-1 bg-gradient-to-r from-slate-400 to-slate-600 w-40 mx-auto rounded-full"></div>
           </div>
         </div>
         <CardSkeleton count={5} />
@@ -84,8 +84,8 @@ export default function OrdersScreen({ user }: { user: User }) {
     <div className="flex flex-col min-h-[calc(100vh-120px)] lg:min-h-screen bg-amber-50 p-4">
       <div className="flex justify-center mb-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-slate-800 mb-4">Orders</h1>
-          <div className="h-1 bg-slate-800 w-32 mx-auto"></div>
+          <h1 className="text-4xl font-bold text-slate-800 mb-2">Orders</h1>
+          <div className="h-1 bg-gradient-to-r from-slate-400 to-slate-600 w-40 mx-auto rounded-full"></div>
         </div>
       </div>
 
@@ -189,7 +189,7 @@ export default function OrdersScreen({ user }: { user: User }) {
               {displayedOrders.map((order, index) => (
                 <div
                   key={order.id}
-                  className="bg-white border-2 border-slate-800 rounded-lg p-6 hover:shadow-md transition-shadow"
+                  className="bg-[#E3EDE3] border-2 border-[#2D3E2D] rounded-lg p-6 hover:shadow-md transition-shadow"
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-2">

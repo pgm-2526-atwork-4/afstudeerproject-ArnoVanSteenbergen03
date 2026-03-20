@@ -7,6 +7,7 @@ import {
   Truck,
   MessageCircle,
   User,
+  LogOut,
   Menu,
   X,
 } from "lucide-react";
@@ -26,7 +27,7 @@ interface NavItem {
 
 export default function AppNavigation() {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { hasPermission } = usePermissions();
   const { totalUnread } = useUnreadCounts();
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
@@ -85,11 +86,17 @@ export default function AppNavigation() {
                 variant="ghost"
                 className={`flex flex-col items-center gap-2 h-auto p-2 ${
                   isActive
-                    ? "text-orange-600"
-                    : "text-slate-600 hover:text-orange-600"
+                    ? "text-[#2D3E2D]"
+                    : "text-slate-600 hover:text-[#2D3E2D]"
                 }`}
               >
-                <div className="relative">
+                <div
+                  className={`relative rounded-full p-1.5 ${
+                    isActive
+                      ? "bg-[#E3EDE3] border border-[#2D3E2D]"
+                      : "bg-[#E3EDE3]"
+                  }`}
+                >
                   <IconComponent className="w-6 h-6" />
                   {item.href === "/chatroom" && totalUnread > 0 && (
                     <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
@@ -97,7 +104,11 @@ export default function AppNavigation() {
                     </span>
                   )}
                 </div>
-                <span className="text-xs font-semibold">{item.label}</span>
+                <span
+                  className={`text-xs ${isActive ? "font-bold" : "font-semibold"}`}
+                >
+                  {item.label}
+                </span>
               </Button>
             </Link>
           );
@@ -144,7 +155,7 @@ export default function AppNavigation() {
 
         <aside
           id="desktop-nav-drawer"
-          className={`absolute left-0 top-0 h-full w-72 border-r-2 border-slate-800 bg-white p-6 shadow-xl transition-transform duration-200 ${
+          className={`absolute left-0 top-0 h-full w-72 border-r-2 border-slate-800 bg-white p-6 shadow-xl transition-transform duration-200 flex flex-col ${
             isDesktopMenuOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
@@ -189,6 +200,21 @@ export default function AppNavigation() {
               );
             })}
           </nav>
+
+          <div className="mt-auto pt-4">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={async () => {
+                setIsDesktopMenuOpen(false);
+                await logout();
+              }}
+              className="w-full justify-start gap-3 px-4 py-6 rounded-lg text-red-600 hover:bg-red-50"
+            >
+              <LogOut className="w-5 h-5" />
+              <span className="font-semibold">Logout</span>
+            </Button>
+          </div>
         </aside>
       </div>
     </>

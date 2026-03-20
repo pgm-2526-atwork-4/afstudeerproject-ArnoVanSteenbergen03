@@ -116,8 +116,8 @@ export default function ChatManagementModal({
     <>
       {open && (
         <div className="fixed inset-0 z-20 flex items-center justify-center bg-slate-900/35 p-4">
-          <div className="w-full max-w-2xl rounded-xl border-2 border-slate-800 bg-white shadow-xl max-h-[80vh] overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+          <div className="w-full max-w-2xl rounded-xl border-2 border-[#2D3E2D] bg-white shadow-xl max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between border-b border-[#2D3E2D] px-6 py-4">
               <h2 className="text-lg font-bold text-slate-800">
                 {isAdmin ? "Manage Chat Members" : "Chat Info"}
               </h2>
@@ -159,7 +159,7 @@ export default function ChatManagementModal({
                     participants.map((participant) => (
                       <div
                         key={participant.id}
-                        className="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:bg-slate-50"
+                        className="flex items-center justify-between p-3 rounded-lg border border-[#2D3E2D] hover:bg-slate-50"
                       >
                         <div className="flex items-center gap-3">
                           {participant.profileImage ? (
@@ -237,7 +237,7 @@ export default function ChatManagementModal({
                   </div>
 
                   {showAddForm && (
-                    <div className="space-y-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div className="space-y-3 p-3 bg-slate-50 rounded-lg border border-[#2D3E2D]">
                       {loadingUsers ? (
                         <p className="text-sm text-slate-600">
                           Loading users...
@@ -251,7 +251,7 @@ export default function ChatManagementModal({
                               placeholder="Search users by name..."
                               value={searchQuery}
                               onChange={(e) => setSearchQuery(e.target.value)}
-                              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                              className="w-full pl-10 pr-4 py-2 border border-[#2D3E2D] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D3E2D] text-sm"
                             />
                           </div>
 
@@ -261,7 +261,7 @@ export default function ChatManagementModal({
                                 {paginatedUsers.map((user) => (
                                   <div
                                     key={user.id}
-                                    className="flex items-center justify-between p-3 rounded-lg bg-white border border-slate-200"
+                                    className="flex items-center justify-between p-3 rounded-lg bg-white border border-[#2D3E2D]"
                                   >
                                     <div className="flex items-center gap-3">
                                       {user.profileImage ? (
@@ -342,7 +342,7 @@ export default function ChatManagementModal({
               )}
             </div>
 
-            <div className="border-t border-slate-200 px-6 py-4 bg-slate-50">
+            <div className="border-t border-[#2D3E2D] px-6 py-4 bg-slate-50">
               <Button
                 onClick={() => {
                   onOpenChange(false);
@@ -358,8 +358,8 @@ export default function ChatManagementModal({
 
           {deleteConfirm && (
             <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-900/50 p-4">
-              <div className="w-full max-w-sm rounded-xl border-2 border-slate-800 bg-white shadow-xl">
-                <div className="border-b border-slate-200 px-6 py-4">
+              <div className="w-full max-w-sm rounded-xl border-2 border-[#2D3E2D] bg-white shadow-xl">
+                <div className="border-b border-[#2D3E2D] px-6 py-4">
                   <h3 className="text-lg font-bold text-slate-800">
                     Remove Member
                   </h3>
@@ -373,7 +373,7 @@ export default function ChatManagementModal({
                   </p>
                 </div>
 
-                <div className="flex gap-3 border-t border-slate-200 px-6 py-4">
+                <div className="flex gap-3 border-t border-[#2D3E2D] px-6 py-4">
                   <button
                     onClick={() => setDeleteConfirm(null)}
                     disabled={loadingAction === deleteConfirm.userId}

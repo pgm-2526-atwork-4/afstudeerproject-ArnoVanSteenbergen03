@@ -3,8 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 
-//TODO: ADD MORE GREEN FN
-
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-amber-50">

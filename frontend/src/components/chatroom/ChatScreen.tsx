@@ -21,7 +21,7 @@ import ChatManagementModal from "./ChatManagementModal";
 function ChatScreenSkeleton() {
   return (
     <div className="flex flex-col h-[calc(100dvh-94px)] lg:h-[100dvh] min-h-0">
-      <div className="relative px-4 py-3 border-b border-slate-200 bg-white">
+      <div className="relative px-4 py-3 border-b border-[#2D3E2D] bg-white">
         <div className="h-6 w-44 mx-auto rounded bg-slate-200 animate-pulse" />
       </div>
 
@@ -31,7 +31,7 @@ function ChatScreenSkeleton() {
           {Array.from({ length: 5 }).map((_, index) => (
             <div
               key={`community-${index}`}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-100"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#2D3E2D]"
             >
               <div className="h-4 w-4 rounded bg-slate-200 animate-pulse" />
               <div className="h-3 w-32 rounded bg-slate-200 animate-pulse" />
@@ -44,7 +44,7 @@ function ChatScreenSkeleton() {
           {Array.from({ length: 4 }).map((_, index) => (
             <div
               key={`thread-${index}`}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-100"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#2D3E2D]"
             >
               <div className="h-4 w-4 rounded bg-slate-200 animate-pulse" />
               <div className="h-3 w-40 rounded bg-slate-200 animate-pulse" />
@@ -70,20 +70,20 @@ function MessageSkeletonList() {
             <div
               className={`max-w-[75%] rounded-2xl px-4 py-3 animate-pulse ${
                 isOwn
-                  ? "bg-orange-200"
-                  : "bg-white border border-slate-200"
+                    ? "bg-[#E3EDE3] border border-[#2D3E2D]"
+                  : "bg-white border border-[#2D3E2D]"
               }`}
             >
               {!isOwn && (
-                <div className="h-3 w-24 bg-orange-200 rounded mb-2" />
+                  <div className="h-3 w-24 bg-[#E3EDE3] rounded mb-2" />
               )}
               <div
                 className={`h-3 rounded mb-2 ${
-                  isOwn ? "bg-orange-300" : "bg-slate-200"
+                    isOwn ? "bg-[#C9DBC9]" : "bg-slate-200"
                 } ${index % 3 === 0 ? "w-40" : "w-28"}`}
               />
               <div
-                className={`h-2 rounded ${isOwn ? "bg-orange-300" : "bg-slate-200"} w-14`}
+                  className={`h-2 rounded ${isOwn ? "bg-[#C9DBC9]" : "bg-slate-200"} w-14`}
               />
             </div>
           </div>
@@ -290,7 +290,7 @@ export default function ChatScreen() {
 
   return (
     <div className="flex flex-col h-[calc(100dvh-94px)] lg:h-[100dvh] min-h-0">
-      <div className="relative flex items-center justify-center px-4 py-3 border-b border-slate-200 bg-white">
+      <div className="relative flex items-center justify-center px-4 py-3 border-b border-[#2D3E2D] bg-white">
         {!showSidebar && (
           <button
             onClick={() => setShowSidebar(true)}
@@ -305,7 +305,7 @@ export default function ChatScreen() {
           <button
             type="button"
             onClick={() => setShowManagement(true)}
-            className="text-xl font-bold text-slate-800 text-center truncate max-w-[70%] hover:text-orange-600 transition-colors"
+            className="text-xl font-bold text-slate-800 text-center truncate max-w-[70%] hover:text-[#2D3E2D] transition-colors"
             title={isAdmin ? "Manage members" : "Chat info"}
           >
             {activeChannel.name}
@@ -319,7 +319,7 @@ export default function ChatScreen() {
 
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <div
-          className={`${showSidebar ? "w-full" : "hidden"} md:block md:w-64 md:border-r border-slate-200 bg-white overflow-y-auto flex-shrink-0`}
+          className={`${showSidebar ? "w-full" : "hidden"} md:block md:w-64 md:border-r border-[#2D3E2D] bg-white overflow-y-auto flex-shrink-0`}
         >
           <div className="p-3">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
@@ -331,7 +331,7 @@ export default function ChatScreen() {
                 onClick={() => selectChannel(ch)}
                 className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-left text-sm ${
                   activeChannel?.id === ch.id
-                    ? "bg-orange-100 text-orange-700 font-medium"
+                    ? "bg-[#E3EDE3] text-[#2D3E2D] font-medium border border-[#2D3E2D]"
                     : "text-slate-600 hover:bg-slate-50"
                 }`}
               >
@@ -347,7 +347,7 @@ export default function ChatScreen() {
           </div>
 
           {distroChannels.length > 0 && (
-            <div className="p-3 border-t border-slate-100">
+            <div className="p-3 border-t border-[#2D3E2D]">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                 Distribution Centers
               </p>
@@ -357,7 +357,7 @@ export default function ChatScreen() {
                   onClick={() => selectChannel(ch)}
                   className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-left text-sm ${
                     activeChannel?.id === ch.id
-                      ? "bg-orange-100 text-orange-700 font-medium"
+                      ? "bg-[#E3EDE3] text-[#2D3E2D] font-medium border border-[#2D3E2D]"
                       : "text-slate-600 hover:bg-slate-50"
                   }`}
                 >
@@ -374,7 +374,7 @@ export default function ChatScreen() {
           )}
 
           {supplierChannels.length > 0 && (
-            <div className="p-3 border-t border-slate-100">
+            <div className="p-3 border-t border-[#2D3E2D]">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                 Suppliers
               </p>
@@ -384,7 +384,7 @@ export default function ChatScreen() {
                   onClick={() => selectChannel(ch)}
                   className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-left text-sm ${
                     activeChannel?.id === ch.id
-                      ? "bg-orange-100 text-orange-700 font-medium"
+                      ? "bg-[#E3EDE3] text-[#2D3E2D] font-medium border border-[#2D3E2D]"
                       : "text-slate-600 hover:bg-slate-50"
                   }`}
                 >
@@ -432,12 +432,12 @@ export default function ChatScreen() {
                           <div
                             className={`max-w-[75%] rounded-2xl px-4 py-2 ${
                               isOwn
-                                ? "bg-orange-500 text-white"
-                                : "bg-white border border-slate-200 text-slate-800"
+                                ? "bg-[#E3EDE3] border border-[#2D3E2D] text-[#2D3E2D]"
+                                : "bg-white border border-[#2D3E2D] text-slate-800"
                             }`}
                           >
                             {!isOwn && (
-                              <p className="text-xs font-semibold text-orange-600 mb-0.5">
+                              <p className="text-xs font-semibold text-[#2D3E2D] mb-0.5">
                                 {msg.user.firstname} {msg.user.lastname}
                               </p>
                             )}
@@ -445,7 +445,7 @@ export default function ChatScreen() {
                               {displayBody}
                             </p>
                             <p
-                              className={`text-[10px] mt-1 ${isOwn ? "text-orange-200" : "text-slate-400"}`}
+                              className={`text-[10px] mt-1 ${isOwn ? "text-[#5A6F5A]" : "text-slate-400"}`}
                             >
                               {new Date(msg.createdAt).toLocaleTimeString([], {
                                 hour: "2-digit",
@@ -461,7 +461,7 @@ export default function ChatScreen() {
                 )}
               </div>
 
-              <div className="border-t border-slate-200 bg-white px-4 py-3">
+              <div className="border-t border-[#2D3E2D] bg-white px-4 py-3">
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
@@ -470,12 +470,12 @@ export default function ChatScreen() {
                     onKeyDown={handleKeyDown}
                     placeholder="Type a message..."
                     disabled={messagesLoading}
-                    className="flex-1 rounded-full border border-slate-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    className="flex-1 rounded-full border border-[#2D3E2D] px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2D3E2D]"
                   />
                   <button
                     onClick={handleSend}
                     disabled={messagesLoading || !input.trim()}
-                    className="p-2 rounded-full bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="p-2 rounded-full border border-[#2D3E2D] bg-[#E3EDE3] text-[#2D3E2D] hover:bg-[#D3E2D3] disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <Send className="h-4 w-4" />
                   </button>

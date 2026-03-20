@@ -138,7 +138,7 @@ export default function ManageOrdersPage() {
         </div>
 
         <div className="max-w-5xl mx-auto w-full">
-          <div className="bg-white border-2 border-slate-800 rounded-lg p-4 mb-6">
+          <div className="bg-white border-2 border-[#2D3E2D] rounded-lg p-4 mb-6">
             <div className="flex items-center gap-2 mb-3">
               <Filter className="w-4 h-4 text-slate-600" />
               <span className="text-sm font-semibold text-slate-700">Filters</span>
@@ -247,7 +247,7 @@ export default function ManageOrdersPage() {
                 {orders.map((order) => (
                   <div
                     key={order.id}
-                    className="bg-white border-2 border-slate-800 rounded-lg p-4 hover:bg-slate-50 transition-colors"
+                    className="bg-white border-2 border-[#2D3E2D] rounded-lg p-4 hover:bg-slate-50 transition-colors"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="flex-1 min-w-0">

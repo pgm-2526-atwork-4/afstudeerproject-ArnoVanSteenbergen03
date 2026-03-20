@@ -308,10 +308,10 @@ export default function DeliveriesScreen() {
       <div className="flex flex-col min-h-[calc(100vh-120px)] lg:min-h-screen bg-amber-50 p-4">
         <div className="flex justify-center mb-8">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-slate-800 mb-4">
+            <h1 className="text-4xl font-bold text-slate-800 mb-2">
               Deliveries
             </h1>
-            <div className="h-1 bg-slate-800 w-32 mx-auto"></div>
+            <div className="h-1 bg-gradient-to-r from-slate-400 to-slate-600 w-40 mx-auto rounded-full"></div>
           </div>
         </div>
         <CardSkeleton count={5} />
@@ -323,8 +323,8 @@ export default function DeliveriesScreen() {
     <div className="flex flex-col min-h-[calc(100vh-120px)] lg:min-h-screen bg-amber-50 p-4">
       <div className="flex justify-center mb-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-slate-800 mb-4">Deliveries</h1>
-          <div className="h-1 bg-slate-800 w-32 mx-auto"></div>
+          <h1 className="text-4xl font-bold text-slate-800 mb-2">Deliveries</h1>
+          <div className="h-1 bg-gradient-to-r from-slate-400 to-slate-600 w-40 mx-auto rounded-full"></div>
         </div>
       </div>
 
@@ -401,10 +401,7 @@ export default function DeliveriesScreen() {
               <label className="block text-xs font-medium text-slate-500 mb-1">
                 Distribution Center
               </label>
-              <Select
-                value={filterCenter}
-                onValueChange={setFilterCenter}
-              >
+              <Select value={filterCenter} onValueChange={setFilterCenter}>
                 <SelectTrigger className="w-full p-2 border border-slate-200 rounded-lg text-sm">
                   <SelectValue placeholder="All Centers" />
                 </SelectTrigger>

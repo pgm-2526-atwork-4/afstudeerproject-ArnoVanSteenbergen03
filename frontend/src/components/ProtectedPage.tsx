@@ -43,11 +43,7 @@ export default function ProtectedPage({
   }, [user, loading, router, hasAccess]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-amber-50">
-        <p className="text-slate-600">Loading...</p>
-      </div>
-    );
+    return null;
   }
 
   if (!user || !user.isApproved || !hasAccess) {

@@ -125,7 +125,7 @@ export default function DistributionCentersPage() {
               {centers.map((center) => (
                 <div
                   key={center.id}
-                  className="bg-white border-2 border-slate-800 rounded-lg p-6"
+                  className="bg-white border-2 border-[#2D3E2D] rounded-lg p-6"
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div>

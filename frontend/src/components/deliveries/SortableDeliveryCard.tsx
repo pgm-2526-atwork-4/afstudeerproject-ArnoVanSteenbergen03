@@ -35,7 +35,7 @@ export default function SortableDeliveryCard({
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-[#E3EDE3] border-2 border-[#2D3E2D] rounded-lg p-6 transition-shadow h-full ${isDragging ? "shadow-lg" : "hover:shadow-md"}`}
+      className={`bg-[#E3EDE3] border-2 border-[#2D3E2D] rounded-lg p-6 transition-shadow ${isDragging ? "shadow-lg" : "hover:shadow-md"}`}
     >
       <div className="flex gap-3">
         <button

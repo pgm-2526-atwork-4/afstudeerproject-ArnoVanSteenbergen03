@@ -239,6 +239,10 @@ function CreateOrderContent() {
               onSubmit={handleSubmitOrder}
               submitting={submitting}
               error={error}
+              initialLocation={formData.location}
+              initialVehicleId={formData.vehicleId}
+              initialNotes={formData.deliveryNotes}
+              initialOrderTime={formData.orderTime}
               hideDateTime={isRepeated}
             />
           )}

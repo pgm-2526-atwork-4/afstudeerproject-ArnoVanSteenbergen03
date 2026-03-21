@@ -22,7 +22,7 @@ export default function OrderTypeStep({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl w-full">
         <Card
-          className="cursor-pointer hover:shadow-lg transition-shadow border-slate-800 rounded-lg"
+          className="cursor-pointer hover:shadow-lg transition-shadow border-slate-800 rounded-lg bg-white"
           onClick={() => onSelectOrderType("single")}
         >
           <CardContent className="p-8">
@@ -38,7 +38,7 @@ export default function OrderTypeStep({
         </Card>
 
         <Card
-          className="cursor-pointer hover:shadow-lg transition-shadow border-slate-800 rounded-lg"
+          className="cursor-pointer hover:shadow-lg transition-shadow border-slate-800 rounded-lg bg-white"
           onClick={() => onSelectOrderType("repeated")}
         >
           <CardContent className="p-8">

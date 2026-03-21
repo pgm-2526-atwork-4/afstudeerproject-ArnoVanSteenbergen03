@@ -12,6 +12,7 @@ import { getVehicles } from "@/lib/api-client";
 import type { Vehicle } from "@shared/index";
 import { z } from "zod/v4";
 
+
 const deliveryStepSchema = z.object({
   location: z.string().trim().min(1, "Please enter a location."),
   vehicleId: z.string().trim().min(1, "Please select a vehicle type."),
@@ -184,7 +185,7 @@ export default function DeliveryStep({
         {loading ? (
           <p className="text-slate-600">Loading vehicles...</p>
         ) : (
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {vehicles.map((vehicle) => {
               const IconComponent = getIconComponent(vehicle.icon);
               const isSelected = selectedVehicle === vehicle.id;
@@ -199,7 +200,7 @@ export default function DeliveryStep({
                     }
                   }}
                   variant="outline"
-                  className={`flex flex-col items-center gap-3 p-4 border-2 rounded-lg transition ${
+                  className={`h-auto min-h-24 flex flex-col items-center justify-center gap-2 px-3 py-4 whitespace-normal border-2 rounded-lg transition ${
                     isSelected
                       ? "border-orange-600 bg-orange-50"
                       : "border-slate-300 hover:border-slate-800"

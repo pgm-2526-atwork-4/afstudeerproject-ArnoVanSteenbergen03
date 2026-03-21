@@ -560,7 +560,7 @@ export default function DeliveriesScreen() {
                   items={displayedOrders.map((d) => d.activity.id)}
                   strategy={rectSortingStrategy}
                 >
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
                     {displayedOrders.map((delivery) => (
                       <SortableDeliveryCard
                         key={delivery.activity.id}
@@ -580,7 +580,7 @@ export default function DeliveriesScreen() {
                 </SortableContext>
               </DndContext>
             ) : activeTab === "assistance" ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
                 {displayedOrders.map((delivery) => (
                   <div
                     key={delivery.activity.id}

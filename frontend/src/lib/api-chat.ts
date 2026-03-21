@@ -128,7 +128,7 @@ export async function sendCompletionMessage(
   activityId: string,
   status: "completed" | "incomplete" | "need_assistance",
   data?: Record<string, unknown>,
-): Promise<ChatMessage> {
+): Promise<ChatMessage | null> {
   const response = await fetch(`${API_BASE_URL}/chat/send-completion-message`, {
     method: "POST",
     credentials: "include",
@@ -144,6 +144,13 @@ export async function sendCompletionMessage(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
+    if (
+      response.status === 404 &&
+      typeof error.error === "string" &&
+      error.error.includes("No channel found")
+    ) {
+      return null;
+    }
     throw new Error(error.error || "Failed to send completion message");
   }
 

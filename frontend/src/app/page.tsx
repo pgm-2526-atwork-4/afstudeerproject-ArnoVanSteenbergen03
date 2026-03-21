@@ -21,7 +21,7 @@ export default function Home() {
           Welcome to Pick Up & Give!
         </h1>
 
-        <Card className="w-full max-w-sm mb-8 border-2 border-slate-300 rounded-3xl">
+        <Card className="w-full max-w-sm mb-8 border-2 border-slate-300 rounded-3xl bg-white">
           <CardHeader className="pb-2">
             <CardTitle className="text-center text-lg font-semibold">
               Project Description

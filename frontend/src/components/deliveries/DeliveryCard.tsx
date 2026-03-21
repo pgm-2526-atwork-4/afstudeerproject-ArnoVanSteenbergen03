@@ -16,7 +16,7 @@ export default function DeliveryCard({
   getVehicleIcon,
 }: OpenCardProps) {
   return (
-    <div className="bg-[#E3EDE3] border-2 border-[#2D3E2D] rounded-lg p-6 hover:shadow-md transition-shadow h-full">
+    <div className="bg-[#E3EDE3] border-2 border-[#2D3E2D] rounded-lg p-6 hover:shadow-md transition-shadow">
       <CardContent
         delivery={delivery}
         expandedOrderId={expandedOrderId}

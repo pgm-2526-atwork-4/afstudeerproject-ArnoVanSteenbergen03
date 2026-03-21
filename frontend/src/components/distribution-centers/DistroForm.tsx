@@ -105,6 +105,11 @@ export default function DistroForm({
     });
   };
 
+  const handlePhoneChange = (value: string) => {
+    const digitsOnly = value.replace(/\D/g, "");
+    handleNestedChange("contactInfo", "phone", digitsOnly);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError(null);
@@ -208,9 +213,9 @@ export default function DistroForm({
                 <Input
                   type="tel"
                   value={formData.contactInfo.phone}
-                  onChange={(e) =>
-                    handleNestedChange("contactInfo", "phone", e.target.value)
-                  }
+                  onChange={(e) => handlePhoneChange(e.target.value)}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   className="w-full px-3 py-2 border-2 border-slate-800 rounded"
                 />
               </div>

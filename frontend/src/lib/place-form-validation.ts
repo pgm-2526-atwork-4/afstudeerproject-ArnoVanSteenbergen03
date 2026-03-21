@@ -2,12 +2,19 @@ import { operatingInfoSchema, type DistributionCenter } from "@shared/index"
 import { z } from "zod/v4"
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const phoneDigitsRegex = /^\d+$/
 
 export const placeFormSchema = z
   .object({
     name: z.string().trim().min(1, "Name is required"),
     contactInfo: z.object({
-      phone: z.string().trim().optional(),
+      phone: z
+        .string()
+        .trim()
+        .optional()
+        .refine((value) => !value || phoneDigitsRegex.test(value), {
+          message: "Phone number can only contain numbers",
+        }),
       email: z
         .string()
         .trim()

@@ -14,7 +14,13 @@ import {
   getChannelMessages,
   getChannelParticipants,
 } from "@/lib/api-chat";
-import { Hash, Send, ArrowLeft, MessageCircle, Building2, Store } from "lucide-react";
+import {
+  Hash,
+  Send,
+  ArrowLeft,
+  Building2,
+  Store,
+} from "lucide-react";
 import { useUnreadCounts, markChannelRead } from "../../hooks/useUnreadCounts";
 import ChatManagementModal from "./ChatManagementModal";
 
@@ -70,20 +76,18 @@ function MessageSkeletonList() {
             <div
               className={`max-w-[75%] rounded-2xl px-4 py-3 animate-pulse ${
                 isOwn
-                    ? "bg-[#E3EDE3] border border-[#2D3E2D]"
+                  ? "bg-[#E3EDE3] border border-[#2D3E2D]"
                   : "bg-white border border-[#2D3E2D]"
               }`}
             >
-              {!isOwn && (
-                  <div className="h-3 w-24 bg-[#E3EDE3] rounded mb-2" />
-              )}
+              {!isOwn && <div className="h-3 w-24 bg-[#E3EDE3] rounded mb-2" />}
               <div
                 className={`h-3 rounded mb-2 ${
-                    isOwn ? "bg-[#C9DBC9]" : "bg-slate-200"
+                  isOwn ? "bg-[#C9DBC9]" : "bg-slate-200"
                 } ${index % 3 === 0 ? "w-40" : "w-28"}`}
               />
               <div
-                  className={`h-2 rounded ${isOwn ? "bg-[#C9DBC9]" : "bg-slate-200"} w-14`}
+                className={`h-2 rounded ${isOwn ? "bg-[#C9DBC9]" : "bg-slate-200"} w-14`}
               />
             </div>
           </div>
@@ -162,12 +166,10 @@ export default function ChatScreen() {
         let target: ChatChannel | null = null;
 
         if (channelParam) {
-          // Direct channel parameter (from delivery chat button)
           target = allChannels.find((c) => c.id === channelParam) || null;
         }
 
         if (!target) {
-          // Default to community channel
           target = allChannels.find((c) => c.type === "community") || null;
         }
 
@@ -252,12 +254,13 @@ export default function ChatScreen() {
 
   useEffect(() => {
     if (activityParam && activityMessageRef.current) {
-      // Scroll to the activity message if we have one
       setTimeout(() => {
-        activityMessageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        activityMessageRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
       }, 100);
     } else {
-      // Otherwise scroll to the end
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, activityParam]);
@@ -285,7 +288,9 @@ export default function ChatScreen() {
   }
 
   const communityChannels = channels.filter((c) => c.type === "community");
-  const distroChannels = channels.filter((c) => c.type === "distribution_center");
+  const distroChannels = channels.filter(
+    (c) => c.type === "distribution_center",
+  );
   const supplierChannels = channels.filter((c) => c.type === "supplier");
 
   return (
@@ -418,15 +423,26 @@ export default function ChatScreen() {
                     )}
                     {messages.map((msg) => {
                       const isOwn = msg.user.id === user?.id;
-                      const containsActivity = msg.body.includes(`[${activityParam}]`);
-                      const displayBody = msg.body.replace(`\n[${/`\w{8}-\w{4}-\w{4}-\w{4}-\w{12}`/}]`, "").trim();
-                      
+                      const containsActivity = msg.body.includes(
+                        `[${activityParam}]`,
+                      );
+                      const displayBody = msg.body
+                        .replace(
+                          `\n[${/`\w{8}-\w{4}-\w{4}-\w{4}-\w{12}`/}]`,
+                          "",
+                        )
+                        .trim();
+
                       return (
                         <div
                           key={msg.id}
-                          ref={containsActivity ? activityMessageRef : undefined}
+                          ref={
+                            containsActivity ? activityMessageRef : undefined
+                          }
                           className={`flex ${isOwn ? "justify-end" : "justify-start"} ${
-                            containsActivity ? "ring-2 ring-blue-400 rounded-2xl" : ""
+                            containsActivity
+                              ? "ring-2 ring-blue-400 rounded-2xl"
+                              : ""
                           }`}
                         >
                           <div

@@ -16,8 +16,8 @@ vi.mock("@/config/database", () => ({
 
 vi.mock("@/middleware/auth", () => ({
   requireAuth: (_req: unknown, _res: unknown, next: () => void) => next(),
-  requirePermission:
-    () => (_req: unknown, _res: unknown, next: () => void) => next(),
+  requirePermission: () => (_req: unknown, _res: unknown, next: () => void) =>
+    next(),
 }));
 
 vi.mock("@/services/autoAssign", () => ({
@@ -59,28 +59,34 @@ describe("Minimal lifecycle flow", () => {
 
     const insertReturningMock = vi
       .fn()
-      .mockResolvedValueOnce([{ id: "activity-1", assignedCenterId: "center-1" }])
+      .mockResolvedValueOnce([
+        { id: "activity-1", assignedCenterId: "center-1" },
+      ])
       .mockResolvedValueOnce([{ id: "collection-1" }])
       .mockResolvedValueOnce([{ id: "good-1" }]);
-    const insertValuesMock = vi.fn((value: unknown) => ({ returning: insertReturningMock }));
+    const insertValuesMock = vi.fn((value: unknown) => ({
+      returning: insertReturningMock,
+    }));
     dbMock.insert.mockReturnValue({ values: insertValuesMock });
 
     const app = buildApp(orderRouter, "provider-1");
-    const response = await request(app).post("/").send({
-      location: "Warehouse A",
-      vehicleId: "vehicle-1",
-      orderTime: "2026-03-21T10:00:00.000Z",
-      orderType: "single",
-      goods: [
-        {
-          category: "Vegetables",
-          name: "Carrots",
-          quantity: 5,
-          unit: "kg",
-          packageIncluded: false,
-        },
-      ],
-    });
+    const response = await request(app)
+      .post("/")
+      .send({
+        location: "Warehouse A",
+        vehicleId: "vehicle-1",
+        orderTime: "2026-03-21T10:00:00.000Z",
+        orderType: "single",
+        goods: [
+          {
+            category: "Vegetables",
+            name: "Carrots",
+            quantity: 5,
+            unit: "kg",
+            packageIncluded: false,
+          },
+        ],
+      });
 
     expect(response.status).toBe(201);
     expect(response.body.message).toContain("1 order(s) created successfully");
@@ -108,11 +114,15 @@ describe("Minimal lifecycle flow", () => {
     const selectFromMock = vi.fn(() => ({ where: selectWhereMock }));
     dbMock.select.mockReturnValue({ from: selectFromMock });
 
-    const updateReturningMock = vi.fn().mockResolvedValueOnce([
-      { id: "activity-1", status: "accepted", assignedDriver: "driver-1" },
-    ]);
+    const updateReturningMock = vi
+      .fn()
+      .mockResolvedValueOnce([
+        { id: "activity-1", status: "accepted", assignedDriver: "driver-1" },
+      ]);
     const updateWhereMock = vi.fn(() => ({ returning: updateReturningMock }));
-    const updateSetMock = vi.fn((value: unknown) => ({ where: updateWhereMock }));
+    const updateSetMock = vi.fn((value: unknown) => ({
+      where: updateWhereMock,
+    }));
     dbMock.update.mockReturnValue({ set: updateSetMock });
 
     const onConflictDoNothingMock = vi.fn().mockResolvedValue(undefined);
@@ -167,7 +177,9 @@ describe("Minimal lifecycle flow", () => {
         body: "Delivery completed successfully",
       },
     ]);
-    const insertValuesMock = vi.fn((value: unknown) => ({ returning: insertReturningMock }));
+    const insertValuesMock = vi.fn((value: unknown) => ({
+      returning: insertReturningMock,
+    }));
     dbMock.insert.mockReturnValue({ values: insertValuesMock });
 
     const app = buildApp(chatRouter, "driver-1");
@@ -204,7 +216,9 @@ describe("Minimal lifecycle flow", () => {
       },
     ]);
     const updateWhereMock = vi.fn(() => ({ returning: updateReturningMock }));
-    const updateSetMock = vi.fn((value: unknown) => ({ where: updateWhereMock }));
+    const updateSetMock = vi.fn((value: unknown) => ({
+      where: updateWhereMock,
+    }));
     dbMock.update.mockReturnValue({ set: updateSetMock });
 
     const app = buildApp(deliveryRouter, "driver-1");

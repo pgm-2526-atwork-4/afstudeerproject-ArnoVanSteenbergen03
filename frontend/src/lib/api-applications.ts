@@ -41,15 +41,12 @@ export async function getApplicationCount(): Promise<{ count: number }> {
 }
 
 export async function approveApplication(id: string, permissionIds: number[]) {
-  const response = await fetch(
-    `${API_BASE_URL}/applications/${id}/approve`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ permissionIds }),
-    },
-  );
+  const response = await fetch(`${API_BASE_URL}/applications/${id}/approve`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ permissionIds }),
+  });
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
@@ -60,15 +57,12 @@ export async function approveApplication(id: string, permissionIds: number[]) {
 }
 
 export async function denyApplication(id: string, reason?: string) {
-  const response = await fetch(
-    `${API_BASE_URL}/applications/${id}/deny`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ reason }),
-    },
-  );
+  const response = await fetch(`${API_BASE_URL}/applications/${id}/deny`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ reason }),
+  });
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));

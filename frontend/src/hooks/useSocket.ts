@@ -4,7 +4,9 @@ import { useEffect, useRef, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 import { ChatMessage } from "@shared/index";
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "") || "http://localhost:5000";
+const SOCKET_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "") ||
+  "http://localhost:5000";
 
 export function useSocket(onMessage: (msg: ChatMessage) => void) {
   const socketRef = useRef<Socket | null>(null);

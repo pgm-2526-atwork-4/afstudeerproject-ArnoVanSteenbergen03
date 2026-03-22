@@ -62,9 +62,11 @@ export default function AdminDash({ user }: AdminDashProps) {
       borderColor: "border-orange-300",
     },
   ];
-  
+
   const userPermissions = new Set(user.permissions ?? []);
-  const visibleLinks = links.filter((item) => userPermissions.has(item.permission));
+  const visibleLinks = links.filter((item) =>
+    userPermissions.has(item.permission),
+  );
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-100px)] bg-amber-50 to-slate-100 p-6 pb-24">
@@ -83,20 +85,24 @@ export default function AdminDash({ user }: AdminDashProps) {
               const bgGradient = item.bgColor;
               return (
                 <Link key={item.href} href={item.href}>
-                  <div className={`h-full bg-gradient-to-br ${bgGradient} rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer border-2 ${item.borderColor} group`}>
+                  <div
+                    className={`h-full bg-gradient-to-br ${bgGradient} rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer border-2 ${item.borderColor} group`}
+                  >
                     <div className="flex items-start justify-between mb-4">
-                      <div className={`${item.iconColor} bg-white p-3 rounded-lg shadow-sm group-hover:scale-110 transition-transform duration-300`}>
+                      <div
+                        className={`${item.iconColor} bg-white p-3 rounded-lg shadow-sm group-hover:scale-110 transition-transform duration-300`}
+                      >
                         <Icon className="w-8 h-8" />
                       </div>
                     </div>
-                    
+
                     <h3 className="text-xl font-bold text-slate-800 mb-1">
                       {item.label}
                     </h3>
                     <p className="text-sm text-slate-600 mb-4">
                       {item.description}
                     </p>
-                    
+
                     <div className="inline-block text-sm font-semibold text-slate-700 group-hover:translate-x-1 transition-transform duration-300">
                       Manage →
                     </div>

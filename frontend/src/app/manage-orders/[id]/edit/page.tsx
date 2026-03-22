@@ -10,6 +10,11 @@ import {
   getDistributionCenters,
   getUsers,
 } from "@/lib/api-client";
+import {
+  EDIT_ORDER_STATUSES as STATUSES,
+  EDIT_ORDER_ACTIVITY_TYPES as ACTIVITY_TYPES,
+  editOrderSchema,
+} from "@shared/schemas/orders";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,27 +30,9 @@ import { Textarea } from "@/components/ui/textarea";
 import type { AdminUser, DistributionCenter } from "@/types";
 import Link from "next/link";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
-import { z } from "zod/v4";
 
-const STATUSES = ["requested", "accepted", "in_progress", "completed", "cancelled"] as const;
-const ACTIVITY_TYPES = ["collection", "distribution", "hygiene", "other"] as const;
 const NO_VOLUNTEER = "__no_volunteer__";
 const NO_CENTER = "__no_center__";
-
-const editOrderSchema = z.object({
-  status: z.enum(STATUSES),
-  assignedDriver: z.string().nullable(),
-  assignedCenterId: z.string().nullable(),
-  location: z.string().trim().min(1, "Location is required"),
-  activityType: z.enum(ACTIVITY_TYPES),
-  orderTime: z
-    .string()
-    .min(1, "Order time is required")
-    .refine((value) => !Number.isNaN(new Date(value).getTime()), {
-      message: "Order time is invalid",
-    }),
-  notes: z.string().optional(),
-});
 
 export default function EditOrderPage() {
   const { user } = useAuth();
@@ -68,8 +55,12 @@ export default function EditOrderPage() {
 
   const [providerName, setProviderName] = useState("");
 
-  const [centers, setCenters] = useState<Array<Pick<DistributionCenter, "id" | "name">>>([]);
-  const [volunteers, setVolunteers] = useState<Array<Pick<AdminUser, "id" | "firstname" | "lastname">>>([]);
+  const [centers, setCenters] = useState<
+    Array<Pick<DistributionCenter, "id" | "name">>
+  >([]);
+  const [volunteers, setVolunteers] = useState<
+    Array<Pick<AdminUser, "id" | "firstname" | "lastname">>
+  >([]);
 
   useEffect(() => {
     if (!user || !orderId) return;
@@ -102,9 +93,7 @@ export default function EditOrderPage() {
           );
         }
 
-        setCenters(
-          centersData.map((c) => ({ id: c.id, name: c.name })),
-        );
+        setCenters(centersData.map((c) => ({ id: c.id, name: c.name })));
         setVolunteers(
           volunteersData.map((v) => ({
             id: v.id,
@@ -153,7 +142,9 @@ export default function EditOrderPage() {
         location: validated.data.location,
         activityType: validated.data.activityType,
         orderTime: new Date(validated.data.orderTime).toISOString(),
-        notes: validated.data.notes?.trim() ? validated.data.notes.trim() : null,
+        notes: validated.data.notes?.trim()
+          ? validated.data.notes.trim()
+          : null,
       });
       setSuccess("Order updated successfully");
       setTimeout(() => router.push("/manage-orders"), 1000);
@@ -191,12 +182,18 @@ export default function EditOrderPage() {
           ) : (
             <div className="bg-white border-2 border-slate-800 rounded-lg p-6 space-y-5">
               <div>
-                <Label className="text-sm font-medium text-slate-500">Provider</Label>
-                <p className="text-slate-800 font-semibold mt-1">{providerName}</p>
+                <Label className="text-sm font-medium text-slate-500">
+                  Provider
+                </Label>
+                <p className="text-slate-800 font-semibold mt-1">
+                  {providerName}
+                </p>
               </div>
 
               <div>
-                <Label className="text-sm font-medium text-slate-700">Status</Label>
+                <Label className="text-sm font-medium text-slate-700">
+                  Status
+                </Label>
                 <Select
                   value={status}
                   onValueChange={(value) => setStatus(value)}
@@ -228,7 +225,9 @@ export default function EditOrderPage() {
                     <SelectValue placeholder="No volunteer assigned" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={NO_VOLUNTEER}>No volunteer assigned</SelectItem>
+                    <SelectItem value={NO_VOLUNTEER}>
+                      No volunteer assigned
+                    </SelectItem>
                     {volunteers.map((v) => (
                       <SelectItem key={v.id} value={v.id}>
                         {v.firstname} {v.lastname}
@@ -252,7 +251,9 @@ export default function EditOrderPage() {
                     <SelectValue placeholder="No center assigned" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={NO_CENTER}>No center assigned</SelectItem>
+                    <SelectItem value={NO_CENTER}>
+                      No center assigned
+                    </SelectItem>
                     {centers.map((c) => (
                       <SelectItem key={c.id} value={c.id}>
                         {c.name}
@@ -284,7 +285,9 @@ export default function EditOrderPage() {
               </div>
 
               <div>
-                <Label className="text-sm font-medium text-slate-700">Location</Label>
+                <Label className="text-sm font-medium text-slate-700">
+                  Location
+                </Label>
                 <Input
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
@@ -305,7 +308,9 @@ export default function EditOrderPage() {
               </div>
 
               <div>
-                <Label className="text-sm font-medium text-slate-700">Notes</Label>
+                <Label className="text-sm font-medium text-slate-700">
+                  Notes
+                </Label>
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}

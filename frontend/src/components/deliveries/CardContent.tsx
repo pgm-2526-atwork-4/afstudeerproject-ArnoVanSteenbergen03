@@ -60,7 +60,6 @@ export default function CardContent({
 
   const handleChatClick = () => {
     if (delivery.supplierChannel) {
-      //auto scrolls to order post in the supplier channel
       router.push(
         `/chatroom?channel=${delivery.supplierChannel.id}&activity=${delivery.activity.id}`,
       );

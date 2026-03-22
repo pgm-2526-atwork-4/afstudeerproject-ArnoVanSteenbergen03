@@ -3,12 +3,7 @@
 import { User, Order } from "@shared/index";
 import { Button } from "@/components/ui/button";
 import { CardSkeleton } from "@/components/ui/loading";
-import {
-  FileText,
-  ChevronDown,
-  MessageCircle,
-  Copy,
-} from "lucide-react";
+import { FileText, ChevronDown, MessageCircle, Copy } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { getProviderOrders } from "@/lib/api-client";
@@ -72,7 +67,7 @@ export default function OrdersScreen({ user }: { user: User }) {
         <div className="flex justify-center mb-8">
           <div className="text-center">
             <h1 className="text-4xl font-bold text-slate-800 mb-2">Orders</h1>
-          <div className="h-1 bg-gradient-to-r from-slate-400 to-slate-600 w-40 mx-auto rounded-full"></div>
+            <div className="h-1 bg-gradient-to-r from-slate-400 to-slate-600 w-40 mx-auto rounded-full"></div>
           </div>
         </div>
         <CardSkeleton count={5} />

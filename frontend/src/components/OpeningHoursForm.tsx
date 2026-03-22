@@ -58,14 +58,9 @@ export default function OpeningHoursForm({
   return (
     <div className="space-y-4">
       {DAYS.map((day) => (
-        <div
-          key={day}
-          className="border-2 border-slate-300 rounded-lg p-4"
-        >
+        <div key={day} className="border-2 border-slate-300 rounded-lg p-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-slate-800 capitalize">
-              {day}
-            </h3>
+            <h3 className="font-semibold text-slate-800 capitalize">{day}</h3>
             <div className="flex items-center gap-2">
               <Checkbox
                 id={`hours-${day}`}
@@ -98,9 +93,7 @@ export default function OpeningHoursForm({
                 <Input
                   type="time"
                   value={getHours(day)?.open || ""}
-                  onChange={(e) =>
-                    updateTime(day, "open", e.target.value)
-                  }
+                  onChange={(e) => updateTime(day, "open", e.target.value)}
                   className="w-full px-3 py-2 border-2 border-slate-800 rounded"
                   required
                 />
@@ -112,9 +105,7 @@ export default function OpeningHoursForm({
                 <Input
                   type="time"
                   value={getHours(day)?.close || ""}
-                  onChange={(e) =>
-                    updateTime(day, "close", e.target.value)
-                  }
+                  onChange={(e) => updateTime(day, "close", e.target.value)}
                   className="w-full px-3 py-2 border-2 border-slate-800 rounded"
                   required
                 />

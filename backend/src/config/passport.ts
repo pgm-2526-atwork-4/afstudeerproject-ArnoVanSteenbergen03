@@ -57,10 +57,7 @@ passport.deserializeUser(async (id: string, done) => {
     const permissionRows = await db
       .select({ key: permissions.key })
       .from(userPermissions)
-      .innerJoin(
-        permissions,
-        eq(userPermissions.permissionId, permissions.id),
-      )
+      .innerJoin(permissions, eq(userPermissions.permissionId, permissions.id))
       .where(eq(userPermissions.userId, user.id));
 
     const permissionKeys = permissionRows.map((r) => r.key);

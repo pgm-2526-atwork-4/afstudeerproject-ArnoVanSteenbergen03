@@ -1,4 +1,4 @@
-// Re-export all types from shared (single source of truth)
+// export all types from shared
 export {
   type User,
   type AuthResponse,

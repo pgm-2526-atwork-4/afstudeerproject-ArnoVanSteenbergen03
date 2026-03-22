@@ -19,33 +19,29 @@ import { findOpenCenter } from "@/services/autoAssign";
 const router = Router();
 
 // Get lookup values for goods form dropdowns
-router.get(
-  "/lookups",
-  requireAuth,
-  async (req: Request, res: Response) => {
-    try {
-      const { type } = req.query;
+router.get("/lookups", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { type } = req.query;
 
-      if (type && typeof type === "string") {
-        const values = await db
-          .select()
-          .from(lookupValues)
-          .where(eq(lookupValues.type, type))
-          .orderBy(lookupValues.sortOrder);
-        return res.json(values);
-      }
-
-      const allValues = await db
+    if (type && typeof type === "string") {
+      const values = await db
         .select()
         .from(lookupValues)
-        .orderBy(lookupValues.type, lookupValues.sortOrder);
-      return res.json(allValues);
-    } catch (error) {
-      console.error("Error fetching lookup values:", error);
-      res.status(500).json({ error: "Failed to fetch lookup values" });
+        .where(eq(lookupValues.type, type))
+        .orderBy(lookupValues.sortOrder);
+      return res.json(values);
     }
-  },
-);
+
+    const allValues = await db
+      .select()
+      .from(lookupValues)
+      .orderBy(lookupValues.type, lookupValues.sortOrder);
+    return res.json(allValues);
+  } catch (error) {
+    console.error("Error fetching lookup values:", error);
+    res.status(500).json({ error: "Failed to fetch lookup values" });
+  }
+});
 
 // Create new order
 router.post(
@@ -81,7 +77,6 @@ router.post(
         return res.status(404).json({ error: "Vehicle not found" });
       }
 
-      // Build the list of order times with filter
       const orderTimes: Date[] = [];
       let normalizedSlots: { date: string; time: string }[] = [];
 
@@ -170,7 +165,6 @@ router.post(
           goods: createdGoods,
         });
 
-        // Post to supplier channel
         const [supplierPlace] = await db
           .select()
           .from(places)
@@ -188,7 +182,6 @@ router.post(
             );
 
           if (supplierChannel) {
-            // Ensure provider is a member of their own supplier channel
             const [existingMember] = await db
               .select()
               .from(chatMembers)
@@ -206,7 +199,9 @@ router.post(
               });
             }
 
-            const goodsInfo = goodsData.map((g: any) => `${g.name} (${g.quantity} ${g.unit})`).join(", ");
+            const goodsInfo = goodsData
+              .map((g: any) => `${g.name} (${g.quantity} ${g.unit})`)
+              .join(", ");
             await db.insert(messages).values({
               channelId: supplierChannel.id,
               userId,
@@ -272,7 +267,7 @@ router.get(
             centerName,
             firstGoodCategory: firstGood?.category ?? null,
           };
-        })
+        }),
       );
 
       return res.json(ordersWithCounts);

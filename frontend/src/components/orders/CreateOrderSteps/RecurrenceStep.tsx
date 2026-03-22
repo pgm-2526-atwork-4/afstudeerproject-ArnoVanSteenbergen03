@@ -121,7 +121,6 @@ export default function RecurrenceStep({
     });
   };
 
-  // Build calendar grid
   const calendarCells: (number | null)[] = [];
   for (let i = 0; i < firstDay; i++) calendarCells.push(null);
   for (let d = 1; d <= daysInMonth; d++) calendarCells.push(d);

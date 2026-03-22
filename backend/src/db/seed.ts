@@ -36,7 +36,15 @@ function pickOne<T>(arr: readonly T[]): T {
 
 // Types for seed data
 type Permission = { id: number; resource: string; action: string; key: string };
-type User = { id: string; userType: string; firstname: string; lastname: string; email: string; username: string; password: string };
+type User = {
+  id: string;
+  userType: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+  username: string;
+  password: string;
+};
 type Place = { id: string; type: string; name: string; userId: string | null };
 type Vehicle = { id: string };
 
@@ -91,12 +99,18 @@ async function main() {
     resource: "special",
     action: "admin",
     key,
-    description: key.replace(/_/g, " ").charAt(0).toUpperCase() + key.replace(/_/g, " ").slice(1),
+    description:
+      key.replace(/_/g, " ").charAt(0).toUpperCase() +
+      key.replace(/_/g, " ").slice(1),
   }));
 
   const insertedPermissions = await db
     .insert(permissions)
-    .values([...permissionValues, ...pagePermissionValues, ...adminPermissionValues])
+    .values([
+      ...permissionValues,
+      ...pagePermissionValues,
+      ...adminPermissionValues,
+    ])
     .onConflictDoNothing()
     .returning();
 
@@ -120,9 +134,24 @@ async function main() {
       { type: "category", value: "vegies", label: "Vegies", sortOrder: 3 },
       { type: "category", value: "fruits", label: "Fruits", sortOrder: 4 },
       { type: "category", value: "bakery", label: "Bakery", sortOrder: 5 },
-      { type: "category", value: "prepared food (hot/warm)", label: "Prepared Food (Hot/Warm)", sortOrder: 6 },
-      { type: "category", value: "prepared food (cold)", label: "Prepared Food (Cold)", sortOrder: 7 },
-      { type: "category", value: "packaged goods", label: "Packaged Goods", sortOrder: 8 },
+      {
+        type: "category",
+        value: "prepared food (hot/warm)",
+        label: "Prepared Food (Hot/Warm)",
+        sortOrder: 6,
+      },
+      {
+        type: "category",
+        value: "prepared food (cold)",
+        label: "Prepared Food (Cold)",
+        sortOrder: 7,
+      },
+      {
+        type: "category",
+        value: "packaged goods",
+        label: "Packaged Goods",
+        sortOrder: 8,
+      },
       // Units
       { type: "unit", value: "items", label: "Items", sortOrder: 1 },
       { type: "unit", value: "kg", label: "Kg", sortOrder: 2 },
@@ -208,10 +237,7 @@ async function main() {
 
   const providerUsers: User[] = [];
   for (const data of providerData) {
-    await db
-      .insert(users)
-      .values(data)
-      .onConflictDoNothing();
+    await db.insert(users).values(data).onConflictDoNothing();
 
     // Ensure password is up to date for existing users
     await db
@@ -245,10 +271,7 @@ async function main() {
 
   const volunteerUsers: User[] = [];
   for (const data of volunteerData) {
-    await db
-      .insert(users)
-      .values(data)
-      .onConflictDoNothing();
+    await db.insert(users).values(data).onConflictDoNothing();
 
     // Ensure password is up to date for existing users
     await db
@@ -282,10 +305,7 @@ async function main() {
 
   const pendingUsers: User[] = [];
   for (const data of pendingData) {
-    await db
-      .insert(users)
-      .values(data)
-      .onConflictDoNothing();
+    await db.insert(users).values(data).onConflictDoNothing();
 
     // Ensure password is up to date for existing users
     await db
@@ -303,7 +323,12 @@ async function main() {
     }
   }
 
-  const allApprovedUsers = [adminUser, managerUser, ...providerUsers, ...volunteerUsers];
+  const allApprovedUsers = [
+    adminUser,
+    managerUser,
+    ...providerUsers,
+    ...volunteerUsers,
+  ];
 
   console.log(
     `Seeded ${allApprovedUsers.length} approved + ${pendingUsers.length} pending users`,
@@ -550,7 +575,16 @@ async function main() {
     const count = faker.number.int({ min: 1, max: 4 });
     await db.insert(goods).values(
       Array.from({ length: count }).map(() => ({
-        category: pickOne(["meat", "dairy", "vegies", "fruits", "bakery", "prepared food (hot/warm)", "prepared food (cold)", "packaged goods"]),
+        category: pickOne([
+          "meat",
+          "dairy",
+          "vegies",
+          "fruits",
+          "bakery",
+          "prepared food (hot/warm)",
+          "prepared food (cold)",
+          "packaged goods",
+        ]),
         name: faker.commerce.productName(),
         goodState: pickOne(["fresh", "old", "dry"]),
         overDueDate: faker.datatype.boolean(),

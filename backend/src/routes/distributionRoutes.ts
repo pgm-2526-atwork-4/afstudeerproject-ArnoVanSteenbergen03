@@ -46,20 +46,19 @@ router.post(
         })
         .returning();
 
-      // Auto-create a channel for this distribution center
-      const [newChannel] = await db.insert(channels).values({
-        name: `${newCenter.name} - Distro`,
-        type: "distribution_center",
-        placeId: newCenter.id,
-      }).returning();
+      const [newChannel] = await db
+        .insert(channels)
+        .values({
+          name: `${newCenter.name} - Distro`,
+          type: "distribution_center",
+          placeId: newCenter.id,
+        })
+        .returning();
 
-      // Add all admins to the channel
       const admins = await db
         .select({ id: users.id })
         .from(users)
-        .where(
-          inArray(users.userType, ["admin", "manager"]),
-        );
+        .where(inArray(users.userType, ["admin", "manager"]));
 
       for (const admin of admins) {
         await db
@@ -127,7 +126,9 @@ router.put(
           ...(validated.name && { name: validated.name }),
           ...(validated.type && { type: validated.type }),
           ...(validated.geojson && { geojson: validated.geojson }),
-          ...(validated.operatingInfo && { operatingInfo: validated.operatingInfo }),
+          ...(validated.operatingInfo && {
+            operatingInfo: validated.operatingInfo,
+          }),
           ...(validated.contactInfo && { contactInfo: validated.contactInfo }),
           updatedAt: new Date(),
         })

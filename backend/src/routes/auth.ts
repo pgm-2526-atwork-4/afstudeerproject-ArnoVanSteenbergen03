@@ -24,7 +24,9 @@ function getSessionCookieSettings() {
     try {
       secure = new URL(firstOrigin).protocol === "https:";
     } catch {
-      // Keep fallback value when FRONTEND_URL is malformed.
+      console.warn(
+        `Invalid FRONTEND_URL origin: , defaulting to secure cookies in production`,
+      );
     }
   }
 
@@ -130,7 +132,6 @@ router.post("/login", (req: Request, res: Response, next: NextFunction) => {
         return res.status(500).json({ error: "Login failed" });
       }
 
-      // Compute isApproved from applications table
       const approvedApp = await db.query.applications.findFirst({
         where: and(
           eq(applications.userId, user.id),
@@ -175,7 +176,6 @@ router.get("/me", requireAuth, async (req: Request, res: Response) => {
     return res.status(404).json({ error: "User not found" });
   }
 
-  // Fetch user's permission keys
   const permRows = await db
     .select({ key: permissions.key })
     .from(userPermissions)
@@ -184,7 +184,6 @@ router.get("/me", requireAuth, async (req: Request, res: Response) => {
 
   const permissionKeys = permRows.map((r) => r.key);
 
-  // Compute isApproved from applications table
   const approvedApp = await db.query.applications.findFirst({
     where: and(
       eq(applications.userId, userId),
@@ -216,8 +215,6 @@ router.post("/logout", (req: Request, res: Response) => {
 
     const sessionCookieSettings = getSessionCookieSettings();
 
-    // Session is automatically destroyed by passport.logout()
-    // Clear cookies just to be safe
     res.clearCookie("connect.sid", {
       httpOnly: true,
       ...sessionCookieSettings,

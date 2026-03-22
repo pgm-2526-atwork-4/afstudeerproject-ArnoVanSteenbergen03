@@ -49,9 +49,7 @@ let useSecureCookie = process.env.NODE_ENV === "production";
 try {
   useSecureCookie = new URL(firstOrigin).protocol === "https:";
 } catch {
-  throw new Error(
-    `FRONTEND_URL contains an invalid origin: ${firstOrigin}`,
-  );
+  throw new Error(`FRONTEND_URL contains an invalid origin: ${firstOrigin}`);
 }
 
 const cookieSameSite: "lax" | "none" = useSecureCookie ? "none" : "lax";
@@ -101,7 +99,7 @@ const sessionMiddleware = session({
   secret: sessionSecret,
   resave: false,
   saveUninitialized: false,
-  proxy: true, // Trust Railway's proxy for X-Forwarded-Proto
+  proxy: true,
   cookie: {
     httpOnly: true,
     secure: useSecureCookie,
@@ -136,7 +134,7 @@ app.use("/api/upload", uploadRouter);
 // Chat routes
 app.use("/api/chat", chatRouter);
 
-// Feature-based routes
+// page routes
 app.use("/api/profile", profileRouter);
 app.use("/api/orders", orderRouter);
 app.use("/api/dashboard", dashboardRouter);

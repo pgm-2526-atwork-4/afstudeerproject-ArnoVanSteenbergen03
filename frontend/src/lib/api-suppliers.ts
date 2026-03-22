@@ -2,7 +2,6 @@ import type { DistributionCenter } from "@shared/index";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-// Re-use DistributionCenter type since suppliers share the same places table
 export type Supplier = DistributionCenter;
 
 // Get all suppliers

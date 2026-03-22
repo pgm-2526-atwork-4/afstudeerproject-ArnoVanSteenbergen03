@@ -26,9 +26,7 @@ export const requireApproved = (
     return res.status(401).json({ error: "Authentication required" });
   }
   if (!(req.user as any).isApproved) {
-    return res
-      .status(403)
-      .json({ error: "Account pending approval by admin" });
+    return res.status(403).json({ error: "Account pending approval by admin" });
   }
   next();
 };

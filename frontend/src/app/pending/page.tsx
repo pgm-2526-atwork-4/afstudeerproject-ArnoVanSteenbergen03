@@ -75,7 +75,6 @@ export default function PendingApprovalPage() {
           </div>
         </div>
       </div>
-
     </div>
   );
 }

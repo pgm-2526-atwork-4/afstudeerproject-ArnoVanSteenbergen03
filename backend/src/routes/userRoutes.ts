@@ -38,7 +38,8 @@ router.post(
   async (req: Request, res: Response) => {
     try {
       const validated = createUserSchema.parse(req.body);
-      const { firstname, lastname, email, password, userType, permissionIds } = validated;
+      const { firstname, lastname, email, password, userType, permissionIds } =
+        validated;
 
       const [existingEmail] = await db
         .select({ id: users.id })
@@ -104,7 +105,9 @@ router.post(
     } catch (error) {
       if (error instanceof z.ZodError) {
         const firstIssue = error.issues[0];
-        return res.status(400).json({ error: firstIssue?.message || "Validation failed" });
+        return res
+          .status(400)
+          .json({ error: firstIssue?.message || "Validation failed" });
       }
       console.error("Failed to create user:", error);
       res.status(500).json({ error: "Failed to create user" });
@@ -202,7 +205,8 @@ router.put(
   async (req: Request<{ id: string }>, res: Response) => {
     try {
       const id = req.params.id;
-      const { firstname, lastname, username, email, userType, permissionIds } = req.body;
+      const { firstname, lastname, username, email, userType, permissionIds } =
+        req.body;
 
       const [existing] = await db
         .select({ id: users.id })
@@ -288,7 +292,9 @@ router.delete(
       const adminId = (req.user as any).id;
 
       if (id === adminId) {
-        return res.status(400).json({ error: "Cannot delete your own account" });
+        return res
+          .status(400)
+          .json({ error: "Cannot delete your own account" });
       }
 
       const [existing] = await db

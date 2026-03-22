@@ -37,21 +37,23 @@ function CreateOrderContent() {
     const loadTemplate = async () => {
       try {
         const data = await getProviderOrderById(templateId);
-        const templateGoods: GoodsData[] = (data.goods || []).map((g: Record<string, unknown>) => {
-          const meta = (g.metadata || {}) as Record<string, unknown>;
-          return {
-            goodState: g.goodState || "fresh",
-            overDueDate: g.overDueDate || false,
-            category: g.category || "",
-            name: g.name || "",
-            quantity: Number(g.quantity) || 1,
-            unit: g.unit || "items",
-            allergies: meta.allergies || "",
-            expirationDate: meta.expirationDate || "",
-            packageIncluded: meta.packageIncluded || false,
-            image: g.image || "",
-          };
-        });
+        const templateGoods: GoodsData[] = (data.goods || []).map(
+          (g: Record<string, unknown>) => {
+            const meta = (g.metadata || {}) as Record<string, unknown>;
+            return {
+              goodState: g.goodState || "fresh",
+              overDueDate: g.overDueDate || false,
+              category: g.category || "",
+              name: g.name || "",
+              quantity: Number(g.quantity) || 1,
+              unit: g.unit || "items",
+              allergies: meta.allergies || "",
+              expirationDate: meta.expirationDate || "",
+              packageIncluded: meta.packageIncluded || false,
+              image: g.image || "",
+            };
+          },
+        );
 
         setFormData((prev) => ({
           ...prev,
@@ -173,80 +175,80 @@ function CreateOrderContent() {
         ) : (
           <>
             {currentStep > 0 && (
-          <div className="max-w-2xl mx-auto w-full mb-8">
-            <div className="flex items-center justify-center gap-4">
-              {steps.map((step, index) => (
-                <div key={step.number} className="flex items-center gap-4">
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
-                      currentStep >= step.number
-                        ? "bg-[#2D3E2D] text-white"
-                        : "bg-slate-300 text-slate-600"
-                    }`}
-                  >
-                    {step.number}
-                  </div>
-                  <span
-                    className={`text-sm font-semibold ${
-                      currentStep >= step.number
-                        ? "text-[#2D3E2D]"
-                        : "text-slate-400"
-                    }`}
-                  >
-                    {step.title}
-                  </span>
-                  {index < steps.length - 1 && (
-                    <div
-                      className={`w-12 h-1 mx-2 ${
-                        currentStep > step.number
-                          ? "bg-[#2D3E2D]"
-                          : "bg-slate-300"
-                      }`}
-                    ></div>
-                  )}
+              <div className="max-w-2xl mx-auto w-full mb-8">
+                <div className="flex items-center justify-center gap-4">
+                  {steps.map((step, index) => (
+                    <div key={step.number} className="flex items-center gap-4">
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
+                          currentStep >= step.number
+                            ? "bg-[#2D3E2D] text-white"
+                            : "bg-slate-300 text-slate-600"
+                        }`}
+                      >
+                        {step.number}
+                      </div>
+                      <span
+                        className={`text-sm font-semibold ${
+                          currentStep >= step.number
+                            ? "text-[#2D3E2D]"
+                            : "text-slate-400"
+                        }`}
+                      >
+                        {step.title}
+                      </span>
+                      {index < steps.length - 1 && (
+                        <div
+                          className={`w-12 h-1 mx-2 ${
+                            currentStep > step.number
+                              ? "bg-[#2D3E2D]"
+                              : "bg-slate-300"
+                          }`}
+                        ></div>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+            )}
+
+            <div className="max-w-2xl mx-auto w-full flex-1">
+              {currentStep === 0 && (
+                <OrderTypeStep onSelectOrderType={handleSelectOrderType} />
+              )}
+
+              {isRepeated && currentStep === 1 && (
+                <RecurrenceStep
+                  onNext={handleRecurrenceNext}
+                  onBack={() => setCurrentStep(0)}
+                  initialSlots={formData.recurrenceSlots}
+                />
+              )}
+
+              {currentStep === goodsStepIndex && (
+                <GoodsStep
+                  onNext={handleGoodsNext}
+                  onCancel={handleCancel}
+                  initialGoods={formData.goods}
+                  onBack={isRepeated ? handleBack : undefined}
+                />
+              )}
+
+              {currentStep === deliveryStepIndex && (
+                <DeliveryStep
+                  onBack={handleBack}
+                  onCancel={handleCancel}
+                  onSubmit={handleSubmitOrder}
+                  submitting={submitting}
+                  error={error}
+                  initialLocation={formData.location}
+                  initialVehicleId={formData.vehicleId}
+                  initialNotes={formData.deliveryNotes}
+                  initialOrderTime={formData.orderTime}
+                  hideDateTime={isRepeated}
+                />
+              )}
             </div>
-          </div>
-        )}
-
-        <div className="max-w-2xl mx-auto w-full flex-1">
-          {currentStep === 0 && (
-            <OrderTypeStep onSelectOrderType={handleSelectOrderType} />
-          )}
-
-          {isRepeated && currentStep === 1 && (
-            <RecurrenceStep
-              onNext={handleRecurrenceNext}
-              onBack={() => setCurrentStep(0)}
-              initialSlots={formData.recurrenceSlots}
-            />
-          )}
-
-          {currentStep === goodsStepIndex && (
-            <GoodsStep
-              onNext={handleGoodsNext}
-              onCancel={handleCancel}
-              initialGoods={formData.goods}
-              onBack={isRepeated ? handleBack : undefined}
-            />
-          )}
-
-          {currentStep === deliveryStepIndex && (
-            <DeliveryStep
-              onBack={handleBack}
-              onCancel={handleCancel}
-              onSubmit={handleSubmitOrder}
-              submitting={submitting}
-              error={error}
-              initialLocation={formData.location}
-              initialVehicleId={formData.vehicleId}
-              initialNotes={formData.deliveryNotes}
-              initialOrderTime={formData.orderTime}
-              hideDateTime={isRepeated}
-            />
-          )}
-        </div>
           </>
         )}
       </div>
@@ -256,7 +258,13 @@ function CreateOrderContent() {
 
 export default function CreateOrderPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          Loading...
+        </div>
+      }
+    >
       <CreateOrderContent />
     </Suspense>
   );

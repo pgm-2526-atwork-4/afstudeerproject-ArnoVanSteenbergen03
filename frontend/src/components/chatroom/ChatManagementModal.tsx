@@ -89,7 +89,9 @@ export default function ChatManagementModal({
       onParticipantAdded?.();
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to add participant");
+      setError(
+        err instanceof Error ? err.message : "Failed to add participant",
+      );
     } finally {
       setLoadingAction(null);
     }
@@ -285,7 +287,9 @@ export default function ChatManagementModal({
                                     </div>
 
                                     <button
-                                      onClick={() => handleAddParticipant(user.id)}
+                                      onClick={() =>
+                                        handleAddParticipant(user.id)
+                                      }
                                       disabled={loadingAction === user.id}
                                       className="px-3 py-1 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
                                     >
@@ -368,7 +372,9 @@ export default function ChatManagementModal({
                 <div className="px-6 py-4">
                   <p className="text-slate-700">
                     Are you sure you want to remove{" "}
-                    <span className="font-semibold">{deleteConfirm.userName}</span>{" "}
+                    <span className="font-semibold">
+                      {deleteConfirm.userName}
+                    </span>{" "}
                     from this chat?
                   </p>
                 </div>

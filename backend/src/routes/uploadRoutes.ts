@@ -65,16 +65,11 @@ router.post(
       const userId = (req.user as any).id;
       const imageUrl = `/uploads/profiles/${req.file.filename}`;
 
-      // Delete old profile image if it exists
       const currentUser = await db.query.users.findFirst({
         where: eq(users.id, userId),
       });
       if (currentUser?.profileImage) {
-        const oldPath = path.join(
-          __dirname,
-          "../..",
-          currentUser.profileImage,
-        );
+        const oldPath = path.join(__dirname, "../..", currentUser.profileImage);
         if (fs.existsSync(oldPath)) {
           fs.unlinkSync(oldPath);
         }

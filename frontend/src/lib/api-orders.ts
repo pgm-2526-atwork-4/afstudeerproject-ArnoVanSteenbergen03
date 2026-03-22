@@ -9,14 +9,16 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export type { AdminOrderRow, AdminOrdersResponse };
 
-export async function getAdminOrders(params: {
-  page?: number;
-  limit?: number;
-  status?: string;
-  centerId?: string;
-  dateFrom?: string;
-  dateTo?: string;
-} = {}): Promise<AdminOrdersResponse> {
+export async function getAdminOrders(
+  params: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    centerId?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  } = {},
+): Promise<AdminOrdersResponse> {
   const query = new URLSearchParams();
   if (params.page) query.set("page", String(params.page));
   if (params.limit) query.set("limit", String(params.limit));
@@ -25,11 +27,14 @@ export async function getAdminOrders(params: {
   if (params.dateFrom) query.set("dateFrom", params.dateFrom);
   if (params.dateTo) query.set("dateTo", params.dateTo);
 
-  const response = await fetch(`${API_BASE_URL}/dashboard?${query.toString()}`, {
-    method: "GET",
-    credentials: "include",
-    cache: "no-store",
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/dashboard?${query.toString()}`,
+    {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    },
+  );
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));

@@ -48,8 +48,6 @@ import {
 import DeliveryCard from "./DeliveryCard";
 import SortableDeliveryCard from "./SortableDeliveryCard";
 
-// TODO: General dashboard (open / in progress orders) (admin, managers and drivers) dashboard drivers and map.
-
 export default function DeliveriesScreen() {
   const [activeTab, setActiveTab] = useState<"open" | "mine" | "assistance">(
     "open",
@@ -71,7 +69,6 @@ export default function DeliveriesScreen() {
   );
   const [error, setError] = useState<string | null>(null);
 
-  // Filters
   const [centers, setCenters] = useState<DistributionCenter[]>([]);
   const [filterCenter, setFilterCenter] = useState<string>("all");
   const [filterDay, setFilterDay] = useState<string>("all");
@@ -156,7 +153,6 @@ export default function DeliveriesScreen() {
       setCompletingId(activityId);
       await completeDelivery(activityId, completionStatus, completionData);
 
-      // Send automated message to the supplier channel
       try {
         await sendCompletionMessage(
           activityId,

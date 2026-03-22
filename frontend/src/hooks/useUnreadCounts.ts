@@ -1,9 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import {
-  getChannelsLatest,
-} from "@/lib/api-chat";
+import { getChannelsLatest } from "@/lib/api-chat";
 import { useAuth } from "@/lib/auth-context";
 
 const READ_COUNT_KEY = "chat_last_read_count";
@@ -50,7 +48,10 @@ function setNumberMap(storageKey: string, map: NumberMap) {
   localStorage.setItem(storageKey, JSON.stringify(map));
 }
 
-function normalizeMessageCount(value: unknown, hasLastMessageAt: boolean): number {
+function normalizeMessageCount(
+  value: unknown,
+  hasLastMessageAt: boolean,
+): number {
   if (typeof value === "number" && Number.isFinite(value) && value >= 0) {
     return Math.floor(value);
   }
@@ -62,11 +63,13 @@ function normalizeMessageCount(value: unknown, hasLastMessageAt: boolean): numbe
     }
   }
 
-  // If we have a latest timestamp but no parseable count, there is at least one message.
   return hasLastMessageAt ? 1 : 0;
 }
 
-function computeUnreadState(latestCounts: NumberMap, readCounts: NumberMap): UnreadState {
+function computeUnreadState(
+  latestCounts: NumberMap,
+  readCounts: NumberMap,
+): UnreadState {
   const unreadMap: Record<string, boolean> = {};
   const unreadCountMap: NumberMap = {};
   let totalUnread = 0;
@@ -113,7 +116,7 @@ export function markChannelRead(
   const candidateBaseline =
     typeof knownMessageCount === "number" && Number.isFinite(knownMessageCount)
       ? Math.max(0, Math.floor(knownMessageCount))
-      : latestCounts[channelId] ?? readCounts[channelId] ?? 0;
+      : (latestCounts[channelId] ?? readCounts[channelId] ?? 0);
 
   const baseline = Math.max(readCounts[channelId] ?? 0, candidateBaseline);
 
@@ -186,11 +189,7 @@ export function useUnreadCounts() {
     };
 
     const handleStorage = (event: StorageEvent) => {
-      if (
-        event.key &&
-        event.key !== readKey &&
-        event.key !== latestKey
-      ) {
+      if (event.key && event.key !== readKey && event.key !== latestKey) {
         return;
       }
       triggerRefresh();

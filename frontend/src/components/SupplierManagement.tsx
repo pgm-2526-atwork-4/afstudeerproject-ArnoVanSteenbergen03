@@ -7,23 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useState, useEffect, useCallback } from "react";
 import { OperatingInfo } from "@shared/index";
+import { SupplierData } from "@shared/schemas/suppliers";
 import OpeningHoursForm from "@/components/OpeningHoursForm";
-import { supplierFormSchema, toSupplierPayload } from "@/lib/place-form-validation";
+import {
+  supplierFormSchema,
+  toSupplierPayload,
+} from "@/lib/place-form-validation";
 import { X } from "lucide-react";
-
-interface SupplierData {
-  id?: string;
-  name: string;
-  contactInfo: {
-    phone: string;
-    email: string;
-  };
-  operatingInfo: OperatingInfo;
-  geojson: {
-    type: "Point";
-    coordinates: [number, number];
-  };
-}
 
 interface SupplierManagementProps {
   user: User;
@@ -196,8 +186,8 @@ export default function SupplierManagement({ user }: SupplierManagementProps) {
           Supplier Details
         </h2>
         <p className="text-slate-600 mb-4">
-          You don&apos;t have a supplier profile yet. Create one to start listing
-          your products and services.
+          You don&apos;t have a supplier profile yet. Create one to start
+          listing your products and services.
         </p>
         <Button
           onClick={() => {

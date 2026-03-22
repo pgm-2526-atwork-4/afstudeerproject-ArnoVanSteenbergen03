@@ -38,14 +38,19 @@ export default function SuppliersPage() {
           setError(null);
         }
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to fetch suppliers");
+        if (!cancelled)
+          setError(
+            err instanceof Error ? err.message : "Failed to fetch suppliers",
+          );
       } finally {
         if (!cancelled) setLoading(false);
       }
     };
     setLoading(true);
     fetchSuppliers();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleDelete = async () => {
@@ -56,7 +61,9 @@ export default function SuppliersPage() {
       setSuppliers((prev) => prev.filter((s) => s.id !== deleteTarget.id));
       setDeleteTarget(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete supplier");
+      setError(
+        err instanceof Error ? err.message : "Failed to delete supplier",
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -69,10 +76,7 @@ export default function SuppliersPage() {
       <div className="flex flex-col min-h-[calc(100vh-100px)] bg-amber-50 p-4 pb-24">
         <div className="flex items-center justify-between mb-8 lg:ml-20 relative z-10">
           <Link href="/dashboard">
-            <Button
-              variant="ghost"
-              className="p-0 h-auto hover:bg-transparent"
-            >
+            <Button variant="ghost" className="p-0 h-auto hover:bg-transparent">
               <ArrowLeft className="w-6 h-6 text-slate-800" />
             </Button>
           </Link>

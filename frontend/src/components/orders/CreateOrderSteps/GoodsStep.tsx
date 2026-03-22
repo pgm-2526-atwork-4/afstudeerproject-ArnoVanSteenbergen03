@@ -17,30 +17,9 @@ import Image from "next/image";
 import { uploadGoodsImage, getLookupValues } from "@/lib/api-client";
 import type { GoodsData, GoodsFormItem } from "@/types";
 import type { LookupValue } from "@/lib/api-lookups";
-import { z } from "zod/v4";
+import { goodsFormValidationSchema } from "@shared/schemas/orders";
 
 const CATEGORY_PLACEHOLDER = "__select_category__";
-
-const goodsItemValidationSchema = z.object({
-  goodState: z.enum(["fresh", "old", "dry"]),
-  overDueDate: z.boolean(),
-  category: z.string().trim().min(1, "Category is required"),
-  name: z.string().trim().min(1, "Item name is required"),
-  quantity: z
-    .string()
-    .trim()
-    .min(1, "Quantity is required")
-    .refine((value) => {
-      const parsed = Number(value);
-      return Number.isFinite(parsed) && parsed > 0;
-    }, "Quantity must be a positive number")
-    .transform((value) => Number(value)),
-  unit: z.enum(["kg", "items", "boxes", "pallets", "liters"]),
-  allergies: z.string().trim().optional(),
-  expirationDate: z.string().optional(),
-  packageIncluded: z.boolean(),
-  image: z.string().optional(),
-});
 
 interface GoodsStepProps {
   onNext: (goods: GoodsData[]) => void;
@@ -158,7 +137,7 @@ export default function GoodsStep({
 
     for (let index = 0; index < goodsItems.length; index++) {
       const item = goodsItems[index];
-      const parsed = goodsItemValidationSchema.safeParse({
+      const parsed = goodsFormValidationSchema.safeParse({
         goodState: item.goodState,
         overDueDate: item.overDueDate,
         category: item.category,

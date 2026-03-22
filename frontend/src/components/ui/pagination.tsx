@@ -27,7 +27,7 @@ export function Pagination({
           <Button
             variant="outline"
             size="sm"
-            className="border-slate-300 text-slate-600"
+            className="border-[#2D3E2D] text-slate-600"
             disabled={page <= 1}
             onClick={() => onPageChange(page - 1)}
           >
@@ -42,7 +42,7 @@ export function Pagination({
           <Button
             variant="outline"
             size="sm"
-            className="border-slate-300 text-slate-600"
+            className="border-[#2D3E2D] text-slate-600"
             disabled={page >= totalPages}
             onClick={() => onPageChange(page + 1)}
           >
@@ -53,7 +53,8 @@ export function Pagination({
       )}
 
       <p className="text-center text-xs text-slate-400 py-4">
-        Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} of {total} {label}
+        Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)}{" "}
+        of {total} {label}
       </p>
     </div>
   );

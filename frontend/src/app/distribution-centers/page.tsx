@@ -15,7 +15,7 @@ import {
 import {
   getDistributionCenters,
   deleteDistributionCenter,
-} from "@/lib/api-client";
+} from "@/lib/api-distro";
 import { DistributionCenter } from "@/types";
 import { CardSkeleton } from "@/components/ui/loading";
 import Link from "next/link";

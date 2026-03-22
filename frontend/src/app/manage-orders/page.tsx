@@ -30,7 +30,13 @@ import {
   Pencil,
 } from "lucide-react";
 
-const STATUSES = ["requested", "accepted", "in_progress", "completed", "cancelled"];
+const STATUSES = [
+  "requested",
+  "accepted",
+  "in_progress",
+  "completed",
+  "cancelled",
+];
 const PAGE_SIZE = 10;
 const ALL_CENTERS = "__all_centers__";
 const ALL_STATUSES = "__all_statuses__";
@@ -51,7 +57,9 @@ export default function ManageOrdersPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
-  const [centers, setCenters] = useState<Array<Pick<DistributionCenter, "id" | "name">>>([]);
+  const [centers, setCenters] = useState<
+    Array<Pick<DistributionCenter, "id" | "name">>
+  >([]);
 
   useEffect(() => {
     getDistributionCenters()
@@ -71,21 +79,24 @@ export default function ManageOrdersPage() {
     [status, centerId, dateFrom, dateTo],
   );
 
-  const fetchOrders = useCallback(async (p: number) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await getAdminOrders(buildParams(p));
-      setOrders(res.orders);
-      setPage(p);
-      setTotalPages(res.pagination.totalPages);
-      setTotal(res.pagination.total);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load orders");
-    } finally {
-      setLoading(false);
-    }
-  }, [buildParams]);
+  const fetchOrders = useCallback(
+    async (p: number) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await getAdminOrders(buildParams(p));
+        setOrders(res.orders);
+        setPage(p);
+        setTotalPages(res.pagination.totalPages);
+        setTotal(res.pagination.total);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load orders");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [buildParams],
+  );
 
   useEffect(() => {
     fetchOrders(1);
@@ -141,7 +152,9 @@ export default function ManageOrdersPage() {
           <div className="bg-white border-2 border-[#2D3E2D] rounded-lg p-4 mb-6">
             <div className="flex items-center gap-2 mb-3">
               <Filter className="w-4 h-4 text-slate-600" />
-              <span className="text-sm font-semibold text-slate-700">Filters</span>
+              <span className="text-sm font-semibold text-slate-700">
+                Filters
+              </span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <div>
@@ -269,13 +282,16 @@ export default function ManageOrdersPage() {
                           </span>
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3.5 h-3.5" />
-                            {new Date(order.orderTime).toLocaleDateString("nl-BE", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
+                            {new Date(order.orderTime).toLocaleDateString(
+                              "nl-BE",
+                              {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
+                            )}
                           </span>
                           {order.centerName && (
                             <span className="text-xs bg-slate-100 px-2 py-0.5 rounded border border-slate-200">

@@ -3,6 +3,10 @@
 import ProtectedPage from "@/components/ProtectedPage";
 import DistroForm from "@/components/distribution-centers/DistroForm";
 import { useAuth } from "@/lib/auth-context";
+import {
+  getDistributionCenter,
+  updateDistributionCenter,
+} from "@/lib/api-distro";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { DistributionCenter } from "@/types";
@@ -22,20 +26,7 @@ export default function EditDistributionCenterPage() {
     const fetchCenter = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/distribution-centers/${id}`,
-          {
-            method: "GET",
-            credentials: "include",
-            cache: "no-store",
-          },
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch distribution center");
-        }
-
-        const data = await response.json();
+        const data = await getDistributionCenter(id);
         setCenter(data);
         setError(null);
       } catch (err) {
@@ -67,25 +58,7 @@ export default function EditDistributionCenterPage() {
       setIsSubmitting(true);
       setError(null);
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/distribution-centers/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify(data),
-        },
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || "Failed to update distribution center",
-        );
-      }
-
+      await updateDistributionCenter(id, data);
       router.push("/distribution-centers");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");

@@ -10,7 +10,9 @@ interface IntentionSelectionProps {
   onSelect: (userType: "volunteer" | "provider") => void;
 }
 
-export default function IntentionSelection({ onSelect }: IntentionSelectionProps) {
+export default function IntentionSelection({
+  onSelect,
+}: IntentionSelectionProps) {
   const intentions = [
     {
       id: "volunteer" as const,

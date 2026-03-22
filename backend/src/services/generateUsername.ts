@@ -2,7 +2,10 @@ import { db } from "@/config/database";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
-export async function generateUsername(firstname: string, lastname: string): Promise<string> {
+export async function generateUsername(
+  firstname: string,
+  lastname: string,
+): Promise<string> {
   let username = `${firstname}${lastname}`.toLowerCase().replace(/\s+/g, "");
   let counter = 1;
 
@@ -11,7 +14,9 @@ export async function generateUsername(firstname: string, lastname: string): Pro
       where: eq(users.username, username),
     })
   ) {
-    username = `${firstname}${lastname}${counter}`.toLowerCase().replace(/\s+/g, "");
+    username = `${firstname}${lastname}${counter}`
+      .toLowerCase()
+      .replace(/\s+/g, "");
     counter++;
   }
 

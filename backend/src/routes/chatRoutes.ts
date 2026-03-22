@@ -1,6 +1,13 @@
 import { Router, Request, Response } from "express";
 import { db } from "@/config/database";
-import { channels, messages, users, activities, chatMembers, places } from "@/db/schema";
+import {
+  channels,
+  messages,
+  users,
+  activities,
+  chatMembers,
+  places,
+} from "@/db/schema";
 import { eq, desc, and, max, sql, not, inArray } from "drizzle-orm";
 import { requireAuth } from "@/middleware/auth";
 
@@ -11,7 +18,6 @@ router.get("/channels", requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = (req.user as any)?.id as string;
 
-    // Only return channels where user is a member
     const userChannels = await db
       .select({
         id: channels.id,
@@ -56,13 +62,10 @@ router.post(
         })
         .returning();
 
-      // Add all admins to community channel
       const admins = await db
         .select({ id: users.id })
         .from(users)
-        .where(
-          inArray(users.userType, ["admin", "manager"]),
-        );
+        .where(inArray(users.userType, ["admin", "manager"]));
 
       for (const admin of admins) {
         await db
@@ -86,7 +89,6 @@ router.post(
 );
 
 // Get channel by activity ID
-// Validate user has access to a channel (distro)
 async function canAccessChannel(
   userId: string,
   channelId: string,
@@ -103,10 +105,8 @@ async function canAccessChannel(
 
   if (!channel) return false;
 
-  // Community channels are accessible to all
   if (channel.type === "community") return true;
 
-  // Check if user is admin or manager - they can access all chats
   const [user] = await db
     .select({ userType: users.userType })
     .from(users)
@@ -116,7 +116,6 @@ async function canAccessChannel(
     return true;
   }
 
-  // For supplier channels, check if user is a member
   if (channel.type === "supplier") {
     const [member] = await db
       .select()
@@ -132,7 +131,6 @@ async function canAccessChannel(
     }
   }
 
-  // For distro channels, all users who have accessed that distro can view
   if (channel.type === "distribution_center") {
     return true;
   }
@@ -235,7 +233,6 @@ router.get(
     try {
       const userId = (req.user as any)?.id as string;
 
-      // Get IDs of channels the user is a member of or community channels
       const userChannelIds = await db
         .select({ id: channels.id })
         .from(channels)
@@ -252,7 +249,6 @@ router.get(
         ...communityChannelIds.map((ch) => ch.id),
       ]);
 
-      // Get message counts only for these channels
       const result = await db
         .select({
           channelId: messages.channelId,
@@ -296,7 +292,6 @@ router.post(
         return res.status(400).json({ error: "Missing required fields" });
       }
 
-      // Get the activity to find the provider
       const [activity] = await db
         .select()
         .from(activities)
@@ -308,11 +303,15 @@ router.post(
 
       let channel = null;
 
-      // Try to get supplier channel from provider
       const [supplierPlace] = await db
         .select()
         .from(places)
-        .where(and(eq(places.userId, activity.providerId), eq(places.type, "supplier")));
+        .where(
+          and(
+            eq(places.userId, activity.providerId),
+            eq(places.type, "supplier"),
+          ),
+        );
 
       if (supplierPlace) {
         const [supplierChannel] = await db
@@ -330,7 +329,6 @@ router.post(
         }
       }
 
-      // If no supplier channel, try distribution center channel
       if (!channel && activity.assignedCenterId) {
         const [distroChannel] = await db
           .select()
@@ -348,7 +346,9 @@ router.post(
       }
 
       if (!channel) {
-        return res.status(404).json({ error: "No channel found for completion message" });
+        return res
+          .status(404)
+          .json({ error: "No channel found for completion message" });
       }
 
       let messageBody = "";
@@ -361,7 +361,7 @@ router.post(
         if (assistanceOptions?.orderTooLarge) reasons.push("Order too large");
         if (assistanceOptions?.vehicleIssue) reasons.push("Vehicle issue");
         messageBody = `🚨 Assistance needed - ${reasons.join(", ")}${assistanceNotes ? ` - ${assistanceNotes}` : ""}`;
-        
+
         if (assistanceOptions?.needAdditionalDriver) {
           messageBody += `\n🤝 Additional driver needed`;
         }
@@ -376,8 +376,11 @@ router.post(
         })
         .returning();
 
-      // If assistance is needed and we posted to supplier channel, also post to distro
-      if (status === "need_assistance" && channel.type === "supplier" && activity.assignedCenterId) {
+      if (
+        status === "need_assistance" &&
+        channel.type === "supplier" &&
+        activity.assignedCenterId
+      ) {
         const [distroChannel] = await db
           .select()
           .from(channels)
@@ -439,9 +442,7 @@ router.get(
         .from(chatMembers)
         .where(eq(chatMembers.channelId, channelId as any));
 
-      const participantIds = new Set(
-        channelParticipants.map((p) => p.userId),
-      );
+      const participantIds = new Set(channelParticipants.map((p) => p.userId));
 
       const availableUsers = await db
         .select({

@@ -24,7 +24,9 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [profileImage, setProfileImage] = useState<string | null>(user.profileImage || null);
+  const [profileImage, setProfileImage] = useState<string | null>(
+    user.profileImage || null,
+  );
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
@@ -116,7 +118,8 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
       setProfileImage(result.imageUrl);
     } catch (error) {
       setErrors({
-        general: error instanceof Error ? error.message : "Failed to upload image",
+        general:
+          error instanceof Error ? error.message : "Failed to upload image",
       });
     } finally {
       setUploadingImage(false);
@@ -137,7 +140,7 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
           <div className="w-24 h-24 rounded-full border-4 border-slate-800 flex items-center justify-center bg-white overflow-hidden">
             {profileImage ? (
               <Image
-                src={`${process.env.NEXT_PUBLIC_API_BASE_URL?.replace('/api', '')}${profileImage}`}
+                src={`${process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "")}${profileImage}`}
                 alt="Profile"
                 className="w-full h-full object-cover"
                 width={96}
@@ -182,7 +185,9 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
                 <Input
                   type="text"
                   value={formData.firstname}
-                  onChange={(e) => handleInputChange("firstname", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("firstname", e.target.value)
+                  }
                   className="w-full px-3 py-2 bg-white border-2 border-green-500 rounded text-slate-800"
                 />
                 {errors.firstname && (
@@ -207,7 +212,9 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
                 <Input
                   type="text"
                   value={formData.lastname}
-                  onChange={(e) => handleInputChange("lastname", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("lastname", e.target.value)
+                  }
                   className="w-full px-3 py-2 bg-white border-2 border-green-500 rounded text-slate-800"
                 />
                 {errors.lastname && (
@@ -232,7 +239,9 @@ export default function ProfileScreen({ user }: ProfileScreenProps) {
                 <Input
                   type="text"
                   value={formData.username}
-                  onChange={(e) => handleInputChange("username", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("username", e.target.value)
+                  }
                   className="w-full px-3 py-2 bg-white border-2 border-green-500 rounded text-slate-800"
                 />
                 {errors.username && (

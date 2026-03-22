@@ -311,7 +311,7 @@ export default function EditUserPage() {
                             id={`resource-${resource}`}
                             checked={allChecked ? true : someChecked ? "indeterminate" : false}
                             onCheckedChange={() => toggleResourceGroup(resource)}
-                            className="border-slate-500 data-[state=checked]:bg-slate-800 data-[state=checked]:border-slate-800"
+                            className="border-[#2D3E2D]"
                           />
                           <Label
                             htmlFor={`resource-${resource}`}
@@ -333,7 +333,7 @@ export default function EditUserPage() {
                                   perm.id,
                                 )}
                                 onCheckedChange={() => togglePermission(perm.id)}
-                                className="border-slate-500 data-[state=checked]:bg-slate-800 data-[state=checked]:border-slate-800"
+                                className="border-[#2D3E2D]"
                               />
                               <Label
                                 htmlFor={`perm-${resource}-${perm.id}`}

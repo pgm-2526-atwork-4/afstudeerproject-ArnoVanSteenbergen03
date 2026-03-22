@@ -99,7 +99,10 @@ export function RegisterForm({ userType, onBack }: RegisterFormProps) {
                 type="text"
                 placeholder="First name"
                 value={firstName}
-                onChange={(e) => { setFirstName(e.target.value); clearError(); }}
+                onChange={(e) => {
+                  setFirstName(e.target.value);
+                  clearError();
+                }}
                 className="px-4 py-4 bg-white border-2 border-slate-400 rounded-2xl placeholder-slate-500 focus:outline-none focus:border-orange-600"
               />
             </div>
@@ -113,7 +116,10 @@ export function RegisterForm({ userType, onBack }: RegisterFormProps) {
                 type="text"
                 placeholder="Last name"
                 value={lastName}
-                onChange={(e) => { setLastName(e.target.value); clearError(); }}
+                onChange={(e) => {
+                  setLastName(e.target.value);
+                  clearError();
+                }}
                 className="px-4 py-4 bg-white border-2 border-slate-400 rounded-2xl placeholder-slate-500 focus:outline-none focus:border-orange-600"
               />
             </div>
@@ -127,7 +133,10 @@ export function RegisterForm({ userType, onBack }: RegisterFormProps) {
                 type="email"
                 placeholder="E-mail"
                 value={email}
-                onChange={(e) => { setEmail(e.target.value); clearError(); }}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  clearError();
+                }}
                 className="px-4 py-4 bg-white border-2 border-slate-400 rounded-2xl placeholder-slate-500 focus:outline-none focus:border-orange-600"
               />
             </div>
@@ -142,7 +151,10 @@ export function RegisterForm({ userType, onBack }: RegisterFormProps) {
                   type={showPassword ? "text" : "password"}
                   placeholder="Password"
                   value={password}
-                  onChange={(e) => { setPassword(e.target.value); clearError(); }}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    clearError();
+                  }}
                   className="px-4 py-4 bg-white border-2 border-slate-400 rounded-2xl placeholder-slate-500 focus:outline-none focus:border-orange-600"
                 />
                 <Button
@@ -174,7 +186,10 @@ export function RegisterForm({ userType, onBack }: RegisterFormProps) {
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="Repeat password"
                   value={confirmPassword}
-                  onChange={(e) => { setConfirmPassword(e.target.value); clearError(); }}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    clearError();
+                  }}
                   className="px-4 py-4 bg-white border-2 border-slate-400 rounded-2xl placeholder-slate-500 focus:outline-none focus:border-orange-600"
                 />
                 <Button

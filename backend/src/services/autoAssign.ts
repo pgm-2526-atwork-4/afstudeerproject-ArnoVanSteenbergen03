@@ -54,4 +54,3 @@ export async function findOpenCenter(orderTime: Date): Promise<string | null> {
   const picked = openCenters[Math.floor(Math.random() * openCenters.length)];
   return picked.id;
 }
-

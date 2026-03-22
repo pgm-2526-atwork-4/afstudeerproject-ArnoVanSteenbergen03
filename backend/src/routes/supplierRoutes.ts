@@ -7,28 +7,25 @@ import { distributionCenterSchema } from "@shared/index";
 
 const router = Router();
 
-// Get supplier by user ID (must be before /:id to match correctly)
-router.get(
-  "/by-user/:userId",
-  async (req: Request, res: Response) => {
-    try {
-      const userId = req.params.userId as string;
-      const [supplier] = await db
-        .select()
-        .from(places)
-        .where(and(eq(places.userId, userId), eq(places.type, "supplier")));
+// Get supplier by user ID 
+router.get("/by-user/:userId", async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.userId as string;
+    const [supplier] = await db
+      .select()
+      .from(places)
+      .where(and(eq(places.userId, userId), eq(places.type, "supplier")));
 
-      if (!supplier) {
-        return res.status(404).json({ error: "Supplier not found" });
-      }
-
-      res.json(supplier);
-    } catch (error) {
-      console.error("Fetch supplier by user error:", error);
-      res.status(500).json({ error: "Failed to fetch supplier" });
+    if (!supplier) {
+      return res.status(404).json({ error: "Supplier not found" });
     }
-  },
-);
+
+    res.json(supplier);
+  } catch (error) {
+    console.error("Fetch supplier by user error:", error);
+    res.status(500).json({ error: "Failed to fetch supplier" });
+  }
+});
 
 // Get all suppliers
 router.get(
@@ -80,7 +77,7 @@ router.post(
   async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any)?.id;
-      
+
       if (!userId) {
         return res.status(400).json({ error: "User ID not found" });
       }
@@ -101,7 +98,6 @@ router.post(
         })
         .returning();
 
-      // Create a channel for this supplier
       const [supplierChannel] = await db
         .insert(channels)
         .values({
@@ -112,7 +108,6 @@ router.post(
         })
         .returning();
 
-      // Add the supplier owner to the channel
       await db
         .insert(chatMembers)
         .values({
@@ -121,13 +116,10 @@ router.post(
         })
         .onConflictDoNothing();
 
-      // Add all admins to the channel
       const admins = await db
         .select({ id: users.id })
         .from(users)
-        .where(
-          inArray(users.userType, ["admin", "manager"]),
-        );
+        .where(inArray(users.userType, ["admin", "manager"]));
 
       for (const admin of admins) {
         await db
@@ -170,7 +162,9 @@ router.put(
         .set({
           ...(validated.name && { name: validated.name }),
           ...(validated.geojson && { geojson: validated.geojson }),
-          ...(validated.operatingInfo && { operatingInfo: validated.operatingInfo }),
+          ...(validated.operatingInfo && {
+            operatingInfo: validated.operatingInfo,
+          }),
           ...(validated.contactInfo && { contactInfo: validated.contactInfo }),
           updatedAt: new Date(),
         })

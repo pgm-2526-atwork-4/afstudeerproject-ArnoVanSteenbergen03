@@ -210,9 +210,7 @@ export default function ApplicationsPage() {
   };
 
   const formatResource = (r: string) =>
-    r
-      .replace(/_/g, " ")
-      .replace(/\b\w/g, (c) => c.toUpperCase());
+    r.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
   const formatPageKey = (key: string) =>
     key
@@ -225,10 +223,7 @@ export default function ApplicationsPage() {
       <div className="flex flex-col min-h-[calc(100vh-100px)] bg-amber-50 p-4 pb-24">
         <div className="flex items-center justify-between mb-8">
           <Link href="/users">
-            <Button
-              variant="ghost"
-              className="p-0 h-auto hover:bg-transparent"
-            >
+            <Button variant="ghost" className="p-0 h-auto hover:bg-transparent">
               <ArrowLeft className="w-6 h-6 text-slate-800" />
             </Button>
           </Link>
@@ -402,7 +397,9 @@ export default function ApplicationsPage() {
             <div className="flex items-center justify-between p-6 border-b border-slate-200">
               <div>
                 <h2 className="text-xl font-bold text-slate-800">
-                  {permStep === 1 ? "Step 1: Page Access" : "Step 2: Data Permissions"}
+                  {permStep === 1
+                    ? "Step 1: Page Access"
+                    : "Step 2: Data Permissions"}
                 </h2>
                 <p className="text-sm text-slate-500 mt-1">
                   {approvingApp.firstname} {approvingApp.lastname} &middot;{" "}
@@ -425,7 +422,9 @@ export default function ApplicationsPage() {
             <div className="flex-1 min-h-0 overflow-auto p-6">
               {permStep === 1 ? (
                 <>
-                  <p className="text-sm text-slate-500 mb-4">Select which pages this user can access.</p>
+                  <p className="text-sm text-slate-500 mb-4">
+                    Select which pages this user can access.
+                  </p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {permissionGrid.pagePermissions.map((perm) => (
                       <div
@@ -454,7 +453,9 @@ export default function ApplicationsPage() {
                 </>
               ) : (
                 <>
-                  <p className="text-sm text-slate-500 mb-4">Select which data operations this user can perform.</p>
+                  <p className="text-sm text-slate-500 mb-4">
+                    Select which data operations this user can perform.
+                  </p>
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse text-sm">
                       <thead>
@@ -471,7 +472,8 @@ export default function ApplicationsPage() {
                                   )
                                 }
                                 onCheckedChange={() => {
-                                  const crudPerms = permissionGrid.crudPermissions;
+                                  const crudPerms =
+                                    permissionGrid.crudPermissions;
                                   const allSelected = crudPerms.every((p) =>
                                     selectedPermissionIds.has(p.id),
                                   );
@@ -485,7 +487,10 @@ export default function ApplicationsPage() {
                                   });
                                 }}
                               />
-                              <Label htmlFor="approve-all-crud-perms" className="cursor-pointer">
+                              <Label
+                                htmlFor="approve-all-crud-perms"
+                                className="cursor-pointer"
+                              >
                                 Resource
                               </Label>
                             </div>
@@ -520,9 +525,14 @@ export default function ApplicationsPage() {
                                     id={`approve-resource-${resource}`}
                                     className="data-[state=checked]:bg-slate-800 data-[state=checked]:border-slate-800"
                                     checked={allRowSelected}
-                                    onCheckedChange={() => toggleResourceRow(resource)}
+                                    onCheckedChange={() =>
+                                      toggleResourceRow(resource)
+                                    }
                                   />
-                                  <Label htmlFor={`approve-resource-${resource}`} className="cursor-pointer">
+                                  <Label
+                                    htmlFor={`approve-resource-${resource}`}
+                                    className="cursor-pointer"
+                                  >
                                     {formatResource(resource)}
                                   </Label>
                                 </div>
@@ -541,8 +551,12 @@ export default function ApplicationsPage() {
                                       <Checkbox
                                         id={`approve-perm-${resource}-${action}-${perm.id}`}
                                         className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
-                                        checked={selectedPermissionIds.has(perm.id)}
-                                        onCheckedChange={() => togglePermission(perm.id)}
+                                        checked={selectedPermissionIds.has(
+                                          perm.id,
+                                        )}
+                                        onCheckedChange={() =>
+                                          togglePermission(perm.id)
+                                        }
                                       />
                                     ) : (
                                       <span className="text-slate-300">—</span>

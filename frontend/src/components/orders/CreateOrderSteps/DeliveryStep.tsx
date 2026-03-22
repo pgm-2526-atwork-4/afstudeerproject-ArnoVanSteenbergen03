@@ -12,7 +12,6 @@ import { getVehicles } from "@/lib/api-client";
 import type { Vehicle } from "@shared/index";
 import { z } from "zod/v4";
 
-
 const deliveryStepSchema = z.object({
   location: z.string().trim().min(1, "Please enter a location."),
   vehicleId: z.string().trim().min(1, "Please select a vehicle type."),

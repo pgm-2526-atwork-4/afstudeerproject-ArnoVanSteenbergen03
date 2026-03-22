@@ -3,6 +3,7 @@
 import ProtectedPage from "@/components/ProtectedPage";
 import DistroForm from "@/components/distribution-centers/DistroForm";
 import { useAuth } from "@/lib/auth-context";
+import { createDistributionCenter } from "@/lib/api-distro";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { DistributionCenter } from "@/types";
@@ -21,25 +22,7 @@ export default function NewDistributionCenterPage() {
       setIsSubmitting(true);
       setError(null);
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/distribution-centers`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify(data),
-        },
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || "Failed to create distribution center",
-        );
-      }
-
+      await createDistributionCenter(data);
       router.push("/distribution-centers");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");

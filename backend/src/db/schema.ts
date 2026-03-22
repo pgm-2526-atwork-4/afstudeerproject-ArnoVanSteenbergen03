@@ -49,7 +49,9 @@ export const userPermissions = pgTable(
     permissionId: integer("permission_id")
       .notNull()
       .references(() => permissions.id, { onDelete: "cascade" }),
-    grantedBy: uuid("granted_by").references(() => users.id, { onDelete: "set null" }),
+    grantedBy: uuid("granted_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
   },
   (table) => [primaryKey({ columns: [table.userId, table.permissionId] })],
 );
@@ -62,12 +64,13 @@ export const applications = pgTable("applications", {
     .references(() => users.id, { onDelete: "cascade" }),
   userType: varchar("user_type", { length: 20 }).notNull(), // provider, volunteer
   status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, approved, denied
-  reviewedBy: uuid("reviewed_by").references(() => users.id, { onDelete: "set null" }),
+  reviewedBy: uuid("reviewed_by").references(() => users.id, {
+    onDelete: "set null",
+  }),
   reviewedAt: timestamp("reviewed_at"),
   denialReason: text("denial_reason"),
   createdAt: timestamp("created_at").defaultNow(),
 });
-
 
 export const places = pgTable("places", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -135,7 +138,7 @@ export const collectionActivities = pgTable(
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
-  (table) => [index("collection_activity_idx").on(table.activityId)]
+  (table) => [index("collection_activity_idx").on(table.activityId)],
 );
 
 // Goods table
@@ -149,17 +152,18 @@ export const goods = pgTable(
     overDueDate: boolean("over_due_date").notNull().default(false),
     quantity: decimal("quantity", { precision: 10, scale: 2 }).notNull(),
     unit: text("unit").notNull(), // 'kg', 'items', 'boxes', 'pallets', 'liters', etc.
-    
+
     status: text("status").notNull().default("available"), // 'available', 'reserved', 'distributed', 'expired', 'discarded'
-    
+
     sourcePlaceId: uuid("source_place_id").references(() => places.id),
     currentPlaceId: uuid("current_place_id").references(() => places.id),
-    
-    sourceActivityId: serial("source_activity_id").references(() => collectionActivities.id),
- 
-   
-    metadata: jsonb("metadata"),// Extra comment 
-    
+
+    sourceActivityId: serial("source_activity_id").references(
+      () => collectionActivities.id,
+    ),
+
+    metadata: jsonb("metadata"), // Extra comment
+
     image: text("image"),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
@@ -169,7 +173,7 @@ export const goods = pgTable(
     index("goods_source_place_idx").on(table.sourcePlaceId),
     index("goods_current_place_idx").on(table.currentPlaceId),
     index("goods_source_activity_idx").on(table.sourceActivityId),
-  ]
+  ],
 );
 
 //These are the different type of vehicles used for pickups
@@ -193,9 +197,8 @@ export const lookupValues = pgTable(
     sortOrder: integer("sort_order").notNull().default(0),
     createdAt: timestamp("created_at").defaultNow(),
   },
-  (table) => [index("lookup_type_idx").on(table.type)]
+  (table) => [index("lookup_type_idx").on(table.type)],
 );
-
 
 // Channels
 export const channels = pgTable("channels", {
@@ -228,7 +231,7 @@ export const messages = pgTable(
   (table) => [index("messages_channel_idx").on(table.channelId)],
 );
 
-// Chat members 
+// Chat members
 export const chatMembers = pgTable(
   "chat_members",
   {
@@ -334,7 +337,7 @@ export const collectionActivitiesRelations = relations(
       references: [activities.id],
     }),
     goods: many(goods),
-  })
+  }),
 );
 
 export const goodsRelations = relations(goods, ({ one }) => ({
@@ -384,5 +387,3 @@ export const chatMembersRelations = relations(chatMembers, ({ one }) => ({
     references: [users.id],
   }),
 }));
-
-

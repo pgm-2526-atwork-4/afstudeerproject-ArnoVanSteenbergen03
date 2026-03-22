@@ -121,7 +121,9 @@ export default function AppNavigation() {
         className="hidden lg:flex fixed top-2 left-4 z-50 items-center gap-2 rounded-lg border-2 border-slate-800 bg-white px-3 py-2 text-slate-800 shadow-sm hover:bg-slate-50"
         aria-expanded={isDesktopMenuOpen}
         aria-controls="desktop-nav-drawer"
-        aria-label={isDesktopMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+        aria-label={
+          isDesktopMenuOpen ? "Close navigation menu" : "Open navigation menu"
+        }
       >
         <div className="relative">
           {isDesktopMenuOpen ? (

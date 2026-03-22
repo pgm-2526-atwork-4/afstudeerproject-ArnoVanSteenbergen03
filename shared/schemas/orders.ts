@@ -98,6 +98,62 @@ export const goodsDataSchema = z.object({
 });
 
 export type GoodsData = z.infer<typeof goodsDataSchema>;
+
+// Edit order form constants
+export const EDIT_ORDER_STATUSES = [
+  "requested",
+  "accepted",
+  "in_progress",
+  "completed",
+  "cancelled",
+] as const;
+
+export const EDIT_ORDER_ACTIVITY_TYPES = [
+  "collection",
+  "distribution",
+  "hygiene",
+  "other",
+] as const;
+
+// Edit order schema
+export const editOrderSchema = z.object({
+  status: z.enum(EDIT_ORDER_STATUSES),
+  assignedDriver: z.string().nullable(),
+  assignedCenterId: z.string().nullable(),
+  location: z.string().trim().min(1, "Location is required"),
+  activityType: z.enum(EDIT_ORDER_ACTIVITY_TYPES),
+  orderTime: z
+    .string()
+    .min(1, "Order time is required")
+    .refine((value) => !Number.isNaN(new Date(value).getTime()), {
+      message: "Order time is invalid",
+    }),
+  notes: z.string().optional(),
+});
+
+export type EditOrderInput = z.infer<typeof editOrderSchema>;
+
+// Goods form validation schema (with trims and transforms for form input)
+export const goodsFormValidationSchema = z.object({
+  goodState: z.enum(["fresh", "old", "dry"]),
+  overDueDate: z.boolean(),
+  category: z.string().trim().min(1, "Category is required"),
+  name: z.string().trim().min(1, "Item name is required"),
+  quantity: z
+    .string()
+    .trim()
+    .min(1, "Quantity is required")
+    .refine((value) => {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) && parsed > 0;
+    }, "Quantity must be a positive number")
+    .transform((value) => Number(value)),
+  unit: z.enum(["kg", "items", "boxes", "pallets", "liters"]),
+  allergies: z.string().trim().optional(),
+  expirationDate: z.string().optional(),
+  packageIncluded: z.boolean(),
+  image: z.string().optional(),
+});
 export const foodItemDataSchema = goodsDataSchema;
 export type FoodItemData = GoodsData;
 

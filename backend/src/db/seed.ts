@@ -20,7 +20,6 @@ import {
   messages,
 } from "./schema";
 
-// TODO: clear seed data. dubble look at permissions and goods / activity
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error("DATABASE_URL is missing");

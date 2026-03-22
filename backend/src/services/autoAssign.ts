@@ -48,9 +48,10 @@ export async function findOpenCenter(orderTime: Date): Promise<string | null> {
 
   if (openCenters.length === 0) return null;
 
-  // Pick a random open center
   //TODO: Geolocation shortest route // map package: openstreet, mapops, free credits api
   //TODO: acceptance hours // outside of normal opening hours. we can also have acceptance hour
+
+  // Pick a random open center
   const picked = openCenters[Math.floor(Math.random() * openCenters.length)];
   return picked.id;
 }
